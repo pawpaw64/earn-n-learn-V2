@@ -38,7 +38,7 @@ const profileMenuItems = [{
 }];
 const DashboardSidebar = () => {
   const location = useLocation();
-  return <Sidebar className="border-r">
+  return <Sidebar className="border-r rounded-none mx-0 px-0">
       <SidebarContent className="px-0 py-[33px]">
         <div className="px-2 py-4">
           
