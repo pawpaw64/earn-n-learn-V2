@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,10 @@ const Index = () => {
   const [showSignupModal, setShowSignupModal] = useState(false);
 
   const handleApply = () => {
+    setShowLoginModal(true);
+  };
+
+  const handleViewDetails = () => {
     setShowLoginModal(true);
   };
 
@@ -60,6 +63,7 @@ const Index = () => {
               description="Represent leading brands on campus and earn while building valuable marketing experience."
               payment="$15/hour"
               onApply={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <JobCard
               title="Web Development"
@@ -67,6 +71,7 @@ const Index = () => {
               description="Help local businesses with their websites. Perfect for CS students!"
               payment="$25/hour"
               onApply={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <JobCard
               title="Research Assistant"
@@ -74,6 +79,7 @@ const Index = () => {
               description="Assist in ongoing research projects in the Biology department."
               payment="$18/hour"
               onApply={handleApply}
+              onViewDetails={handleViewDetails}
             />
           </div>
         </div>
@@ -91,24 +97,28 @@ const Index = () => {
               skill="Python Programming"
               pricing="$20/hour"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <SkillCard
               name="Sarah K."
               skill="Digital Marketing"
               pricing="$15/hour"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <SkillCard
               name="James R."
               skill="Guitar Lessons"
               pricing="$25/hour"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <SkillCard
               name="Emily W."
               skill="Academic Writing"
               pricing="$18/hour"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
           </div>
         </div>
@@ -128,6 +138,7 @@ const Index = () => {
               price="$45"
               availability="For Sale"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <MaterialCard
               name="Lisa P."
@@ -136,6 +147,7 @@ const Index = () => {
               price="$30"
               availability="For Sale"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
             <MaterialCard
               name="Tom R."
@@ -144,6 +156,7 @@ const Index = () => {
               price="$5/week"
               availability="Available for Rent"
               onContact={handleApply}
+              onViewDetails={handleViewDetails}
             />
           </div>
         </div>

@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ArrowUpRight } from "lucide-react";
 
 interface JobCardProps {
   title: string;
@@ -14,14 +15,14 @@ interface JobCardProps {
 const JobCard = ({ title, type, description, payment, onApply, onViewDetails }: JobCardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start mb-3">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 font-medium">
           {type}
         </Badge>
       </div>
-      <p className="mt-2 text-gray-600 text-sm">{description}</p>
-      <div className="mt-4 flex items-center justify-between">
+      <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
+      <div className="flex items-center justify-between">
         <span className="text-emerald-600 font-medium">{payment}</span>
         <div className="flex gap-2">
           <Button
@@ -29,7 +30,7 @@ const JobCard = ({ title, type, description, payment, onApply, onViewDetails }: 
             onClick={onViewDetails}
             className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
           >
-            View Details
+            Details <ArrowUpRight className="ml-1 h-4 w-4" />
           </Button>
           <Button
             onClick={onApply}
