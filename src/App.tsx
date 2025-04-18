@@ -5,6 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import DashboardLayout from "./layouts/DashboardLayout";
+import Browse from "./pages/dashboard/Browse";
+import Campus from "./pages/dashboard/Campus";
+import Wallet from "./pages/dashboard/Wallet";
+import Messages from "./pages/dashboard/Messages";
+import Profile from "./pages/dashboard/Profile";
+import Settings from "./pages/dashboard/Settings";
+import Leaderboard from "./pages/dashboard/Leaderboard";
+import Calendar from "./pages/dashboard/Calendar";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +25,16 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route path="browse" element={<Browse />} />
+            <Route path="campus" element={<Campus />} />
+            <Route path="wallet" element={<Wallet />} />
+            <Route path="messages" element={<Messages />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="calendar" element={<Calendar />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
