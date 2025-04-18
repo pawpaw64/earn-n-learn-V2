@@ -9,6 +9,7 @@ interface MaterialCardProps {
   price: string;
   availability: string;
   onContact: () => void;
+  onViewDetails: () => void;
 }
 
 const MaterialCard = ({
@@ -18,6 +19,7 @@ const MaterialCard = ({
   price,
   availability,
   onContact,
+  onViewDetails,
 }: MaterialCardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -32,13 +34,22 @@ const MaterialCard = ({
         <p className="text-emerald-600 font-medium">{price}</p>
         <p className="text-sm text-gray-500">{availability}</p>
       </div>
-      <Button
-        onClick={onContact}
-        variant="outline"
-        className="w-full mt-4 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-      >
-        Contact Seller
-      </Button>
+      <div className="flex gap-2 mt-4">
+        <Button
+          variant="outline"
+          onClick={onViewDetails}
+          className="flex-1 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+        >
+          View Details
+        </Button>
+        <Button
+          onClick={onContact}
+          variant="outline"
+          className="flex-1 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+        >
+          Contact Seller
+        </Button>
+      </div>
     </div>
   );
 };

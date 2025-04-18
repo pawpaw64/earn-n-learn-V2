@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,7 +20,6 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState("recent");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock data for demonstration
   const jobs = [
     {
       id: 1,
@@ -101,15 +99,29 @@ export default function Browse() {
     toast.success("Application submitted! The poster will contact you soon.");
   };
 
+  const handleViewJobDetails = (jobId) => {
+    toast.info("Opening job details...");
+    // You can implement a modal or navigation to a details page here
+  };
+
   const handleContactSkill = (skillId) => {
     toast.success("Contact request sent successfully!");
+  };
+
+  const handleViewSkillDetails = (skillId) => {
+    toast.info("Opening skill details...");
+    // You can implement a modal or navigation to a details page here
   };
 
   const handleContactMaterial = (materialId) => {
     toast.success("Contact request sent to the owner!");
   };
 
-  // Filter displayed items based on search and category
+  const handleViewMaterialDetails = (materialId) => {
+    toast.info("Opening material details...");
+    // You can implement a modal or navigation to a details page here
+  };
+
   const filteredJobs = jobs.filter(job => 
     job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
     job.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -127,16 +139,13 @@ export default function Browse() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Campus Marketplace</h1>
       
-      {/* Main Tabs: Explore vs Post */}
       <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="explore">Explore Opportunities</TabsTrigger>
           <TabsTrigger value="post">Post Opportunities</TabsTrigger>
         </TabsList>
         
-        {/* EXPLORE OPPORTUNITIES VIEW */}
         <TabsContent value="explore" className="space-y-6">
-          {/* Filters Row */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -178,65 +187,58 @@ export default function Browse() {
             </div>
           </div>
           
-          {/* Results - Jobs */}
-          {(categoryFilter === "all" || categoryFilter === "jobs") && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Jobs</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredJobs.map(job => (
-                  <JobCard 
-                    key={job.id}
-                    title={job.title}
-                    type={job.type}
-                    description={job.description}
-                    payment={job.payment}
-                    onApply={() => handleApplyJob(job.id)}
-                  />
-                ))}
-              </div>
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Jobs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredJobs.map(job => (
+                <JobCard 
+                  key={job.id}
+                  title={job.title}
+                  type={job.type}
+                  description={job.description}
+                  payment={job.payment}
+                  onApply={() => handleApplyJob(job.id)}
+                  onViewDetails={() => handleViewJobDetails(job.id)}
+                />
+              ))}
             </div>
-          )}
+          </div>
           
-          {/* Results - Skills */}
-          {(categoryFilter === "all" || categoryFilter === "skills") && (
-            <div className="space-y-4 mt-8">
-              <h2 className="text-xl font-semibold">Skills</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSkills.map(skill => (
-                  <SkillCard 
-                    key={skill.id}
-                    name={skill.name}
-                    skill={skill.skill}
-                    pricing={skill.pricing}
-                    onContact={() => handleContactSkill(skill.id)}
-                  />
-                ))}
-              </div>
+          <div className="space-y-4 mt-8">
+            <h2 className="text-xl font-semibold">Skills</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredSkills.map(skill => (
+                <SkillCard 
+                  key={skill.id}
+                  name={skill.name}
+                  skill={skill.skill}
+                  pricing={skill.pricing}
+                  onContact={() => handleContactSkill(skill.id)}
+                  onViewDetails={() => handleViewSkillDetails(skill.id)}
+                />
+              ))}
             </div>
-          )}
+          </div>
           
-          {/* Results - Materials */}
-          {(categoryFilter === "all" || categoryFilter === "materials") && (
-            <div className="space-y-4 mt-8">
-              <h2 className="text-xl font-semibold">Materials</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredMaterials.map(material => (
-                  <MaterialCard 
-                    key={material.id}
-                    name={material.name}
-                    material={material.material}
-                    condition={material.condition}
-                    price={material.price}
-                    availability={material.availability}
-                    onContact={() => handleContactMaterial(material.id)}
-                  />
-                ))}
-              </div>
+          <div className="space-y-4 mt-8">
+            <h2 className="text-xl font-semibold">Materials</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredMaterials.map(material => (
+                <MaterialCard 
+                  key={material.id}
+                  name={material.name}
+                  material={material.material}
+                  condition={material.condition}
+                  price={material.price}
+                  availability={material.availability}
+                  onContact={() => handleContactMaterial(material.id)}
+                  onViewDetails={() => handleViewMaterialDetails(material.id)}
+                />
+              ))}
             </div>
-          )}
+          </div>
         </TabsContent>
         
-        {/* POST OPPORTUNITIES VIEW */}
         <TabsContent value="post" className="space-y-6">
           <Card>
             <Tabs value={postTab} onValueChange={setPostTab}>
