@@ -1,10 +1,11 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/components/ui/use-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface AuthModalProps {
 }
 
 const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,12 +25,35 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
     course: "",
     mobile: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log(formData);
-    onClose();
+    setIsSubmitting(true);
+    
+    // For demonstration purposes, we're simulating authentication
+    setTimeout(() => {
+      if (type === "login") {
+        console.log("Logging in with:", formData.email);
+        // In a real app, you would validate credentials here
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Earn-n-Learn!",
+        });
+        navigate("/dashboard/browse");
+      } else {
+        console.log("Signing up with:", formData);
+        // In a real app, you would create a new account here
+        toast({
+          title: "Account created",
+          description: "Welcome to Earn-n-Learn! You're now logged in.",
+        });
+        navigate("/dashboard/browse");
+      }
+      
+      setIsSubmitting(false);
+      onClose();
+    }, 1000);
   };
 
   return (
@@ -173,8 +198,12 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
           <Button
             type="submit"
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+            disabled={isSubmitting}
           >
-            {type === "login" ? "Login" : "Sign Up"}
+            {isSubmitting ? 
+              (type === "login" ? "Logging in..." : "Signing up...") : 
+              (type === "login" ? "Login" : "Sign Up")
+            }
           </Button>
         </form>
       </DialogContent>

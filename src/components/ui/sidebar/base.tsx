@@ -4,6 +4,9 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "./context"
 
+// Define the missing constant
+const SIDEBAR_WIDTH_MOBILE = "18rem";
+
 const Sidebar = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
