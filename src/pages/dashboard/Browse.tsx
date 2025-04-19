@@ -108,7 +108,7 @@ export default function Browse() {
       <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="explore">Explore </TabsTrigger>
-          <TabsTrigger value="post">Post Opportunities</TabsTrigger>
+          <TabsTrigger value="post">Post </TabsTrigger>
         </TabsList>
         
         <TabsContent value="explore" className="space-y-6">
