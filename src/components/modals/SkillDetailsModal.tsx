@@ -19,13 +19,17 @@ interface SkillDetailsModalProps {
   skill: {
     id: number;
     name: string;
-    skill: string;
-    pricing: string;
-    // Mock additional details
-    description?: string;
-    methodology?: string;
-    prerequisites?: string[];
-    userProfile?: {
+    skillName: string;
+    pricingType: "paid" | "free" | "trade";
+    price: string;
+    description: string;
+    availability: string;
+    methodology: string;
+    prerequisites: string[];
+    tradeSkill?: string;
+    teacher: {
+      name: string;
+      email: string;
       rating: number;
       memberSince: string;
     };
@@ -33,51 +37,55 @@ interface SkillDetailsModalProps {
 }
 
 const SkillDetailsModal = ({ isOpen, onClose, onContact, skill }: SkillDetailsModalProps) => {
-  // Mock data for fields not in original skill object
-  const mockData = {
-    description: skill.description || "Interactive skills training with personalized feedback and hands-on projects. Perfect for beginners and intermediate learners looking to advance their career.",
-    methodology: skill.methodology || "My teaching approach focuses on practical, project-based learning with real-world examples. I provide detailed feedback on your work and customize the curriculum to your learning pace.",
-    prerequisites: skill.prerequisites || ["Basic computer skills", "Eagerness to learn"],
-    userProfile: skill.userProfile || {
-      rating: 4.9,
-      memberSince: "Jan 2022",
-    },
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">{skill.skill}</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{skill.skillName}</DialogTitle>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className="text-emerald-600 border-emerald-600">
-              Skill
+              {skill.pricingType === "free" ? "Free" : 
+               skill.pricingType === "trade" ? "Skill Trade" : 
+               skill.price}
             </Badge>
-            <span className="text-emerald-600 font-medium">{skill.pricing}</span>
           </div>
           <DialogDescription className="text-sm text-gray-600 mt-2">
-            Offered by {skill.name}
+            Offered by {skill.teacher.name}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 my-4">
           <div>
             <h3 className="text-lg font-semibold mb-2">Description</h3>
-            <p className="text-gray-700">{mockData.description}</p>
+            <p className="text-gray-700">{skill.description}</p>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-2">Teaching Methodology</h3>
-            <p className="text-gray-700">{mockData.methodology}</p>
+            <p className="text-gray-700">{skill.methodology}</p>
           </div>
 
+          {skill.prerequisites.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Prerequisites</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                {skill.prerequisites.map((prereq, index) => (
+                  <li key={index} className="text-gray-700">{prereq}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {skill.pricingType === "trade" && skill.tradeSkill && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Looking to Trade For</h3>
+              <p className="text-gray-700">{skill.tradeSkill}</p>
+            </div>
+          )}
+
           <div>
-            <h3 className="text-lg font-semibold mb-2">Prerequisites</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {mockData.prerequisites.map((prereq, index) => (
-                <li key={index} className="text-gray-700">{prereq}</li>
-              ))}
-            </ul>
+            <h3 className="text-lg font-semibold mb-2">Availability</h3>
+            <p className="text-gray-700">{skill.availability}</p>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -88,17 +96,20 @@ const SkillDetailsModal = ({ isOpen, onClose, onContact, skill }: SkillDetailsMo
                   <Star
                     key={i}
                     className={`h-4 w-4 ${
-                      i < Math.floor(mockData.userProfile.rating)
+                      i < Math.floor(skill.teacher.rating)
                         ? "text-yellow-400 fill-yellow-400"
                         : "text-gray-300"
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm font-medium">{mockData.userProfile.rating}</span>
+              <span className="text-sm font-medium">{skill.teacher.rating}</span>
             </div>
             <p className="text-sm text-gray-600">
-              Member since: {mockData.userProfile.memberSince}
+              Member since: {skill.teacher.memberSince}
+            </p>
+            <p className="text-sm text-gray-600">
+              Contact: {skill.teacher.email}
             </p>
           </div>
         </div>

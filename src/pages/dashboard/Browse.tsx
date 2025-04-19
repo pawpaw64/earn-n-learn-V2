@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,7 +24,6 @@ export default function Browse() {
   const [sortBy, setSortBy] = useState("recent");
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Modal states
   const [selectedJob, setSelectedJob] = useState<number | null>(null);
   const [showJobApplication, setShowJobApplication] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<number | null>(null);
@@ -37,69 +35,58 @@ export default function Browse() {
     type: "Remote",
     description: "Looking for a skilled web developer to create a portfolio website. Experience with React required.",
     payment: "$20-30/hr",
-    poster: "Jane Doe"
-  }, {
-    id: 2,
-    title: "Campus Tour Guide",
-    type: "On-campus",
-    description: "Seeking friendly students to lead campus tours for prospective students and their families.",
-    payment: "$15/hr",
-    poster: "University Events Team"
-  }, {
-    id: 3,
-    title: "Logo Designer",
-    type: "Freelance",
-    description: "Need a creative designer to create a logo for a new student club.",
-    payment: "$50 flat rate",
-    poster: "Student Club Association"
+    poster: {
+      name: "Jane Doe",
+      email: "jane@example.com",
+      rating: 4.8,
+      memberSince: "Jan 2023",
+      completedProjects: 15
+    },
+    deadline: "2024-05-01",
+    requiredSkills: ["React", "TypeScript", "UI Design"],
+    timeline: "2-3 weeks",
+    category: "Web Development"
   }];
   
   const skills = [{
     id: 1,
     name: "Alex Chen",
-    skill: "Python Tutoring",
-    pricing: "$15/hr or skill exchange"
-  }, {
-    id: 2,
-    name: "Maya Johnson",
-    skill: "Graphic Design",
-    pricing: "$20/hr"
-  }, {
-    id: 3,
-    name: "Carlos Rodriguez",
-    skill: "Spanish Lessons",
-    pricing: "Free"
+    skillName: "Python Tutoring",
+    pricingType: "paid" as const,
+    price: "$15/hr",
+    description: "Interactive Python lessons for beginners and intermediate learners. Focus on practical applications and problem-solving.",
+    methodology: "Project-based learning with hands-on exercises and real-world examples.",
+    prerequisites: ["Basic computer skills", "Eagerness to learn"],
+    availability: "Weekday evenings and weekends",
+    teacher: {
+      name: "Alex Chen",
+      email: "alex@example.com",
+      rating: 4.9,
+      memberSince: "Mar 2023"
+    }
   }];
   
   const materials = [{
     id: 1,
-    name: "David Kim",
-    material: "Textbooks (Economics 101)",
+    materialName: "Textbooks (Economics 101)",
     condition: "Like New",
+    type: "sale" as const,
     price: "$30",
-    availability: "For Sale"
-  }, {
-    id: 2,
-    name: "Sarah Williams",
-    material: "DSLR Camera",
-    condition: "Good",
-    price: "$15/day",
-    availability: "For Rent"
-  }, {
-    id: 3,
-    name: "Jamal Thompson",
-    material: "Chemistry Lab Equipment",
-    condition: "Excellent",
-    price: "Free",
-    availability: "To Borrow"
+    description: "Complete set of Economics 101 textbooks, includes study guides. Barely used, no markings or highlights.",
+    availability: "Available immediately",
+    photos: ["/placeholder.svg", "/placeholder.svg"],
+    owner: {
+      name: "David Kim",
+      email: "david@example.com",
+      rating: 4.7,
+      memberSince: "Sep 2023"
+    }
   }];
 
-  // Find the selected items based on their IDs
   const currentJob = jobs.find(job => job.id === selectedJob) || null;
   const currentSkill = skills.find(skill => skill.id === selectedSkill) || null;
   const currentMaterial = materials.find(material => material.id === selectedMaterial) || null;
 
-  // Handler functions
   const handleApplyJob = (jobId: number) => {
     setSelectedJob(jobId);
     setShowJobApplication(true);
@@ -137,11 +124,11 @@ export default function Browse() {
   );
   
   const filteredSkills = skills.filter(skill => 
-    skill.skill.toLowerCase().includes(searchQuery.toLowerCase())
+    skill.skillName.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const filteredMaterials = materials.filter(material => 
-    material.material.toLowerCase().includes(searchQuery.toLowerCase())
+    material.materialName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -196,7 +183,6 @@ export default function Browse() {
             </div>
           </div>
           
-          {/* Jobs Section */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Jobs</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -214,7 +200,6 @@ export default function Browse() {
             </div>
           </div>
           
-          {/* Skills Section */}
           <div className="space-y-4 mt-8">
             <h2 className="text-xl font-semibold">Skills</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -222,8 +207,13 @@ export default function Browse() {
                 <SkillCard 
                   key={skill.id} 
                   name={skill.name} 
-                  skill={skill.skill} 
-                  pricing={skill.pricing} 
+                  skill={skill.skillName} 
+                  pricing={skill.pricingType} 
+                  price={skill.price} 
+                  description={skill.description} 
+                  methodology={skill.methodology} 
+                  prerequisites={skill.prerequisites} 
+                  availability={skill.availability} 
                   onContact={() => handleContactSkill(skill.id)} 
                   onViewDetails={() => handleViewSkillDetails(skill.id)} 
                 />
@@ -231,7 +221,6 @@ export default function Browse() {
             </div>
           </div>
           
-          {/* Materials Section */}
           <div className="space-y-4 mt-8">
             <h2 className="text-xl font-semibold">Materials</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -239,7 +228,7 @@ export default function Browse() {
                 <MaterialCard 
                   key={material.id} 
                   name={material.name} 
-                  material={material.material} 
+                  material={material.materialName} 
                   condition={material.condition} 
                   price={material.price} 
                   availability={material.availability} 
@@ -278,7 +267,6 @@ export default function Browse() {
         </TabsContent>
       </Tabs>
 
-      {/* Modals */}
       {currentJob && (
         <JobDetailsModal
           isOpen={selectedJob !== null && !showJobApplication}

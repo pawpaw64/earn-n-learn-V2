@@ -23,32 +23,21 @@ interface JobDetailsModalProps {
     type: string;
     description: string;
     payment: string;
-    poster: string;
-    // Mock additional details
-    requiredSkills?: string[];
-    timeline?: string;
-    category?: string;
-    posterProfile?: {
+    poster: {
+      name: string;
+      email: string;
       rating: number;
       memberSince: string;
       completedProjects: number;
     };
+    deadline: string;
+    requiredSkills: string[];
+    timeline: string;
+    category: string;
   };
 }
 
 const JobDetailsModal = ({ isOpen, onClose, onApply, job }: JobDetailsModalProps) => {
-  // Mock data for fields not in original job object
-  const mockData = {
-    requiredSkills: job.requiredSkills || ["React", "TypeScript", "UI Design"],
-    timeline: job.timeline || "2-3 weeks",
-    category: job.category || "Web Development",
-    posterProfile: job.posterProfile || {
-      rating: 4.8,
-      memberSince: "Sep 2023",
-      completedProjects: 15,
-    },
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -61,7 +50,7 @@ const JobDetailsModal = ({ isOpen, onClose, onApply, job }: JobDetailsModalProps
             <span className="text-emerald-600 font-medium">{job.payment}</span>
           </div>
           <DialogDescription className="text-sm text-gray-600 mt-2">
-            Posted by {job.poster}
+            Posted by {job.poster.name}
           </DialogDescription>
         </DialogHeader>
 
@@ -81,7 +70,7 @@ const JobDetailsModal = ({ isOpen, onClose, onApply, job }: JobDetailsModalProps
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockData.requiredSkills.map((skill, index) => (
+                {job.requiredSkills.map((skill, index) => (
                   <TableRow key={index}>
                     <TableCell>{skill}</TableCell>
                     <TableCell>{index === 0 ? "Essential" : "Preferred"}</TableCell>
@@ -94,11 +83,12 @@ const JobDetailsModal = ({ isOpen, onClose, onApply, job }: JobDetailsModalProps
           <div className="grid grid-cols-2 gap-4">
             <div>
               <h3 className="text-lg font-semibold mb-2">Timeline</h3>
-              <p className="text-gray-700">{mockData.timeline}</p>
+              <p className="text-gray-700">{job.timeline}</p>
+              <p className="text-sm text-gray-500 mt-1">Deadline: {job.deadline}</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-2">Category</h3>
-              <p className="text-gray-700">{mockData.category}</p>
+              <p className="text-gray-700">{job.category}</p>
             </div>
           </div>
 
@@ -110,20 +100,23 @@ const JobDetailsModal = ({ isOpen, onClose, onApply, job }: JobDetailsModalProps
                   <Star
                     key={i}
                     className={`h-4 w-4 ${
-                      i < Math.floor(mockData.posterProfile.rating)
+                      i < Math.floor(job.poster.rating)
                         ? "text-yellow-400 fill-yellow-400"
                         : "text-gray-300"
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-sm font-medium">{mockData.posterProfile.rating}</span>
+              <span className="text-sm font-medium">{job.poster.rating}</span>
             </div>
             <p className="text-sm text-gray-600">
-              Member since: {mockData.posterProfile.memberSince}
+              Member since: {job.poster.memberSince}
             </p>
             <p className="text-sm text-gray-600">
-              Completed projects: {mockData.posterProfile.completedProjects}
+              Completed projects: {job.poster.completedProjects}
+            </p>
+            <p className="text-sm text-gray-600">
+              Contact: {job.poster.email}
             </p>
           </div>
         </div>
