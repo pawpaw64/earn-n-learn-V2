@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -32,6 +31,14 @@ const MaterialDetailsModal = ({ material, isOpen, onOpenChange, onContact }: Mat
         </DialogHeader>
         
         <div className="grid gap-6 my-4">
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
+            <img
+              src={material.imageUrl || "/placeholder.svg"}
+              alt={material.material}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12">
               <AvatarImage src={material.avatarUrl} alt={material.name} />

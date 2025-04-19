@@ -37,4 +37,5 @@ export interface MaterialType {
   avatarUrl?: string;
   duration?: string;
   location?: string;
+  imageUrl?: string;
 }
