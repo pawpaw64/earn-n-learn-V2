@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +13,24 @@ import { toast } from "sonner";
 import PostJobForm from "@/components/forms/PostJobForm";
 import ShareSkillForm from "@/components/forms/ShareSkillForm";
 import ListMaterialForm from "@/components/forms/ListMaterialForm";
+import JobDetailsModal from "@/components/modals/JobDetailsModal";
+import JobApplicationForm from "@/components/modals/JobApplicationForm";
+import SkillDetailsModal from "@/components/modals/SkillDetailsModal";
+import MaterialDetailsModal from "@/components/modals/MaterialDetailsModal";
+
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
   const [postTab, setPostTab] = useState("job");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Modal states
+  const [selectedJob, setSelectedJob] = useState<number | null>(null);
+  const [showJobApplication, setShowJobApplication] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<number | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<number | null>(null);
+
   const jobs = [{
     id: 1,
     title: "Web Developer Needed",
@@ -40,6 +53,7 @@ export default function Browse() {
     payment: "$50 flat rate",
     poster: "Student Club Association"
   }];
+  
   const skills = [{
     id: 1,
     name: "Alex Chen",
@@ -56,6 +70,7 @@ export default function Browse() {
     skill: "Spanish Lessons",
     pricing: "Free"
   }];
+  
   const materials = [{
     id: 1,
     name: "David Kim",
@@ -78,31 +93,59 @@ export default function Browse() {
     price: "Free",
     availability: "To Borrow"
   }];
-  const handleApplyJob = jobId => {
-    toast.success("Application submitted! The poster will contact you soon.");
+
+  // Find the selected items based on their IDs
+  const currentJob = jobs.find(job => job.id === selectedJob) || null;
+  const currentSkill = skills.find(skill => skill.id === selectedSkill) || null;
+  const currentMaterial = materials.find(material => material.id === selectedMaterial) || null;
+
+  // Handler functions
+  const handleApplyJob = (jobId: number) => {
+    setSelectedJob(jobId);
+    setShowJobApplication(true);
   };
-  const handleViewJobDetails = jobId => {
-    toast.info("Opening job details...");
-    // You can implement a modal or navigation to a details page here
+
+  const handleViewJobDetails = (jobId: number) => {
+    setSelectedJob(jobId);
   };
-  const handleContactSkill = skillId => {
+
+  const handleContactSkill = (skillId: number) => {
     toast.success("Contact request sent successfully!");
   };
-  const handleViewSkillDetails = skillId => {
-    toast.info("Opening skill details...");
-    // You can implement a modal or navigation to a details page here
+
+  const handleViewSkillDetails = (skillId: number) => {
+    setSelectedSkill(skillId);
   };
-  const handleContactMaterial = materialId => {
+
+  const handleContactMaterial = (materialId: number) => {
     toast.success("Contact request sent to the owner!");
   };
-  const handleViewMaterialDetails = materialId => {
-    toast.info("Opening material details...");
-    // You can implement a modal or navigation to a details page here
+
+  const handleViewMaterialDetails = (materialId: number) => {
+    setSelectedMaterial(materialId);
   };
-  const filteredJobs = jobs.filter(job => job.title.toLowerCase().includes(searchQuery.toLowerCase()) || job.description.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredSkills = skills.filter(skill => skill.skill.toLowerCase().includes(searchQuery.toLowerCase()));
-  const filteredMaterials = materials.filter(material => material.material.toLowerCase().includes(searchQuery.toLowerCase()));
-  return <div className="space-y-6">
+
+  const handleApplicationSubmit = () => {
+    toast.success("Application submitted successfully!");
+    setShowJobApplication(false);
+    setSelectedJob(null);
+  };
+
+  const filteredJobs = jobs.filter(job => 
+    job.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    job.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const filteredSkills = skills.filter(skill => 
+    skill.skill.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const filteredMaterials = materials.filter(material => 
+    material.material.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
       <h1 className="text-3xl font-bold">Campus Marketplace</h1>
       
       <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
@@ -115,7 +158,12 @@ export default function Browse() {
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input placeholder="Search opportunities..." className="pl-10" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <Input 
+                placeholder="Search opportunities..." 
+                className="pl-10" 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)} 
+              />
             </div>
             
             <div className="flex gap-2">
@@ -148,24 +196,57 @@ export default function Browse() {
             </div>
           </div>
           
+          {/* Jobs Section */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Jobs</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredJobs.map(job => <JobCard key={job.id} title={job.title} type={job.type} description={job.description} payment={job.payment} onApply={() => handleApplyJob(job.id)} onViewDetails={() => handleViewJobDetails(job.id)} />)}
+              {filteredJobs.map(job => (
+                <JobCard 
+                  key={job.id} 
+                  title={job.title} 
+                  type={job.type} 
+                  description={job.description} 
+                  payment={job.payment} 
+                  onApply={() => handleApplyJob(job.id)} 
+                  onViewDetails={() => handleViewJobDetails(job.id)} 
+                />
+              ))}
             </div>
           </div>
           
+          {/* Skills Section */}
           <div className="space-y-4 mt-8">
             <h2 className="text-xl font-semibold">Skills</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredSkills.map(skill => <SkillCard key={skill.id} name={skill.name} skill={skill.skill} pricing={skill.pricing} onContact={() => handleContactSkill(skill.id)} onViewDetails={() => handleViewSkillDetails(skill.id)} />)}
+              {filteredSkills.map(skill => (
+                <SkillCard 
+                  key={skill.id} 
+                  name={skill.name} 
+                  skill={skill.skill} 
+                  pricing={skill.pricing} 
+                  onContact={() => handleContactSkill(skill.id)} 
+                  onViewDetails={() => handleViewSkillDetails(skill.id)} 
+                />
+              ))}
             </div>
           </div>
           
+          {/* Materials Section */}
           <div className="space-y-4 mt-8">
             <h2 className="text-xl font-semibold">Materials</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredMaterials.map(material => <MaterialCard key={material.id} name={material.name} material={material.material} condition={material.condition} price={material.price} availability={material.availability} onContact={() => handleContactMaterial(material.id)} onViewDetails={() => handleViewMaterialDetails(material.id)} />)}
+              {filteredMaterials.map(material => (
+                <MaterialCard 
+                  key={material.id} 
+                  name={material.name} 
+                  material={material.material} 
+                  condition={material.condition} 
+                  price={material.price} 
+                  availability={material.availability} 
+                  onContact={() => handleContactMaterial(material.id)} 
+                  onViewDetails={() => handleViewMaterialDetails(material.id)} 
+                />
+              ))}
             </div>
           </div>
         </TabsContent>
@@ -196,5 +277,52 @@ export default function Browse() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+
+      {/* Modals */}
+      {currentJob && (
+        <JobDetailsModal
+          isOpen={selectedJob !== null && !showJobApplication}
+          onClose={() => setSelectedJob(null)}
+          onApply={() => setShowJobApplication(true)}
+          job={currentJob}
+        />
+      )}
+
+      {currentJob && (
+        <JobApplicationForm
+          isOpen={showJobApplication}
+          onClose={() => {
+            setShowJobApplication(false);
+            setSelectedJob(null);
+          }}
+          onSubmit={handleApplicationSubmit}
+          job={currentJob}
+        />
+      )}
+
+      {currentSkill && (
+        <SkillDetailsModal
+          isOpen={selectedSkill !== null}
+          onClose={() => setSelectedSkill(null)}
+          onContact={() => {
+            handleContactSkill(currentSkill.id);
+            setSelectedSkill(null);
+          }}
+          skill={currentSkill}
+        />
+      )}
+
+      {currentMaterial && (
+        <MaterialDetailsModal
+          isOpen={selectedMaterial !== null}
+          onClose={() => setSelectedMaterial(null)}
+          onContact={() => {
+            handleContactMaterial(currentMaterial.id);
+            setSelectedMaterial(null);
+          }}
+          material={currentMaterial}
+        />
+      )}
+    </div>
+  );
 }
