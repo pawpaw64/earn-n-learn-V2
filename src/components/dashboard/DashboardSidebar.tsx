@@ -1,24 +1,35 @@
-import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar } from "lucide-react";
+
+import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "react-router-dom";
-const mainMenuItems = [{
-  title: "Browse",
-  icon: LayoutGrid,
-  href: "/dashboard/browse"
-}, {
-  title: "Campus Hub",
-  icon: School2,
-  href: "/dashboard/campus"
-}, {
-  title: "Wallet",
-  icon: Wallet,
-  href: "/dashboard/wallet"
-}, {
-  title: "Messages",
-  icon: MessageSquare,
-  href: "/dashboard/messages"
-}];
+const mainMenuItems = [
+  {
+    title: "Browse",
+    icon: LayoutGrid,
+    href: "/dashboard/browse"
+  }, 
+  {
+    title: "Campus Hub",
+    icon: School2,
+    href: "/dashboard/campus"
+  },
+  {
+    title: "My Work",
+    icon: Briefcase,
+    href: "/dashboard/mywork"
+  },
+  {
+    title: "Wallet",
+    icon: Wallet,
+    href: "/dashboard/wallet"
+  }, 
+  {
+    title: "Messages",
+    icon: MessageSquare,
+    href: "/dashboard/messages"
+  }
+];
 const profileMenuItems = [{
   title: "View Profile",
   icon: User,

@@ -14,6 +14,7 @@ import Profile from "./pages/dashboard/Profile";
 import Settings from "./pages/dashboard/Settings";
 import Leaderboard from "./pages/dashboard/Leaderboard";
 import Calendar from "./pages/dashboard/Calendar";
+import MyWork from "./pages/dashboard/MyWork";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route path="browse" element={<Browse />} />
             <Route path="campus" element={<Campus />} />
+            <Route path="mywork" element={<MyWork />} />
             <Route path="wallet" element={<Wallet />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<Profile />} />
