@@ -4,7 +4,7 @@ export default function MyWork() {
   return <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">My Work</h1>
       <Tabs defaultValue="applications" className="w-full">
-        <TabsList className="mb-2 mx-0 px-[240px]">
+        <TabsList className="mb-2 mx-0 px-[340px]">
           <TabsTrigger value="applications" className="px-[35px]">Applications</TabsTrigger>
           <TabsTrigger value="myworks" className="px-[35px]">My Works</TabsTrigger>
           <TabsTrigger value="myposts" className="px-[35px]">My Posts</TabsTrigger>
