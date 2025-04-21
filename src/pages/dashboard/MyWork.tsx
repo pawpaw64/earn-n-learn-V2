@@ -1,17 +1,14 @@
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Filter } from "lucide-react";
-
 export default function MyWork() {
-  return (
-    <div className="max-w-6xl mx-auto">
+  return <div className="max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">My Work</h1>
       <Tabs defaultValue="applications" className="w-full">
-        <TabsList className="mb-2">
-          <TabsTrigger value="applications">Applications</TabsTrigger>
-          <TabsTrigger value="myworks">My Works</TabsTrigger>
-          <TabsTrigger value="myposts">My Posts</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+        <TabsList className="mb-2 mx-0 px-[240px]">
+          <TabsTrigger value="applications" className="px-[35px]">Applications</TabsTrigger>
+          <TabsTrigger value="myworks" className="px-[35px]">My Works</TabsTrigger>
+          <TabsTrigger value="myposts" className="px-[35px]">My Posts</TabsTrigger>
+          <TabsTrigger value="invoices" className="px-[36px]">Invoices</TabsTrigger>
         </TabsList>
         <TabsContent value="applications">
           <div className="flex items-center justify-between mb-4">
@@ -50,6 +47,5 @@ export default function MyWork() {
           </div>
         </TabsContent>
       </Tabs>
-    </div>
-  );
+    </div>;
 }
