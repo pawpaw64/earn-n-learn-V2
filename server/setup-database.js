@@ -76,6 +76,65 @@ async function setupDatabase() {
     `);
     console.log('Materials table created or already exists.');
 
+    // Create users table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        passwordHash VARCHAR(255) NOT NULL,
+        avatar VARCHAR(255),
+        bio TEXT,
+        program VARCHAR(100),
+        graduationYear VARCHAR(20),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Users table created or already exists.');
+
+    // Create user_skills table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS user_skills (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        acquiredFrom VARCHAR(255),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('User skills table created or already exists.');
+
+    // Create portfolio table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS portfolio (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        url VARCHAR(255) NOT NULL,
+        type VARCHAR(50),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('Portfolio table created or already exists.');
+
+    // Create user_websites table
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS user_websites (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        userId INT NOT NULL,
+        title VARCHAR(100) NOT NULL,
+        url VARCHAR(255) NOT NULL,
+        icon VARCHAR(50),
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('User websites table created or already exists.');
+
     console.log('Database setup completed successfully.');
   } catch (error) {
     console.error('Error setting up database:', error);
