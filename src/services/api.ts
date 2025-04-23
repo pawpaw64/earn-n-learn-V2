@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { JobType, SkillType, MaterialType } from '@/types/marketplace';
 
 // Mock data for My Work section
@@ -90,68 +89,28 @@ const mockInvoices = [
 
 // Mock API functions
 export const fetchMyApplications = async () => {
-  // TODO: Replace with actual API call
+  // TODO: Replace with actual API call when backend is implemented
   return mockApplications;
 };
 
 export const fetchMyWorks = async () => {
-  // TODO: Replace with actual API call
+  // TODO: Replace with actual API call when backend is implemented
   return mockWorks;
 };
 
 export const fetchMyPosts = async () => {
-  // TODO: Replace with actual API call
+  // TODO: Replace with actual API call when backend is implemented
   return mockPosts;
 };
 
 export const fetchMyInvoices = async () => {
-  // TODO: Replace with actual API call
+  // TODO: Replace with actual API call when backend is implemented
   return mockInvoices;
 };
 
-// Create axios instance with base URL
-const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-// Jobs API
-export const fetchJobs = async (): Promise<JobType[]> => {
-  const response = await api.get('/jobs');
-  return response.data;
-};
-
-export const createJob = async (jobData: Omit<JobType, 'id'>): Promise<{ jobId: number }> => {
-  const response = await api.post('/jobs', jobData);
-  return response.data;
-};
-
-// Example function to update useBrowseData hook to fetch from API
-export const updateBrowseDataWithApi = async () => {
-  try {
-    const jobs = await fetchJobs();
-    return { jobs };
-  } catch (error) {
-    console.error('Error fetching data from API:', error);
-    return { error };
-  }
-};
-
-// Test database connection
-export const testDatabaseConnection = async (): Promise<{ message: string }> => {
-  const response = await api.get('/test-connection');
-  return response.data;
-};
-
-// User Profile API
+// Mock user profile data
 export const fetchUserProfile = async (userId?: string) => {
-  // This would be a real API call in production
-  // const response = await api.get(`/users/${userId || 'me'}/profile`);
-  // return response.data;
-  
-  // For development purposes, return mock data
+  // TODO: Replace with actual API call when backend is implemented
   return {
     id: "1",
     name: "John Doe",
@@ -175,27 +134,22 @@ export const fetchUserProfile = async (userId?: string) => {
 };
 
 export const updateUserProfile = async (profileData: any) => {
-  // This would be a real API call in production
-  // const response = await api.put(`/users/${profileData.id}/profile`, profileData);
-  // return response.data;
-  
-  // For development purposes, just return the data that would be saved
+  // TODO: Replace with actual API call when backend is implemented
   return profileData;
 };
 
 export const uploadProfileImage = async (userId: string, imageFile: File) => {
-  // In a real implementation, you would use FormData to upload the file
-  const formData = new FormData();
-  formData.append('avatar', imageFile);
-  
-  // This would be a real API call in production
-  // const response = await api.post(`/users/${userId}/avatar`, formData, {
-  //   headers: {
-  //     'Content-Type': 'multipart/form-data',
-  //   },
-  // });
-  // return response.data.imageUrl;
-  
-  // For development purposes, create a fake URL
+  // TODO: Replace with actual API call when backend is implemented
   return URL.createObjectURL(imageFile);
+};
+
+// Mock job-related functions
+export const fetchJobs = async (): Promise<JobType[]> => {
+  // TODO: Replace with actual API call when backend is implemented
+  return [];
+};
+
+export const createJob = async (jobData: Omit<JobType, 'id'>): Promise<{ jobId: number }> => {
+  // TODO: Replace with actual API call when backend is implemented
+  return { jobId: Math.floor(Math.random() * 1000) };
 };
