@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -9,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { createJob } from "@/services/api";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -34,10 +34,29 @@ export default function PostJobForm() {
     }
   });
 
-  function onSubmit(values: PostJobFormValues) {
-    console.log(values);
-    toast.success("Job posted successfully!");
-    form.reset();
+  async function onSubmit(values: PostJobFormValues) {
+    try {
+      // Map form values to API expected format
+      const jobData = {
+        title: values.title,
+        type: values.type,
+        description: values.description,
+        payment: values.payment,
+        poster: "Current User", // In a real app, get from auth
+        posterEmail: values.contactInfo,
+        posterAvatar: "https://i.pravatar.cc/150?img=1", // Placeholder
+        location: values.type === "Remote" ? "Remote" : "On Campus",
+        deadline: values.deadline,
+        requirements: ""
+      };
+      
+      await createJob(jobData);
+      toast.success("Job posted successfully!");
+      form.reset();
+    } catch (error) {
+      console.error("Error posting job:", error);
+      toast.error("Failed to post job. Please try again.");
+    }
   }
 
   return (
