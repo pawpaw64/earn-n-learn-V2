@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import axios from "axios";
 
-
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -31,23 +30,25 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log('Submitting form with data:', formData); // Add this line
-  
+    
     try {
       if (type === "login") {
-        const res = await axios.post("/api/auth/login", {
+        const response = await axios.post("/api/auth/login", {
           email: formData.email,
           password: formData.password,
-        }, { withCredentials: true }); // to store cookies
-  
-        toast({
-          title: "Login successful",
-          description: `Welcome back, ${res.data.name}!`,
-        });
-  
-        navigate("/dashboard/browse");
+        }, { withCredentials: true });
+
+        if (response.data.success) {
+          toast({
+            title: "Login successful",
+            description: `Welcome back, ${response.data.name}!`,
+          });
+          
+          onClose();
+          navigate("/dashboard/browse");
+        }
       } else {
-        const res = await axios.post("/api/auth/register", {
+        const response = await axios.post("/api/auth/register", {
           name: formData.name,
           email: formData.email,
           password: formData.password,
@@ -56,27 +57,28 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
           course: formData.course,
           mobile: formData.mobile,
         });
-  
-        toast({
-          title: "Account created",
-          description: "You’re now part of Earn-n-Learn!",
-        });
-  
-        navigate("/dashboard/browse");
+
+        if (response.data.success) {
+          toast({
+            title: "Registration successful",
+            description: "Welcome to Earn-n-Learn! Please login to continue.",
+          });
+          
+          onClose();
+          navigate("/dashboard/browse");
+        }
       }
-  
-      onClose();
     } catch (err: any) {
-      console.error(err);
+      console.error("Auth error:", err);
       toast({
         title: "Error",
-        description: err.response?.data || "Something went wrong!",
+        description: err.response?.data?.message || "Something went wrong. Please try again.",
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
