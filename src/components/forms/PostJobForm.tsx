@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { createJob } from "@/services/api";
+import { toast } from "@/hooks/use-toast";
+import { postJob } from "@/services";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -36,21 +36,20 @@ export default function PostJobForm() {
 
   async function onSubmit(values: PostJobFormValues) {
     try {
-      // Map form values to API expected format
       const jobData = {
         title: values.title,
         type: values.type,
         description: values.description,
         payment: values.payment,
-        poster: "Current User", // In a real app, get from auth
+        poster: "Current User",
         posterEmail: values.contactInfo,
-        posterAvatar: "https://i.pravatar.cc/150?img=1", // Placeholder
+        posterAvatar: "https://i.pravatar.cc/150?img=1",
         location: values.type === "Remote" ? "Remote" : "On Campus",
         deadline: values.deadline,
         requirements: ""
       };
       
-      await createJob(jobData);
+      await postJob(jobData);
       toast.success("Job posted successfully!");
       form.reset();
     } catch (error) {
