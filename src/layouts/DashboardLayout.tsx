@@ -1,18 +1,22 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { Outlet } from "react-router-dom";
+
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
+
 const DashboardLayout = () => {
-  return <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+  return (
+    <div className="h-screen flex flex-col">
+      <DashboardHeader />
+      <div className="flex flex-1">
         <DashboardSidebar />
-        <div className="flex-1 flex flex-col">
-          <DashboardHeader />
-          <main className="flex-1 p-6 mx-0">
-            <Outlet />
-          </main>
-        </div>
+        <main className="flex-1 p-6">
+          {/* This is where child routes will be rendered */}
+          <Outlet />
+        </main>
       </div>
-    </SidebarProvider>;
+    </div>
+  );
 };
+
 export default DashboardLayout;
