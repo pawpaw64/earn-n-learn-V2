@@ -1,0 +1,7 @@
+{
+  "watch": ["backend/server.js", "backend/routes", "backend/controllers"],
+  "ext": "js,json",
+  "ignore": ["frontend", "node_modules"],
+  "exec": "node backend/server.js",
+  "delay": "2500"
+}
