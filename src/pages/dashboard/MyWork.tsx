@@ -1,154 +1,204 @@
 
-import React, { useState } from 'react';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { useQuery } from '@tanstack/react-query';
-import { fetchUserApplications, fetchUserWorks, fetchUserPosts, fetchUserInvoices } from '@/services';
-
-interface Application {
-  id: number;
-  jobTitle: string;
-  status: string;
-  appliedDate: string;
-}
-
-interface Work {
-  id: number;
-  title: string;
-  status: string;
-  deadline: string;
-}
-
-interface Post {
-  id: number;
-  title: string;
-  type: string;
-  status: string;
-}
-
-interface Invoice {
-  id: number;
-  amount: number;
-  status: string;
-  date: string;
-}
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell 
+} from "@/components/ui/table";
+import { Filter, Calendar, Briefcase, FileText } from "lucide-react";
+import { fetchMyApplications, fetchMyWorks, fetchMyPosts, fetchMyInvoices } from "@/services/api";
 
 export default function MyWork() {
-  const [activeTab, setActiveTab] = useState("applications");
-  
-  const { data: applications = [] } = useQuery<Application[]>({
-    queryKey: ['applications'],
-    queryFn: fetchUserApplications
+  const [activeFilter, setActiveFilter] = useState("all");
+
+  const { data: applications } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications
   });
 
-  const { data: works = [] } = useQuery<Work[]>({
-    queryKey: ['works'],
-    queryFn: fetchUserWorks
+  const { data: works } = useQuery({
+    queryKey: ['myWorks'],
+    queryFn: fetchMyWorks
   });
 
-  const { data: posts = [] } = useQuery<Post[]>({
-    queryKey: ['posts'],
-    queryFn: fetchUserPosts
+  const { data: posts } = useQuery({
+    queryKey: ['myPosts'],
+    queryFn: fetchMyPosts
   });
 
-  const { data: invoices = [] } = useQuery<Invoice[]>({
-    queryKey: ['invoices'],
-    queryFn: fetchUserInvoices
+  const { data: invoices } = useQuery({
+    queryKey: ['myInvoices'],
+    queryFn: fetchMyInvoices
   });
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">My Work</h1>
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">My Work</h1>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="applications">Applications</TabsTrigger>
-          <TabsTrigger value="works">Works</TabsTrigger>
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+      <Tabs defaultValue="applications" className="w-full">
+        <TabsList className="mb-4 grid grid-cols-4 gap-4">
+          <TabsTrigger value="applications" className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4" />
+            Applications
+          </TabsTrigger>
+          <TabsTrigger value="myworks" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            My Works
+          </TabsTrigger>
+          <TabsTrigger value="myposts" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            My Posts
+          </TabsTrigger>
+          <TabsTrigger value="invoices" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Invoices
+          </TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="applications" className="space-y-4">
-          {applications.map((application) => (
-            <Card key={application.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">{application.jobTitle}</h3>
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    application.status === 'Accepted' ? 'bg-green-100 text-green-800' :
-                    application.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {application.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">Applied: {application.appliedDate}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-        
-        <TabsContent value="works" className="space-y-4">
-          {works.map((work) => (
-            <Card key={work.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold">{work.title}</h3>
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    work.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                    work.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                    'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {work.status}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">Deadline: {work.deadline}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-        
-        <TabsContent value="posts" className="space-y-4">
-          {posts.map((post) => (
-            <Card key={post.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold">{post.title}</h3>
-                    <p className="text-sm text-gray-500">{post.type}</p>
+
+        <TabsContent value="applications">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Applications</h2>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {applications?.map((app) => (
+              <Card key={app.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{app.title}</h3>
+                      <p className="text-sm text-muted-foreground">{app.company}</p>
+                    </div>
+                    <Badge variant={app.status === "Applied" ? "secondary" : "outline"}>
+                      {app.status}
+                    </Badge>
                   </div>
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    post.status === 'Active' ? 'bg-green-100 text-green-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {post.status}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{app.description}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Applied: {app.dateApplied}</span>
+                  <Badge variant="outline">{app.type}</Badge>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
-        
-        <TabsContent value="invoices" className="space-y-4">
-          {invoices.map((invoice) => (
-            <Card key={invoice.id}>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="font-semibold">${invoice.amount}</h3>
-                    <p className="text-sm text-gray-500">{invoice.date}</p>
+
+        <TabsContent value="myworks">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">My Works</h2>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {works?.map((work) => (
+              <Card key={work.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{work.title}</h3>
+                      <p className="text-sm text-muted-foreground">{work.company}</p>
+                    </div>
+                    <Badge variant={work.status === "In Progress" ? "secondary" : "outline"}>
+                      {work.status}
+                    </Badge>
                   </div>
-                  <span className={`px-2 py-1 rounded text-sm ${
-                    invoice.status === 'Paid' ? 'bg-green-100 text-green-800' :
-                    invoice.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {invoice.status}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{work.description}</p>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    {work.startDate} - {work.endDate || "Ongoing"}
                   </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <Badge variant="outline">{work.type}</Badge>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="myposts">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">My Posts</h2>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {posts?.map((post) => (
+              <Card key={post.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{post.title}</h3>
+                      <Badge variant="outline">{post.type}</Badge>
+                    </div>
+                    <Badge variant={post.status === "Active" ? "secondary" : "outline"}>
+                      {post.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">{post.description}</p>
+                  <p className="mt-2 font-medium text-emerald-600">{post.payment}</p>
+                </CardContent>
+                <CardFooter>
+                  <span className="text-sm text-muted-foreground">Posted: {post.postedDate}</span>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Invoices</h2>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Filter className="w-4 h-4" /> Filter
+            </Button>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Invoice #</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invoices?.map((invoice) => (
+                <TableRow key={invoice.id}>
+                  <TableCell>{invoice.invoiceNumber}</TableCell>
+                  <TableCell>{invoice.title}</TableCell>
+                  <TableCell>{invoice.client}</TableCell>
+                  <TableCell>{invoice.amount}</TableCell>
+                  <TableCell>{invoice.date}</TableCell>
+                  <TableCell>
+                    <Badge variant={invoice.status === "Paid" ? "secondary" : "outline"}>
+                      {invoice.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </TabsContent>
       </Tabs>
     </div>
