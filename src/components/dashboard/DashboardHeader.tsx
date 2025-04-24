@@ -14,7 +14,6 @@ const DashboardHeader = () => {
     navigate("/");
   };
 
-  
   return (
     <header className="h-16 border-b flex items-center justify-between px-6 bg-white/80 backdrop-blur-md">
       <a href="/" className="text-3xl font-bold text-emerald-600">

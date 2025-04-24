@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import axios from "axios";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,6 +19,7 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
     email: "",
     password: "",
     name: "",
+    confirmPassword: "",
     studentId: "",
     university: "",
     course: "",
@@ -27,57 +27,33 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    try {
+    // For demonstration purposes, we're simulating authentication
+    setTimeout(() => {
       if (type === "login") {
-        const response = await axios.post("/api/auth/login", {
-          email: formData.email,
-          password: formData.password,
-        }, { withCredentials: true });
-
-        if (response.data.success) {
-          toast({
-            title: "Login successful",
-            description: `Welcome back, ${response.data.name}!`,
-          });
-          
-          onClose();
-          navigate("/dashboard/browse");
-        }
-      } else {
-        const response = await axios.post("/api/auth/register", {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          student_id: formData.studentId,
-          university: formData.university,
-          course: formData.course,
-          mobile: formData.mobile,
+        console.log("Logging in with:", formData.email);
+        // In a real app, you would validate credentials here
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Earn-n-Learn!",
         });
-
-        if (response.data.success) {
-          toast({
-            title: "Registration successful",
-            description: "Welcome to Earn-n-Learn! Please login to continue.",
-          });
-          
-          onClose();
-          navigate("/dashboard/browse");
-        }
+        navigate("/dashboard/browse");
+      } else {
+        console.log("Signing up with:", formData);
+        // In a real app, you would create a new account here
+        toast({
+          title: "Account created",
+          description: "Welcome to Earn-n-Learn! You're now logged in.",
+        });
+        navigate("/dashboard/browse");
       }
-    } catch (err: any) {
-      console.error("Auth error:", err);
-      toast({
-        title: "Error",
-        description: err.response?.data?.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
+      
       setIsSubmitting(false);
-    }
+      onClose();
+    }, 1000);
   };
 
   return (
@@ -192,6 +168,32 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
               }
             />
           </div>
+
+          {type === "signup" && (
+            <div className="grid w-full items-center gap-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                type="password"
+                id="confirmPassword"
+                required
+                placeholder="Confirm your password"
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+              />
+            </div>
+          )}
+
+          {type === "login" && (
+            <div className="text-right">
+              <a
+                href="#"
+                className="text-sm text-emerald-600 hover:text-emerald-700"
+              >
+                Forgot Password?
+              </a>
+            </div>
+          )}
 
           <Button
             type="submit"
