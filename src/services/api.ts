@@ -1,8 +1,7 @@
-
 import axios from 'axios';
 import { JobType, SkillType, MaterialType } from '@/types/marketplace';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://localhost:8080/api'; // Backend runs on port 8080
 
 // Set up axios with token
 const setAuthToken = (token: string | null) => {

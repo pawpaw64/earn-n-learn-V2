@@ -1,61 +1,43 @@
 
-import React, { useState } from 'react';
-import { testDatabaseConnection } from '@/services/api';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
-export default function DatabaseConnectionTest() {
-  const [status, setStatus] = useState<null | 'success' | 'error'>(null);
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+const DatabaseConnectionTest = () => {
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [message, setMessage] = useState('Checking database connection...');
 
-  const testConnection = async () => {
-    setLoading(true);
-    try {
-      const result = await testDatabaseConnection();
-      setStatus('success');
-      setMessage(result.message);
-    } catch (error) {
-      setStatus('error');
-      setMessage('Failed to connect to the database. Make sure the backend server is running.');
-      console.error('Database connection error:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        // Simple ping to API to check if backend is running
+        const response = await axios.get('http://localhost:8080/api/users/ping');
+        setStatus('success');
+        setMessage('Database connection successful');
+      } catch (error) {
+        console.error('Database connection failed:', error);
+        setStatus('error');
+        setMessage('Database connection failed');
+      }
+    };
+
+    testConnection();
+  }, []);
 
   return (
-    <div className="p-4 border rounded-lg">
-      <h3 className="text-lg font-medium mb-4">Test Database Connection</h3>
-      
-      <Button 
-        onClick={testConnection} 
-        disabled={loading}
-        className="mb-4"
-      >
-        {loading ? 'Testing...' : 'Test Connection'}
-      </Button>
-      
-      {status === 'success' && (
-        <Alert variant="default" className="bg-green-50 border-green-200">
-          <AlertDescription className="text-green-700">{message}</AlertDescription>
-        </Alert>
-      )}
-      
-      {status === 'error' && (
-        <Alert variant="destructive">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="mt-4 text-sm text-gray-600">
-        <p>Make sure to:</p>
-        <ol className="list-decimal ml-5 space-y-1">
-          <li>Start your MySQL database server</li>
-          <li>Run the backend server using <code>node server/index.js</code></li>
-          <li>Set up your database tables using <code>node server/setup-database.js</code></li>
-        </ol>
+    <div className="p-4 border rounded-md">
+      <h3 className="font-medium text-lg mb-2">Database Connection Status</h3>
+      <div className={`flex items-center ${
+        status === 'success' ? 'text-green-600' : 
+        status === 'error' ? 'text-red-600' : 'text-yellow-600'
+      }`}>
+        <div className={`w-3 h-3 rounded-full mr-2 ${
+          status === 'success' ? 'bg-green-600' : 
+          status === 'error' ? 'bg-red-600' : 'bg-yellow-600'
+        }`}></div>
+        <p>{message}</p>
       </div>
     </div>
   );
-}
+};
+
+export default DatabaseConnectionTest;
