@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { registerUser, loginUser, AuthResponse } from "@/services/api";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -27,33 +29,58 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // For demonstration purposes, we're simulating authentication
-    setTimeout(() => {
+    try {
+      let response: AuthResponse;
+      
       if (type === "login") {
-        console.log("Logging in with:", formData.email);
-        // In a real app, you would validate credentials here
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Earn-n-Learn!",
+        response = await loginUser({
+          email: formData.email,
+          password: formData.password
         });
-        navigate("/dashboard/browse");
+        
+        toast.success("Login successful", {
+          description: "Welcome back to Earn-n-Learn!"
+        });
       } else {
-        console.log("Signing up with:", formData);
-        // In a real app, you would create a new account here
-        toast({
-          title: "Account created",
-          description: "Welcome to Earn-n-Learn! You're now logged in.",
+        // Check if passwords match
+        if (formData.password !== formData.confirmPassword) {
+          toast.error("Passwords do not match");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        response = await registerUser({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          studentId: formData.studentId,
+          university: formData.university,
+          course: formData.course,
+          mobile: formData.mobile
         });
-        navigate("/dashboard/browse");
+        
+        toast.success("Account created", { 
+          description: "Welcome to Earn-n-Learn! You're now logged in."
+        });
       }
       
-      setIsSubmitting(false);
+      // Save token to localStorage
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      // Navigate to dashboard
+      navigate("/dashboard/browse");
       onClose();
-    }, 1000);
+    } catch (error: any) {
+      console.error("Authentication error:", error);
+      toast.error(error.response?.data?.message || "Authentication failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

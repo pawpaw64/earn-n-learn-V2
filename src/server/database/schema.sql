@@ -1,0 +1,114 @@
+
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS dbEarn_learn;
+USE dbEarn_learn;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  avatar VARCHAR(255),
+  bio TEXT,
+  student_id VARCHAR(50),
+  university VARCHAR(100),
+  course VARCHAR(100),
+  program VARCHAR(100),
+  graduation_year VARCHAR(10),
+  mobile VARCHAR(20),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Skills table
+CREATE TABLE IF NOT EXISTS skills (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  acquired_from VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Portfolio items table
+CREATE TABLE IF NOT EXISTS portfolio_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description TEXT,
+  url VARCHAR(255),
+  type VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Jobs table
+CREATE TABLE IF NOT EXISTS jobs (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  payment VARCHAR(100),
+  deadline DATE,
+  requirements TEXT,
+  location VARCHAR(100),
+  status VARCHAR(20) DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Job applications table
+CREATE TABLE IF NOT EXISTS applications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  job_id INT NOT NULL,
+  user_id INT NOT NULL,
+  cover_letter TEXT,
+  status VARCHAR(20) DEFAULT 'Applied',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Skills marketplace table
+CREATE TABLE IF NOT EXISTS skill_marketplace (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  skill_name VARCHAR(100) NOT NULL,
+  description TEXT,
+  pricing VARCHAR(100),
+  availability VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Materials marketplace table
+CREATE TABLE IF NOT EXISTS material_marketplace (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  description TEXT,
+  condition VARCHAR(50),
+  price VARCHAR(100),
+  availability VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Invoices table
+CREATE TABLE IF NOT EXISTS invoices (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  invoice_number VARCHAR(20) NOT NULL,
+  user_id INT NOT NULL,
+  client VARCHAR(100),
+  title VARCHAR(100),
+  amount DECIMAL(10,2),
+  status VARCHAR(20) DEFAULT 'Pending',
+  issued_date DATE,
+  due_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
