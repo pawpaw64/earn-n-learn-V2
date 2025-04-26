@@ -1,22 +1,31 @@
-
-const pool = require('../config/db');
-const bcrypt = require('bcryptjs');
+import { execute } from '../config/db.js';
+import bcrypt from 'bcryptjs';
 
 class UserModel {
   // Find user by email
   static async findByEmail(email) {
     try {
-      const [rows] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
-      return rows[0];
+      const result = await execute('SELECT * FROM users WHERE email = ?', [email]);
+      // Handle different database client responses
+      const rows = Array.isArray(result) ? result : result.rows || result[0] || [];
+      return rows[0] || null;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Database error in findByEmail:', {
+        error: error.message,
+        query: 'SELECT * FROM users WHERE email = ?',
+        parameters: [email]
+      });
+      throw new Error('Failed to find user');
     }
   }
 
   // Find user by ID
   static async findById(id) {
     try {
-      const [rows] = await pool.execute('SELECT id, name, email, avatar, student_id, university, course, mobile, created_at FROM users WHERE id = ?', [id]);
+      const [rows] = await execute(
+        'SELECT id, name, email, avatar, student_id, university, course, mobile, created_at FROM users WHERE id = ?', 
+        [id]
+      );
       return rows[0];
     } catch (error) {
       throw new Error(error.message);
@@ -28,18 +37,23 @@ class UserModel {
     const { name, email, password, studentId, university, course, mobile } = userData;
     
     try {
-      // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
       
-      const [result] = await pool.execute(
+      const result = await execute(
         'INSERT INTO users (name, email, password, student_id, university, course, mobile) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [name, email, hashedPassword, studentId, university, course, mobile]
       );
       
-      return result.insertId;
+      // Handle different database client responses
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('User creation error:', {
+        error: error.message,
+        query: 'INSERT INTO users...',
+        parameters: [name, email, '***', studentId, university, course, mobile]
+      });
+      throw new Error('Failed to create user');
     }
   }
 
@@ -48,7 +62,7 @@ class UserModel {
     const { name, bio, avatar, program, graduationYear } = userData;
     
     try {
-      const [result] = await pool.execute(
+      const [result] = await execute(
         'UPDATE users SET name = ?, bio = ?, avatar = ?, program = ?, graduation_year = ? WHERE id = ?',
         [name, bio, avatar, program, graduationYear, id]
       );
@@ -62,7 +76,7 @@ class UserModel {
   // Get user skills
   static async getUserSkills(userId) {
     try {
-      const [rows] = await pool.execute(
+      const [rows] = await execute(
         'SELECT * FROM skills WHERE user_id = ?',
         [userId]
       );
@@ -75,7 +89,7 @@ class UserModel {
   // Get user portfolio
   static async getUserPortfolio(userId) {
     try {
-      const [rows] = await pool.execute(
+      const [rows] = await execute(
         'SELECT * FROM portfolio_items WHERE user_id = ?',
         [userId]
       );
@@ -86,4 +100,4 @@ class UserModel {
   }
 }
 
-module.exports = UserModel;
+export default UserModel;

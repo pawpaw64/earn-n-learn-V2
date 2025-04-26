@@ -1,18 +1,19 @@
+import { Router } from 'express';
+import { register, login, getMe, updateProfile } from '../controllers/userController.js';
+import auth from '../middleware/authMiddleware.js';
 
-const express = require('express');
-const router = express.Router();
-const userController = require('../controllers/userController');
-const auth = require('../middleware/authMiddleware');
+const router = Router();
 
 // Public routes
 router.get('/ping', (req, res) => {
   res.status(200).json({ message: 'Server is running' });
 });
-router.post('/register', userController.register);
-router.post('/login', userController.login);
 
-// Protected routes
-router.get('/me', auth, userController.getMe);
-router.put('/profile', auth, userController.updateProfile);
+router.post('/register', register);
+router.post('/login', login);
 
-module.exports = router;
+// Protected routes (require authentication)
+router.get('/me', auth, getMe);
+router.put('/profile', auth, updateProfile);
+
+export default router;

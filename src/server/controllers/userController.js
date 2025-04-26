@@ -1,81 +1,86 @@
+import UserModel from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
-const UserModel = require('../models/userModel');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-// Register a new user
-exports.register = async (req, res) => {
-  const { name, email, password, studentId, university, course, mobile } = req.body;
-
-  // Validation
-  if (!name || !email || !password || !studentId || !university) {
-    return res.status(400).json({ message: 'Please provide all required fields' });
-  }
-
+//register
+export async function register(req, res) {
   try {
-    // Check if user already exists
+    const { name, email, password, studentId, university, course, mobile } = req.body;
+
+    // Validate input
+    if (!name || !email || !password || !studentId || !university) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Missing required fields',
+        required: ['name', 'email', 'password', 'studentId', 'university']
+      });
+    }
+
+    // Check for existing user
     const existingUser = await UserModel.findByEmail(email);
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered'
+      });
     }
 
     // Create new user
-    const userId = await UserModel.create({ 
-      name, 
-      email, 
-      password, 
-      studentId, 
-      university, 
-      course, 
-      mobile 
+    const userId = await UserModel.create({
+      name, email, password, studentId, university, course, mobile
     });
-    
-    // Generate JWT
+
+    if (!userId) {
+      throw new Error('User creation returned no ID');
+    }
+
+    // Generate token
     const token = jwt.sign(
-      { id: userId, name: name, email: email },
+      { id: userId, email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    res.status(201).json({ 
+    return res.status(201).json({
+      success: true,
       token,
-      user: {
-        id: userId,
-        name,
-        email
-      },
-      message: 'Registration successful' 
+      user: { id: userId, name, email },
+      message: 'Registration successful'
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
 
+  } catch (error) {
+    console.error('Registration failed:', {
+      error: error.message,
+      body: req.body,
+      stack: error.stack // Always log stack for debugging
+    });
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Registration failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+}
 // Login user
-exports.login = async (req, res) => {
+export async function login(req, res) {
   const { email, password } = req.body;
 
-  // Validation
   if (!email || !password) {
     return res.status(400).json({ message: 'Please provide email and password' });
   }
 
   try {
-    // Check if user exists
     const user = await UserModel.findByEmail(email);
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
       process.env.JWT_SECRET,
@@ -84,55 +89,45 @@ exports.login = async (req, res) => {
 
     res.json({ 
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email
-      },
+      user: { id: user.id, name: user.name, email: user.email },
       message: 'Login successful'
     });
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Get current user
-exports.getMe = async (req, res) => {
+export async function getMe(req, res) {
   try {
     const user = await UserModel.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    // Get user skills
-    const skills = await UserModel.getUserSkills(req.user.id);
+    const [skills, portfolio] = await Promise.all([
+      UserModel.getUserSkills(req.user.id),
+      UserModel.getUserPortfolio(req.user.id)
+    ]);
     
-    // Get user portfolio
-    const portfolio = await UserModel.getUserPortfolio(req.user.id);
-    
-    res.json({
-      user,
-      skills,
-      portfolio
-    });
+    res.json({ user, skills, portfolio });
   } catch (error) {
-    console.error(error);
+    console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Update user profile
-exports.updateProfile = async (req, res) => {
+export async function updateProfile(req, res) {
   try {
     const updated = await UserModel.updateProfile(req.user.id, req.body);
-    if (updated) {
-      res.json({ message: 'Profile updated successfully' });
-    } else {
-      res.status(400).json({ message: 'Profile update failed' });
-    }
+    res.json({ 
+      message: updated ? 'Profile updated successfully' : 'Profile update failed',
+      success: updated
+    });
   } catch (error) {
-    console.error(error);
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}

@@ -1,17 +1,17 @@
 
-const express = require('express');
-const router = express.Router();
-const skillController = require('../controllers/skillController');
-const auth = require('../middleware/authMiddleware');
+import { Router } from 'express';
+const router = Router();
+import { getAllSkills, getSkillById, createSkill, updateSkill, deleteSkill, getUserSkills } from '../controllers/skillController.js';
+import auth from '../middleware/authMiddleware.js';
 
 // Public routes
-router.get('/', skillController.getAllSkills);
-router.get('/:id', skillController.getSkillById);
+router.get('/', getAllSkills);
+router.get('/:id', getSkillById);
 
 // Protected routes
-router.post('/', auth, skillController.createSkill);
-router.put('/:id', auth, skillController.updateSkill);
-router.delete('/:id', auth, skillController.deleteSkill);
-router.get('/user/skills', auth, skillController.getUserSkills);
+router.post('/', auth, createSkill);
+router.put('/:id', auth, updateSkill);
+router.delete('/:id', auth, deleteSkill);
+router.get('/user/skills', auth, getUserSkills);
 
-module.exports = router;
+export default router;

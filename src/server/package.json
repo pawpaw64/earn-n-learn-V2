@@ -1,9 +1,9 @@
-
 {
   "name": "earn-n-learn-server",
   "version": "1.0.0",
   "description": "Backend server for Earn-n-Learn platform",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
@@ -14,7 +14,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "jsonwebtoken": "^9.0.0",
-    "mysql2": "^2.3.3"
+    "mysql2": "^3.6.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

@@ -1,19 +1,18 @@
-
-const MaterialModel = require('../models/materialModel');
+import MaterialModel from '../models/materialModel.js';
 
 // Get all materials
-exports.getAllMaterials = async (req, res) => {
+export async function getAllMaterials(req, res) {
   try {
     const materials = await MaterialModel.getAll();
     res.json(materials);
   } catch (error) {
-    console.error(error);
+    console.error('Get all materials error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Get material by ID
-exports.getMaterialById = async (req, res) => {
+export async function getMaterialById(req, res) {
   try {
     const material = await MaterialModel.getById(req.params.id);
     if (!material) {
@@ -21,16 +20,15 @@ exports.getMaterialById = async (req, res) => {
     }
     res.json(material);
   } catch (error) {
-    console.error(error);
+    console.error('Get material by ID error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Create new material
-exports.createMaterial = async (req, res) => {
+export async function createMaterial(req, res) {
   const { title, description, condition, price, availability } = req.body;
   
-  // Validation
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
   }
@@ -50,68 +48,48 @@ exports.createMaterial = async (req, res) => {
       message: 'Material posted successfully' 
     });
   } catch (error) {
-    console.error(error);
+    console.error('Create material error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Update material
-exports.updateMaterial = async (req, res) => {
+export async function updateMaterial(req, res) {
   try {
-    // First check if material exists and belongs to user
     const material = await MaterialModel.getById(req.params.id);
-    if (!material) {
-      return res.status(404).json({ message: 'Material not found' });
-    }
-    
-    if (material.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to update this material' });
-    }
+    if (!material) return res.status(404).json({ message: 'Material not found' });
+    if (material.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
     
     const updated = await MaterialModel.update(req.params.id, req.body);
-    if (updated) {
-      res.json({ message: 'Material updated successfully' });
-    } else {
-      res.status(400).json({ message: 'Material update failed' });
-    }
+    res.json(updated ? { message: 'Material updated' } : { message: 'Update failed' });
   } catch (error) {
-    console.error(error);
+    console.error('Update material error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Delete material
-exports.deleteMaterial = async (req, res) => {
+export async function deleteMaterial(req, res) {
   try {
-    // First check if material exists and belongs to user
     const material = await MaterialModel.getById(req.params.id);
-    if (!material) {
-      return res.status(404).json({ message: 'Material not found' });
-    }
+    if (!material) return res.status(404).json({ message: 'Material not found' });
+    if (material.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
     
-    if (material.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to delete this material' });
-    }
-    
-    const deleted = await MaterialModel.delete(req.params.id);
-    if (deleted) {
-      res.json({ message: 'Material deleted successfully' });
-    } else {
-      res.status(400).json({ message: 'Material deletion failed' });
-    }
+    const deleted = await MaterialModel.remove(req.params.id);
+    res.json(deleted ? { message: 'Material deleted' } : { message: 'Deletion failed' });
   } catch (error) {
-    console.error(error);
+    console.error('Delete material error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Get user's materials
-exports.getUserMaterials = async (req, res) => {
+export async function getUserMaterials(req, res) {
   try {
     const materials = await MaterialModel.getUserMaterials(req.user.id);
     res.json(materials);
   } catch (error) {
-    console.error(error);
+    console.error('Get user materials error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}

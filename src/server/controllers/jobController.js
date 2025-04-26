@@ -1,19 +1,18 @@
-
-const JobModel = require('../models/jobModel');
+import JobModel from '../models/jobModel.js';
 
 // Get all jobs
-exports.getAllJobs = async (req, res) => {
+export async function getAllJobs(req, res) {
   try {
     const jobs = await JobModel.getAll();
     res.json(jobs);
   } catch (error) {
-    console.error(error);
+    console.error('Get all jobs error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Get job by ID
-exports.getJobById = async (req, res) => {
+export async function getJobById(req, res) {
   try {
     const job = await JobModel.getById(req.params.id);
     if (!job) {
@@ -21,13 +20,13 @@ exports.getJobById = async (req, res) => {
     }
     res.json(job);
   } catch (error) {
-    console.error(error);
+    console.error('Get job by ID error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Create new job
-exports.createJob = async (req, res) => {
+export async function createJob(req, res) {
   const { title, description, type, payment, deadline, requirements, location } = req.body;
   
   // Validation
@@ -52,13 +51,13 @@ exports.createJob = async (req, res) => {
       message: 'Job posted successfully' 
     });
   } catch (error) {
-    console.error(error);
+    console.error('Create job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Update job
-exports.updateJob = async (req, res) => {
+export async function updateJob(req, res) {
   try {
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
@@ -77,13 +76,13 @@ exports.updateJob = async (req, res) => {
       res.status(400).json({ message: 'Job update failed' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Update job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Delete job
-exports.deleteJob = async (req, res) => {
+export async function deleteJob(req, res) {
   try {
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
@@ -102,18 +101,18 @@ exports.deleteJob = async (req, res) => {
       res.status(400).json({ message: 'Job deletion failed' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Delete job error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
 // Get user's jobs
-exports.getUserJobs = async (req, res) => {
+export async function getUserJobs(req, res) {
   try {
     const jobs = await JobModel.getUserJobs(req.user.id);
     res.json(jobs);
   } catch (error) {
-    console.error(error);
+    console.error('Get user jobs error:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+}

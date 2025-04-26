@@ -1,11 +1,10 @@
-
-const pool = require('../config/db');
+import { execute } from '../config/db.js';
 
 class SkillModel {
   // Get all skills in marketplace
-  static async getAll() {
+  static async getAllSkills() {
     try {
-      const [rows] = await pool.execute(`
+      const [rows] = await execute(`
         SELECT s.*, u.name as user_name, u.avatar as user_avatar
         FROM skill_marketplace s
         JOIN users u ON s.user_id = u.id
@@ -18,9 +17,9 @@ class SkillModel {
   }
 
   // Get skill by ID
-  static async getById(id) {
+  static async getSkillById(id) {
     try {
-      const [rows] = await pool.execute(`
+      const [rows] = await execute(`
         SELECT s.*, u.name as user_name, u.avatar as user_avatar, u.email as user_email
         FROM skill_marketplace s
         JOIN users u ON s.user_id = u.id
@@ -33,15 +32,14 @@ class SkillModel {
   }
 
   // Create skill listing
-  static async create(skillData) {
+  static async createSkill(skillData) {
     const { user_id, skill_name, description, pricing, availability } = skillData;
     
     try {
-      const [result] = await pool.execute(
+      const [result] = await execute(
         'INSERT INTO skill_marketplace (user_id, skill_name, description, pricing, availability) VALUES (?, ?, ?, ?, ?)',
         [user_id, skill_name, description, pricing, availability]
       );
-      
       return result.insertId;
     } catch (error) {
       throw new Error(error.message);
@@ -49,15 +47,14 @@ class SkillModel {
   }
 
   // Update skill
-  static async update(id, skillData) {
+  static async updateSkill(id, skillData) {
     const { skill_name, description, pricing, availability } = skillData;
     
     try {
-      const [result] = await pool.execute(
+      const [result] = await execute(
         'UPDATE skill_marketplace SET skill_name = ?, description = ?, pricing = ?, availability = ? WHERE id = ?',
         [skill_name, description, pricing, availability, id]
       );
-      
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(error.message);
@@ -65,9 +62,9 @@ class SkillModel {
   }
 
   // Delete skill
-  static async delete(id) {
+  static async deleteSkill(id) {
     try {
-      const [result] = await pool.execute('DELETE FROM skill_marketplace WHERE id = ?', [id]);
+      const [result] = await execute('DELETE FROM skill_marketplace WHERE id = ?', [id]);
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(error.message);
@@ -77,7 +74,7 @@ class SkillModel {
   // Get user skills in marketplace
   static async getUserSkills(userId) {
     try {
-      const [rows] = await pool.execute(
+      const [rows] = await execute(
         'SELECT * FROM skill_marketplace WHERE user_id = ?',
         [userId]
       );
@@ -88,4 +85,4 @@ class SkillModel {
   }
 }
 
-module.exports = SkillModel;
+export default SkillModel;

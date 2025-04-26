@@ -1,17 +1,17 @@
 
-const express = require('express');
-const router = express.Router();
-const materialController = require('../controllers/materialController');
-const auth = require('../middleware/authMiddleware');
+import { Router } from 'express';
+const router = Router();
+import { getAllMaterials, getMaterialById, createMaterial, updateMaterial, deleteMaterial, getUserMaterials } from '../controllers/materialController.js';
+import auth from '../middleware/authMiddleware.js';
 
 // Public routes
-router.get('/', materialController.getAllMaterials);
-router.get('/:id', materialController.getMaterialById);
+router.get('/', getAllMaterials);
+router.get('/:id', getMaterialById);
 
 // Protected routes
-router.post('/', auth, materialController.createMaterial);
-router.put('/:id', auth, materialController.updateMaterial);
-router.delete('/:id', auth, materialController.deleteMaterial);
-router.get('/user/materials', auth, materialController.getUserMaterials);
+router.post('/', auth, createMaterial);
+router.put('/:id', auth, updateMaterial);
+router.delete('/:id', auth, deleteMaterial);
+router.get('/user/materials', auth, getUserMaterials);
 
-module.exports = router;
+export default router;

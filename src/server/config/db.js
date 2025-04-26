@@ -1,8 +1,8 @@
+import { createPool } from 'mysql2/promise';
+import { config } from 'dotenv';
+config();
 
-const mysql = require('mysql2/promise');
-require('dotenv').config();
-
-const pool = mysql.createPool({
+const pool = createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -12,17 +12,29 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Test connection
-async function testConnection() {
+export async function testConnection() {
   try {
     const connection = await pool.getConnection();
     console.log('Database connection successful');
     connection.release();
+    return true;
   } catch (error) {
     console.error('Unable to connect to the database:', error);
+    return false;
   }
 }
 
-testConnection();
+// Helper function for executing queries
+export async function execute(query, params) {
+  console.log('Executing query:', { query, params });
+  try {
+    const [rows] = await pool.query(query, params);
+    console.log('Query result:', rows);
+    return rows;
+  } catch (error) {
+    console.error('Database error:', { query, params, error: error.message });
+    throw error;
+  }
+}
 
-module.exports = pool;
+export default pool;

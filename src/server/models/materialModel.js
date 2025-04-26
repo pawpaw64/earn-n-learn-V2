@@ -1,11 +1,10 @@
-
-const pool = require('../config/db');
+import { execute } from '../config/db.js';
 
 class MaterialModel {
   // Get all materials
   static async getAll() {
     try {
-      const [rows] = await pool.execute(`
+      const [rows] = await execute(`
         SELECT m.*, u.name as user_name, u.avatar as user_avatar
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
@@ -20,7 +19,7 @@ class MaterialModel {
   // Get material by ID
   static async getById(id) {
     try {
-      const [rows] = await pool.execute(`
+      const [rows] = await execute(`
         SELECT m.*, u.name as user_name, u.avatar as user_avatar, u.email as user_email
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
@@ -37,11 +36,10 @@ class MaterialModel {
     const { user_id, title, description, condition, price, availability } = materialData;
     
     try {
-      const [result] = await pool.execute(
+      const [result] = await execute(
         'INSERT INTO material_marketplace (user_id, title, description, condition, price, availability) VALUES (?, ?, ?, ?, ?, ?)',
         [user_id, title, description, condition, price, availability]
       );
-      
       return result.insertId;
     } catch (error) {
       throw new Error(error.message);
@@ -53,11 +51,10 @@ class MaterialModel {
     const { title, description, condition, price, availability } = materialData;
     
     try {
-      const [result] = await pool.execute(
+      const [result] = await execute(
         'UPDATE material_marketplace SET title = ?, description = ?, condition = ?, price = ?, availability = ? WHERE id = ?',
         [title, description, condition, price, availability, id]
       );
-      
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(error.message);
@@ -65,9 +62,9 @@ class MaterialModel {
   }
 
   // Delete material
-  static async delete(id) {
+  static async remove(id) {
     try {
-      const [result] = await pool.execute('DELETE FROM material_marketplace WHERE id = ?', [id]);
+      const [result] = await execute('DELETE FROM material_marketplace WHERE id = ?', [id]);
       return result.affectedRows > 0;
     } catch (error) {
       throw new Error(error.message);
@@ -77,7 +74,7 @@ class MaterialModel {
   // Get user materials
   static async getUserMaterials(userId) {
     try {
-      const [rows] = await pool.execute(
+      const [rows] = await execute(
         'SELECT * FROM material_marketplace WHERE user_id = ?',
         [userId]
       );
@@ -88,4 +85,4 @@ class MaterialModel {
   }
 }
 
-module.exports = MaterialModel;
+export default MaterialModel;

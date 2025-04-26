@@ -1,7 +1,11 @@
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import initDatabase from './src/server/database/initDb.js';
 
-const { spawn } = require('child_process');
-const path = require('path');
-const initDatabase = require('./src/server/database/initDb');
+// Manually define __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Initialize database (optional, can be commented out if already initialized)
 initDatabase().then(() => {
@@ -17,7 +21,7 @@ const frontend = spawn('npm', ['run', 'dev'], {
 });
 
 // Start the backend
-const backend = spawn('node', [path.join(__dirname, 'src/server/index.js')], {
+const backend = spawn('node', [join(__dirname, 'src/server/index.js')], {
   stdio: 'inherit',
   shell: true
 });

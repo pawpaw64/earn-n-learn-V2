@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +20,6 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
     email: "",
     password: "",
     name: "",
-    confirmPassword: "",
     studentId: "",
     university: "",
     course: "",
@@ -46,13 +44,6 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
           description: "Welcome back to Earn-n-Learn!"
         });
       } else {
-        // Check if passwords match
-        if (formData.password !== formData.confirmPassword) {
-          toast.error("Passwords do not match");
-          setIsSubmitting(false);
-          return;
-        }
-        
         response = await registerUser({
           name: formData.name,
           email: formData.email,
@@ -195,21 +186,6 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
               }
             />
           </div>
-
-          {type === "signup" && (
-            <div className="grid w-full items-center gap-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                type="password"
-                id="confirmPassword"
-                required
-                placeholder="Confirm your password"
-                onChange={(e) =>
-                  setFormData({ ...formData, confirmPassword: e.target.value })
-                }
-              />
-            </div>
-          )}
 
           {type === "login" && (
             <div className="text-right">

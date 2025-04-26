@@ -1,6 +1,6 @@
-
 -- Create database if it doesn't exist
 CREATE DATABASE IF NOT EXISTS dbEarn_learn;
+
 USE dbEarn_learn;
 
 -- Users table
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
   mobile VARCHAR(20),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+) ENGINE=InnoDB;
 
 -- Skills table
 CREATE TABLE IF NOT EXISTS skills (
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS skills (
   acquired_from VARCHAR(100),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Portfolio items table
 CREATE TABLE IF NOT EXISTS portfolio_items (
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS portfolio_items (
   type VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Jobs table
 CREATE TABLE IF NOT EXISTS jobs (
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Job applications table
 CREATE TABLE IF NOT EXISTS applications (
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS applications (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Skills marketplace table
 CREATE TABLE IF NOT EXISTS skill_marketplace (
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS skill_marketplace (
   availability VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Materials marketplace table
 CREATE TABLE IF NOT EXISTS material_marketplace (
@@ -91,12 +91,12 @@ CREATE TABLE IF NOT EXISTS material_marketplace (
   user_id INT NOT NULL,
   title VARCHAR(100) NOT NULL,
   description TEXT,
-  condition VARCHAR(50),
+  `condition` VARCHAR(50),  -- Backticks around reserved word
   price VARCHAR(100),
   availability VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
 
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
@@ -111,4 +111,4 @@ CREATE TABLE IF NOT EXISTS invoices (
   due_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB;
