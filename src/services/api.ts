@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { JobType, SkillType, MaterialType } from '@/types/marketplace';
 
@@ -57,84 +58,139 @@ export const createJob = async (jobData: Omit<JobType, 'id'>): Promise<{ jobId: 
   return response.data;
 };
 
+export const updateJob = async (id: number, jobData: Partial<JobType>): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.put(`${API_URL}/jobs/${id}`, jobData);
+  return response.data;
+};
+
+export const deleteJob = async (id: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/jobs/${id}`);
+  return response.data;
+};
+
+export const getJobDetails = async (id: number): Promise<JobType> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.get(`${API_URL}/jobs/${id}`);
+  return response.data;
+};
+
+// Skill services
+export const fetchSkills = async (): Promise<SkillType[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/skills`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching skills:", error);
+    return [];
+  }
+};
+
+export const createSkill = async (skillData: any): Promise<{ skillId: number }> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/skills`, skillData);
+  return response.data;
+};
+
+export const updateSkill = async (id: number, skillData: any): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.put(`${API_URL}/skills/${id}`, skillData);
+  return response.data;
+};
+
+export const deleteSkill = async (id: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/skills/${id}`);
+  return response.data;
+};
+
+export const getSkillDetails = async (id: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.get(`${API_URL}/skills/${id}`);
+  return response.data;
+};
+
+// Material services
+export const fetchMaterials = async (): Promise<MaterialType[]> => {
+  try {
+    const response = await axios.get(`${API_URL}/materials`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching materials:", error);
+    return [];
+  }
+};
+
+export const createMaterial = async (materialData: any): Promise<{ materialId: number }> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/materials`, materialData);
+  return response.data;
+};
+
+export const updateMaterial = async (id: number, materialData: any): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.put(`${API_URL}/materials/${id}`, materialData);
+  return response.data;
+};
+
+export const deleteMaterial = async (id: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/materials/${id}`);
+  return response.data;
+};
+
+export const getMaterialDetails = async (id: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.get(`${API_URL}/materials/${id}`);
+  return response.data;
+};
+
 export const fetchMyApplications = async () => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  const mockApplications = [
-    {
-      id: 1,
-      title: "Frontend Developer",
-      company: "Tech Solutions Inc",
-      status: "Applied",
-      dateApplied: "2024-04-15",
-      description: "Applied for the frontend developer position focused on React and TypeScript development.",
-      type: "Part-time",
-    },
-    {
-      id: 2,
-      title: "UI/UX Designer",
-      company: "Creative Studios",
-      status: "In Review",
-      dateApplied: "2024-04-10",
-      description: "Applied for the UI/UX designer position for the campus mobile app project.",
-      type: "Project-based",
-    }
-  ];
-  return mockApplications;
+  try {
+    const response = await axios.get(`${API_URL}/users/applications`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    return [];
+  }
 };
 
 export const fetchMyWorks = async () => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  const mockWorks = [
-    {
-      id: 1,
-      title: "Website Development",
-      company: "Student Union",
-      status: "In Progress",
-      startDate: "2024-03-01",
-      deadline: "2024-05-01",
-      description: "Developing the new student union website using React and Tailwind CSS.",
-      type: "Project",
-    },
-    {
-      id: 2,
-      title: "Database Tutor",
-      company: "Computer Science Department",
-      status: "Completed",
-      startDate: "2024-02-01",
-      endDate: "2024-03-15",
-      description: "Provided SQL and database design tutoring to junior students.",
-      type: "Part-time",
-    }
-  ];
-  return mockWorks;
+  try {
+    const response = await axios.get(`${API_URL}/users/works`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching works:", error);
+    return [];
+  }
 };
 
 export const fetchMyPosts = async () => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  const mockPosts = [
-    {
-      id: 1,
-      title: "Math Tutor Needed",
-      type: "Teaching",
-      description: "Looking for a calculus tutor for freshman students.",
-      payment: "$25/hour",
-      status: "Active",
-      postedDate: "2024-04-01",
-    },
-    {
-      id: 2,
-      title: "Campus Event Photographer",
-      type: "Creative",
-      description: "Need a photographer for the upcoming spring festival.",
-      payment: "$150/event",
-      status: "Closed",
-      postedDate: "2024-03-25",
-    }
-  ];
-  return mockPosts;
+  try {
+    // Get user's jobs, skills and materials
+    const [jobs, skills, materials] = await Promise.all([
+      axios.get(`${API_URL}/jobs/user`).then(res => res.data),
+      axios.get(`${API_URL}/skills/user/skills`).then(res => res.data),
+      axios.get(`${API_URL}/materials/user/materials`).then(res => res.data)
+    ]);
+    
+    return {
+      jobs,
+      skills,
+      materials
+    };
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return {
+      jobs: [],
+      skills: [],
+      materials: []
+    };
+  }
 };
 
 export const fetchMyInvoices = async () => {
@@ -163,40 +219,34 @@ export const fetchMyInvoices = async () => {
   return mockInvoices;
 };
 
-// Mock user profile data
+// User profile data
 export const fetchUserProfile = async (userId?: string) => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  return {
-    id: "1",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    bio: "Student at Local University, passionate about technology and innovation.",
-    avatar: "",
-    program: "Computer Science",
-    graduationYear: "2025",
-    skills: [
-      { id: "1", name: "React", description: "Frontend development with React", acquiredFrom: "Online course" },
-      { id: "2", name: "MySQL", description: "Database management", acquiredFrom: "University course" }
-    ],
-    portfolio: [
-      { id: "1", title: "Campus Marketplace", description: "A platform for students to buy and sell items", url: "https://github.com/johndoe/campus-marketplace", type: "github" }
-    ],
-    websites: [
-      { id: "1", title: "GitHub", url: "https://github.com/johndoe", icon: "github" },
-      { id: "2", title: "LinkedIn", url: "https://linkedin.com/in/johndoe", icon: "linkedin" }
-    ]
-  };
+  try {
+    const response = await axios.get(`${API_URL}/users/me`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
 };
 
 export const updateUserProfile = async (profileData: any) => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  return profileData;
+  const response = await axios.put(`${API_URL}/users/profile`, profileData);
+  return response.data;
 };
 
 export const uploadProfileImage = async (userId: string, imageFile: File) => {
   setAuthToken(localStorage.getItem('token'));
-  // TODO: Replace with actual API call when backend is implemented
-  return URL.createObjectURL(imageFile);
+  const formData = new FormData();
+  formData.append('image', imageFile);
+  
+  const response = await axios.post(`${API_URL}/users/upload-avatar`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  
+  return response.data.imageUrl;
 };

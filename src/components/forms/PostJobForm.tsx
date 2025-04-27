@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createJob } from "@/services/api";
+import { createJob, updateJob } from "@/services/api";
+import { useEditableItem } from "@/components/browse/EditableItemContext";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -21,7 +23,15 @@ const formSchema = z.object({
 
 type PostJobFormValues = z.infer<typeof formSchema>;
 
-export default function PostJobForm() {
+interface PostJobFormProps {
+  initialData?: any;
+}
+
+export default function PostJobForm({ initialData }: PostJobFormProps) {
+  const { editItem, editType, clearEditItem } = useEditableItem();
+  const isEditing = Boolean(initialData || (editType === 'job' && editItem));
+  const itemToEdit = initialData || (editType === 'job' ? editItem : null);
+  
   const form = useForm<PostJobFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,6 +44,20 @@ export default function PostJobForm() {
     }
   });
 
+  // If we have initial data, populate the form
+  useEffect(() => {
+    if (itemToEdit) {
+      form.reset({
+        title: itemToEdit.title || "",
+        description: itemToEdit.description || "",
+        type: itemToEdit.type || "On-campus",
+        payment: itemToEdit.payment || "",
+        deadline: itemToEdit.deadline || "",
+        contactInfo: itemToEdit.posterEmail || itemToEdit.contactInfo || ""
+      });
+    }
+  }, [itemToEdit, form]);
+
   async function onSubmit(values: PostJobFormValues) {
     try {
       // Map form values to API expected format
@@ -42,20 +66,24 @@ export default function PostJobForm() {
         type: values.type,
         description: values.description,
         payment: values.payment,
-        poster: "Current User", // In a real app, get from auth
-        posterEmail: values.contactInfo,
-        posterAvatar: "https://i.pravatar.cc/150?img=1", // Placeholder
-        location: values.type === "Remote" ? "Remote" : "On Campus",
         deadline: values.deadline,
-        requirements: ""
+        requirements: "",
+        location: values.type === "Remote" ? "Remote" : "On Campus",
       };
       
-      await createJob(jobData);
-      toast.success("Job posted successfully!");
+      if (isEditing && itemToEdit?.id) {
+        await updateJob(itemToEdit.id, jobData);
+        toast.success("Job updated successfully!");
+      } else {
+        await createJob(jobData);
+        toast.success("Job posted successfully!");
+      }
+      
       form.reset();
+      if (clearEditItem) clearEditItem();
     } catch (error) {
-      console.error("Error posting job:", error);
-      toast.error("Failed to post job. Please try again.");
+      console.error("Error with job:", error);
+      toast.error(isEditing ? "Failed to update job. Please try again." : "Failed to post job. Please try again.");
     }
   }
 
@@ -163,7 +191,23 @@ export default function PostJobForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700">Post Job</Button>
+        <Button 
+          type="submit" 
+          className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {isEditing ? "Update Job" : "Post Job"}
+        </Button>
+        
+        {isEditing && (
+          <Button 
+            type="button" 
+            variant="outline"
+            className="w-full"
+            onClick={clearEditItem}
+          >
+            Cancel Editing
+          </Button>
+        )}
       </form>
     </Form>
   );

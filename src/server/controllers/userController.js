@@ -1,8 +1,9 @@
+
 import UserModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-//register
+// Register
 export async function register(req, res) {
   try {
     const { name, email, password, studentId, university, course, mobile } = req.body;
@@ -61,7 +62,10 @@ export async function register(req, res) {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-}export async function login(req, res) {
+}
+
+// Login
+export async function login(req, res) {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -140,6 +144,74 @@ export async function updateProfile(req, res) {
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get user applications
+export async function getUserApplications(req, res) {
+  try {
+    // This is a mock response until the applications table is implemented
+    // In a real app, you'd query the applications table
+    const mockApplications = [
+      {
+        id: 1,
+        title: "Frontend Developer",
+        company: "Tech Solutions Inc",
+        status: "Applied",
+        dateApplied: "2024-04-15",
+        description: "Applied for the frontend developer position focused on React and TypeScript development.",
+        type: "Part-time",
+      },
+      {
+        id: 2,
+        title: "UI/UX Designer",
+        company: "Creative Studios",
+        status: "In Review",
+        dateApplied: "2024-04-10",
+        description: "Applied for the UI/UX designer position for the campus mobile app project.",
+        type: "Project-based",
+      }
+    ];
+    
+    res.json(mockApplications);
+  } catch (error) {
+    console.error('Get user applications error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get user works
+export async function getUserWorks(req, res) {
+  try {
+    // This is a mock response until the works table is implemented
+    // In a real app, you'd query the works table
+    const mockWorks = [
+      {
+        id: 1,
+        title: "Website Development",
+        company: "Student Union",
+        status: "In Progress",
+        startDate: "2024-03-01",
+        deadline: "2024-05-01",
+        description: "Developing the new student union website using React and Tailwind CSS.",
+        type: "Project",
+      },
+      {
+        id: 2,
+        title: "Database Tutor",
+        company: "Computer Science Department",
+        status: "Completed",
+        startDate: "2024-02-01",
+        endDate: "2024-03-15",
+        description: "Provided SQL and database design tutoring to junior students.",
+        type: "Part-time",
+      }
+    ];
+    
+    res.json(mockWorks);
+  } catch (error) {
+    console.error('Get user works error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }

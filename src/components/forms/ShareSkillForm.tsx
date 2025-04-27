@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { createSkill } from "@/services/api";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
@@ -42,10 +43,27 @@ export default function ShareSkillForm() {
   const watchPricingType = form.watch("pricingType");
   const watchSkillTrade = form.watch("skillTrade");
 
-  function onSubmit(values: ShareSkillFormValues) {
-    console.log(values);
-    toast.success("Skill shared successfully!");
-    form.reset();
+  async function onSubmit(values: ShareSkillFormValues) {
+    try {
+      // Prepare data for API
+      const skillData = {
+        skill_name: values.skillName,
+        description: values.description,
+        pricing: watchPricingType === 'paid' ? values.price : 
+                watchPricingType === 'free' ? 'Free' : 
+                'Skill Trade: ' + (values.tradeSkill || 'Open to offers'),
+        availability: values.availability
+      };
+      
+      // Call API to create skill
+      await createSkill(skillData);
+      
+      toast.success("Skill shared successfully!");
+      form.reset();
+    } catch (error) {
+      console.error("Error sharing skill:", error);
+      toast.error("Failed to share skill. Please try again.");
+    }
   }
 
   return (

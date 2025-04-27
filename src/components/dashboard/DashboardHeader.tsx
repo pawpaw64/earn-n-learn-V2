@@ -1,19 +1,43 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { fetchUserProfile } from "@/services/api";
 
 const DashboardHeader = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
 
-  // Get user data from localStorage when component mounts
+  // Get user data from API when component mounts
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
+    const getUserData = async () => {
+      try {
+        // Try to get from localStorage first
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          setUser(JSON.parse(userData));
+        }
+        
+        // Then try to fetch updated data from API
+        const response = await fetchUserProfile();
+        if (response && response.user) {
+          const updatedUserData = response.user;
+          localStorage.setItem('user', JSON.stringify(updatedUserData));
+          setUser(updatedUserData);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        // If API call fails, still try to use localStorage data
+        const userData = localStorage.getItem('user');
+        if (userData && !user) {
+          setUser(JSON.parse(userData));
+        }
+      }
+    };
+    
+    getUserData();
   }, []);
 
   const handleLogout = () => {

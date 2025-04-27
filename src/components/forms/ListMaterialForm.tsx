@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
-import { ImageIcon, Upload } from "lucide-react";
+import { ImageIcon } from "lucide-react";
+import { createMaterial } from "@/services/api";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),
@@ -42,11 +43,27 @@ export default function ListMaterialForm() {
 
   const watchType = form.watch("type");
 
-  function onSubmit(values: ListMaterialFormValues) {
-    console.log(values);
-    toast.success("Material listed successfully!");
-    form.reset();
-    setImagePreview("");
+  async function onSubmit(values: ListMaterialFormValues) {
+    try {
+      // Prepare data for API
+      const materialData = {
+        title: values.materialName,
+        description: values.description,
+        condition: values.condition,
+        price: values.price,
+        availability: values.availability,
+      };
+      
+      // Call API to create material
+      await createMaterial(materialData);
+      
+      toast.success("Material listed successfully!");
+      form.reset();
+      setImagePreview("");
+    } catch (error) {
+      console.error("Error listing material:", error);
+      toast.error("Failed to list material. Please try again.");
+    }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
