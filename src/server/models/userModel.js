@@ -6,16 +6,20 @@ class UserModel {
   static async findByEmail(email) {
     try {
       const result = await execute('SELECT * FROM users WHERE email = ?', [email]);
-      // Handle different database client responses
       const rows = Array.isArray(result) ? result : result.rows || result[0] || [];
-      return rows[0] || null;
+      const user = rows[0] || null;
+      
+      // Debug log
+      console.log('User found:', user ? { 
+        id: user.id, 
+        email: user.email,
+        hasPassword: !!user.password 
+      } : 'No user found');
+      
+      return user;
     } catch (error) {
-      console.error('Database error in findByEmail:', {
-        error: error.message,
-        query: 'SELECT * FROM users WHERE email = ?',
-        parameters: [email]
-      });
-      throw new Error('Failed to find user');
+      console.error('Database error in findByEmail:', error);
+      throw error;
     }
   }
 

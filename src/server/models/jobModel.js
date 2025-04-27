@@ -34,17 +34,50 @@ class JobModel {
 
   // Create job
   static async create(jobData) {
-    const { title, description, type, payment, deadline, requirements, location, user_id } = jobData;
-    
+    const { 
+      title, 
+      description, 
+      type, 
+      payment, 
+      deadline, 
+      requirements, 
+      location, 
+      user_id 
+    } = jobData;
+  
     try {
-      const [result] = await execute(
-        'INSERT INTO jobs (title, description, type, payment, deadline, requirements, location, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [title, description, type, payment, deadline, requirements, location, user_id]
+      const result = await execute(
+        `INSERT INTO jobs 
+         (title, description, type, payment, deadline, requirements, location, user_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          title, 
+          description, 
+          type, 
+          payment, 
+          deadline, 
+          requirements, 
+          location, 
+          user_id
+        ]
       );
-      
       return result.insertId;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Create job error:', {
+        error: error.message,
+        query: 'INSERT INTO jobs...',
+        parameters: {
+          title,
+          description: description?.substring(0, 20) + '...',
+          type,
+          payment,
+          deadline,
+          requirements: requirements?.substring(0, 20) + '...',
+          location,
+          user_id
+        }
+      });
+      throw new Error('Failed to create job');
     }
   }
 

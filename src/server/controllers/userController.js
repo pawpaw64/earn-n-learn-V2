@@ -61,9 +61,7 @@ export async function register(req, res) {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-}
-// Login user
-export async function login(req, res) {
+}export async function login(req, res) {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -71,16 +69,30 @@ export async function login(req, res) {
   }
 
   try {
+    // 1. First debug point - check if we're finding the user
+    console.log('Searching for user with email:', email);
     const user = await UserModel.findByEmail(email);
+    
     if (!user) {
+      console.log('No user found with email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // 2. Second debug point - check the passwords
+    console.log('Comparing passwords:');
+    console.log('Input password:', password);
+    console.log('Stored hash:', user.password);
+    
     const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) {
+      console.log('Password comparison failed');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // 3. If we get here, login is successful
+    console.log('Login successful for user:', user.email);
+    
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
       process.env.JWT_SECRET,

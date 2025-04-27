@@ -26,15 +26,25 @@ export async function testConnection() {
 
 // Helper function for executing queries
 export async function execute(query, params) {
-  console.log('Executing query:', { query, params });
   try {
+    console.log('Executing query:', {
+      query: query.substring(0, 100) + (query.length > 100 ? '...' : ''), // Truncate long queries
+      params: params.map(p => 
+        typeof p === 'string' ? p.substring(0, 50) + (p.length > 50 ? '...' : '') : p
+      )
+    });
+    
     const [rows] = await pool.query(query, params);
-    console.log('Query result:', rows);
     return rows;
   } catch (error) {
-    console.error('Database error:', { query, params, error: error.message });
+    console.error('Database error:', {
+      query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+      params: params.map(p => 
+        typeof p === 'string' ? p.substring(0, 50) + (p.length > 50 ? '...' : '') : p
+      ),
+      error: error.message
+    });
     throw error;
   }
 }
-
 export default pool;

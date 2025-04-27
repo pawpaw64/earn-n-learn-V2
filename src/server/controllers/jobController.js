@@ -27,35 +27,40 @@ export async function getJobById(req, res) {
 
 // Create new job
 export async function createJob(req, res) {
-  const { title, description, type, payment, deadline, requirements, location } = req.body;
-  
-  // Validation
-  if (!title || !description || !type) {
-    return res.status(400).json({ message: 'Please provide title, description and type' });
-  }
-  
   try {
-    const jobId = await JobModel.create({
-      title,
-      description,
-      type,
-      payment,
-      deadline,
-      requirements,
-      location,
-      user_id: req.user.id
+    const jobData = {
+      title: req.body.title,
+      description: req.body.description,
+      type: req.body.type || 'General', // Default value
+      payment: req.body.payment || '0', // Match varchar(100) type
+      deadline: req.body.deadline,
+      requirements: req.body.requirements || '',
+      location: req.body.location || 'Remote',
+      user_id: req.user.id // Changed from clientId to match schema
+    };
+
+    console.log('Creating job with data:', {
+      ...jobData,
+      description: jobData.description.substring(0, 50) + '...',
+      requirements: jobData.requirements.substring(0, 50) + '...'
     });
+
+    const jobId = await JobModel.create(jobData);
     
-    res.status(201).json({ 
+    return res.status(201).json({
+      success: true,
       jobId,
-      message: 'Job posted successfully' 
+      message: 'Job created successfully'
     });
   } catch (error) {
-    console.error('Create job error:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Create job controller error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 }
-
 // Update job
 export async function updateJob(req, res) {
   try {
