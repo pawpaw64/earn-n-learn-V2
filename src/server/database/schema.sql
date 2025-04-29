@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS applications (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Skills marketplace table
+-- Skills marketplace table (updated with image_url)
 CREATE TABLE IF NOT EXISTS skill_marketplace (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -81,19 +81,22 @@ CREATE TABLE IF NOT EXISTS skill_marketplace (
   description TEXT,
   pricing VARCHAR(100),
   availability VARCHAR(50),
+  image_url VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Materials marketplace table
+-- Materials marketplace table (updated with image_url and deadline)
 CREATE TABLE IF NOT EXISTS material_marketplace (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   title VARCHAR(100) NOT NULL,
   description TEXT,
-  conditions VARCHAR(50),  -- Backticks around reserved word
+  conditions VARCHAR(50),
   price VARCHAR(100),
   availability VARCHAR(50),
+  image_url VARCHAR(255),
+  deadline DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
