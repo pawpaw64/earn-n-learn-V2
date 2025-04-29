@@ -51,6 +51,7 @@ const PostingSectionContent: React.FC<PostingSectionProps> = ({ postTab, setPost
         
         <CardContent className="mt-4">
           <TabsContent value="job">
+            {/* Use curly braces to ensure initialData is passed as a prop and not component content */}
             <PostJobForm initialData={editType === 'job' ? editItem : undefined} />
           </TabsContent>
           

@@ -1,82 +1,161 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { fetchUserProfile } from "@/services/api";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, Menu, Search, User } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { fetchUnreadNotificationCount, fetchNotifications, markNotificationAsRead } from "@/services/api";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import DashboardSidebar from "./DashboardSidebar";
 
 const DashboardHeader = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    avatar: "https://github.com/shadcn.png",
+  });
+  
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  // Get user data from API when component mounts
   useEffect(() => {
-    const getUserData = async () => {
+    // Fetch user data from localStorage or global state
+    const userName = localStorage.getItem("userName");
+    const userEmail = localStorage.getItem("userEmail");
+    const userAvatar = localStorage.getItem("userAvatar");
+    
+    if (userName && userEmail) {
+      setUser({
+        name: userName,
+        email: userEmail,
+        avatar: userAvatar || "https://github.com/shadcn.png",
+      });
+    }
+    
+    // Fetch unread notification count
+    const fetchCount = async () => {
       try {
-        // Try to get from localStorage first
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          setUser(JSON.parse(userData));
-        }
-        
-        // Then try to fetch updated data from API
-        const response = await fetchUserProfile();
-        if (response && response.user) {
-          const updatedUserData = response.user;
-          localStorage.setItem('user', JSON.stringify(updatedUserData));
-          setUser(updatedUserData);
-        }
+        const count = await fetchUnreadNotificationCount();
+        setUnreadCount(count);
       } catch (error) {
-        console.error("Error fetching user data:", error);
-        // If API call fails, still try to use localStorage data
-        const userData = localStorage.getItem('user');
-        if (userData && !user) {
-          setUser(JSON.parse(userData));
-        }
+        console.error("Failed to fetch notification count:", error);
       }
     };
     
-    getUserData();
+    fetchCount();
+    
+    // Set up an interval to check notifications
+    const intervalId = setInterval(fetchCount, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(intervalId);
   }, []);
 
-  const handleLogout = () => {
-    // Clear any stored user data or tokens from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Navigate to home page
-    navigate("/");
+  const handleNotificationClick = async () => {
+    try {
+      const notificationData = await fetchNotifications();
+      setNotifications(notificationData);
+      setShowNotifications(true);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+      toast.error("Failed to load notifications");
+    }
   };
 
-  // Function to get initials from name
-  const getInitials = (name) => {
-    if (!name) return '';
-    const names = name.split(' ');
-    return names.map(n => n[0]).join('').toUpperCase();
+  const handleNotificationRead = async (id: number) => {
+    try {
+      await markNotificationAsRead(id);
+      
+      // Update the local state
+      setNotifications(prev => prev.map(notif => 
+        notif.id === id ? { ...notif, is_read: true } : notif
+      ));
+      
+      // Update the unread count
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
   };
 
   return (
-    <header className="h-16 border-b flex items-center justify-between px-bg-white/80  backdrop-blur-md">
-      <a href="/" className="text-3xl font-bold text-emerald-600">
-        Earn-n-Learn
-      </a>
-      
-      <div className="flex items-center gap-4">
-        <Avatar className="w-8 h-8">
-          <AvatarImage src={user?.avatar} />
+    <div className="sticky top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px-8">
+      <Sheet>
+        <SheetTrigger className="md:hidden">
+          <Button
+            size="icon"
+            variant="outline"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-64 sm:w-72">
+          <DashboardSidebar />
+        </SheetContent>
+      </Sheet>
+      <div className="hidden md:flex" />
+      <div className="flex-1 gap-2 flex md:flex items-center">
+        <div className="relative md:w-64 lg:w-80">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search..."
+            className="w-full pl-9"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" className="relative" onClick={handleNotificationClick}>
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <div className="p-2 font-medium border-b">Notifications</div>
+            <div className="max-h-[400px] overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <DropdownMenuItem
+                    key={notification.id}
+                    className={`p-3 border-b cursor-pointer ${!notification.is_read ? 'bg-slate-50' : ''}`}
+                    onClick={() => handleNotificationRead(notification.id)}
+                  >
+                    <div>
+                      <div className="font-medium">{notification.title}</div>
+                      <div className="text-sm text-gray-500">{notification.message}</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <div className="p-4 text-center text-gray-500">No notifications</div>
+              )}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Avatar>
+          <AvatarImage src={user.avatar} alt={user.name} />
           <AvatarFallback>
-            {user ? getInitials(user.name) : 'U'}
+            <User className="h-5 w-5" />
           </AvatarFallback>
         </Avatar>
-        <span className="text-sm font-medium">
-          {user?.name || 'User'}
-        </span>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOut className="w-4 h-4 mr-2" />
-          Log out
-        </Button>
       </div>
-    </header>
+    </div>
   );
 };
 

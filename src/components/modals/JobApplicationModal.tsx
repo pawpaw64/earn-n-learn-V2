@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
+import { submitJobApplication } from "@/services/api";
 
 interface JobApplicationModalProps {
   job: JobType | null;
@@ -23,20 +24,57 @@ interface JobApplicationModalProps {
 }
 
 const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalProps) => {
-  const [name, setName] = useState("Current User"); // In a real app, this would be filled from user profile
-  const [email, setEmail] = useState("user@example.com"); // In a real app, this would be filled from user profile
+  const [name, setName] = useState(""); 
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(""); 
   const [coverLetter, setCoverLetter] = useState("");
   const [resume, setResume] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch user profile on modal open
+  React.useEffect(() => {
+    if (isOpen) {
+      // Get user info from local storage or state management
+      const userName = localStorage.getItem('userName') || "";
+      const userEmail = localStorage.getItem('userEmail') || "";
+      
+      setName(userName);
+      setEmail(userEmail);
+      setCoverLetter("");
+      setResume("");
+      setPhone("");
+    }
+  }, [isOpen]);
 
   if (!job) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would typically send this data to your backend
-    toast.success("Application submitted! The poster will contact you soon.");
-    onOpenChange(false);
+    if (!coverLetter.trim()) {
+      toast.error("Please provide a cover letter");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const applicationData = {
+        job_id: job.id,
+        cover_letter: coverLetter
+      };
+      
+      // Send the application to the backend
+      await submitJobApplication(applicationData);
+      
+      toast.success("Application submitted! The poster will review your application soon.");
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error("Error submitting job application:", error);
+      toast.error(error.response?.data?.message || "Failed to submit application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -55,6 +93,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
                 required 
+                disabled
               />
             </div>
             <div className="space-y-2">
@@ -65,12 +104,13 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
+                disabled
               />
             </div>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
+            <Label htmlFor="phone">Phone Number (Optional)</Label>
             <Input 
               id="phone" 
               value={phone} 
@@ -79,7 +119,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="resume">Resume/CV Link (optional)</Label>
+            <Label htmlFor="resume">Resume/CV Link (Optional)</Label>
             <Input 
               id="resume" 
               placeholder="Link to your resume/CV" 
@@ -92,7 +132,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
             <Label htmlFor="coverLetter">Cover Letter / Why you're a good fit</Label>
             <Textarea 
               id="coverLetter" 
-              placeholder={`Tell ${job.poster} why you're interested in this position and what makes you a great candidate.`}
+              placeholder={`Tell ${job.poster || 'the job poster'} why you're interested in this position and what makes you a great candidate.`}
               value={coverLetter} 
               onChange={(e) => setCoverLetter(e.target.value)} 
               className="min-h-[120px]" 
@@ -109,6 +149,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
             <Button 
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+              disabled={isSubmitting}
             >
               <Check className="h-4 w-4" /> Submit Application
             </Button>

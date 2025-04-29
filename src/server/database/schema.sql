@@ -1,3 +1,4 @@
+
 -- Create database if it doesn't exist
 CREATE DATABASE IF NOT EXISTS dbEarn_learn;
 
@@ -69,6 +70,7 @@ CREATE TABLE IF NOT EXISTS applications (
   cover_letter TEXT,
   status VARCHAR(20) DEFAULT 'Applied',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS skill_marketplace (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Materials marketplace table (updated with image_url and deadline)
+-- Material marketplace table (updated with image_url and deadline)
 CREATE TABLE IF NOT EXISTS material_marketplace (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -112,6 +114,67 @@ CREATE TABLE IF NOT EXISTS invoices (
   status VARCHAR(20) DEFAULT 'Pending',
   issued_date DATE,
   due_date DATE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Skill applications/contacts table
+CREATE TABLE IF NOT EXISTS skill_contacts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  skill_id INT NOT NULL,
+  user_id INT NOT NULL,
+  message TEXT,
+  status VARCHAR(20) DEFAULT 'Contact Initiated',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (skill_id) REFERENCES skill_marketplace(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Material contacts table
+CREATE TABLE IF NOT EXISTS material_contacts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  material_id INT NOT NULL,
+  user_id INT NOT NULL,
+  message TEXT,
+  status VARCHAR(20) DEFAULT 'Contact Initiated',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (material_id) REFERENCES material_marketplace(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Work assignments table - for tracking accepted applications/contacts
+CREATE TABLE IF NOT EXISTS work_assignments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  job_id INT,
+  skill_id INT,
+  material_id INT,
+  provider_id INT NOT NULL,
+  client_id INT NOT NULL,
+  status VARCHAR(20) DEFAULT 'In Progress',
+  start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  end_date TIMESTAMP NULL,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL,
+  FOREIGN KEY (skill_id) REFERENCES skill_marketplace(id) ON DELETE SET NULL,
+  FOREIGN KEY (material_id) REFERENCES material_marketplace(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  message TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  reference_id INT,
+  reference_type VARCHAR(50),
+  is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

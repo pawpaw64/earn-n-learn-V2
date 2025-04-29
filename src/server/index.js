@@ -1,48 +1,55 @@
-import express, { json, urlencoded } from 'express';
-import cors from 'cors';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { config } from 'dotenv';
-config(); // Load environment variables
 
+import express from 'express';
+import cors from 'cors';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import userRoutes from './routes/userRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import skillRoutes from './routes/skillRoutes.js';
 import materialRoutes from './routes/materialRoutes.js';
+import applicationRoutes from './routes/applicationRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
+import workRoutes from './routes/workRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
+import dotenv from 'dotenv';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Load environment variables
+dotenv.config();
 
+// Create Express app
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Middlewares
+// __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Middleware
 app.use(cors());
-app.use(json());
-app.use(urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Static files (for production)
-app.use(express.static(join(__dirname, '../../dist')));
+// Serve static files from public directory
+app.use('/uploads', express.static(join(__dirname, 'uploads')));
 
-// API Routes
+// API routes
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/materials', materialRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/contacts', contactRoutes);
+app.use('/api/works', workRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
-// Catch-all route for SPA (must come after API routes)
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, '../../dist/index.html'));
+// Root route for API status
+app.get('/api', (req, res) => {
+  res.json({ message: 'Campus Marketplace API is running' });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-// Start server
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });

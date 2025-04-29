@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 const router = Router();
 import { 
@@ -6,7 +7,7 @@ import {
   createJob,
   updateJob,
   deleteJob,
-  getJobsByUserId  // Only need this one for user-specific jobs
+  getJobsByUserId
 } from '../controllers/jobController.js';
 import auth from '../middleware/authMiddleware.js';
 

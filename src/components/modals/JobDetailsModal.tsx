@@ -24,6 +24,21 @@ interface JobDetailsModalProps {
 const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModalProps) => {
   if (!job) return null;
 
+  // Store user info in localStorage when they view a job so it's available in the application modal
+  React.useEffect(() => {
+    if (isOpen) {
+      const storedName = localStorage.getItem('userName');
+      const storedEmail = localStorage.getItem('userEmail');
+      
+      if (!storedName || !storedEmail) {
+        // If user info isn't already stored, try to get it from auth context or state
+        // For now, we'll use placeholder values
+        localStorage.setItem('userName', 'Current User');
+        localStorage.setItem('userEmail', 'user@example.com');
+      }
+    }
+  }, [isOpen]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">

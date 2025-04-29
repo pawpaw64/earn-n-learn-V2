@@ -17,8 +17,10 @@ const formSchema = z.object({
   description: z.string().min(10, "Please provide a more detailed description"),
   type: z.string(),
   payment: z.string().min(1, "Please specify compensation"),
-  deadline: z.string(),
-  contactInfo: z.string().email("Please enter a valid email address")
+  deadline: z.string().optional(),
+  requirements: z.string().optional(),
+  location: z.string().optional(),
+  status: z.string().optional()
 });
 
 type PostJobFormValues = z.infer<typeof formSchema>;
@@ -40,7 +42,9 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       type: "On-campus",
       payment: "",
       deadline: "",
-      contactInfo: ""
+      requirements: "",
+      location: "",
+      status: "Active"
     }
   });
 
@@ -53,30 +57,31 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
         type: itemToEdit.type || "On-campus",
         payment: itemToEdit.payment || "",
         deadline: itemToEdit.deadline || "",
-        contactInfo: itemToEdit.posterEmail || itemToEdit.contactInfo || ""
+        requirements: itemToEdit.requirements || "",
+        location: itemToEdit.location || "",
+        status: itemToEdit.status || "Active"
       });
     }
   }, [itemToEdit, form]);
 
   async function onSubmit(values: PostJobFormValues) {
     try {
-      // Map form values to API expected format
-      const jobData = {
-        title: values.title,
-        type: values.type,
-        description: values.description,
-        payment: values.payment,
-        deadline: values.deadline,
-        requirements: "",
-        location: values.type === "Remote" ? "Remote" : "On Campus",
-        
-      };
-      
       if (isEditing && itemToEdit?.id) {
-        await updateJob(itemToEdit.id, jobData);
+        await updateJob(itemToEdit.id, values);
         toast.success("Job updated successfully!");
       } else {
-        await createJob(jobData);
+        await createJob({
+          title: values.title,
+          description: values.description,
+          type: values.type,
+          payment: values.payment,
+          deadline: values.deadline,
+          requirements: values.requirements || "",
+          location: values.location || values.type === "Remote" ? "Remote" : "On Campus",
+          status: "Active",
+          poster: localStorage.getItem('userName') || "",
+          posterEmail: localStorage.getItem('userEmail') || ""
+        });
         toast.success("Job posted successfully!");
       }
       
@@ -179,18 +184,36 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
 
           <FormField
             control={form.control}
-            name="contactInfo"
+            name="location"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Contact Email</FormLabel>
+                <FormLabel>Location</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="your@email.com" {...field} />
+                  <Input placeholder="e.g., Library, Online, etc." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="requirements"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Requirements (Optional)</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="List any specific requirements or qualifications..."
+                  className="min-h-[80px]"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <Button 
           type="submit" 

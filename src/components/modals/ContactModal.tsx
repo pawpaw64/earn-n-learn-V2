@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,10 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
+import { submitSkillContact, submitMaterialContact } from "@/services/api";
 
 interface ContactModalProps {
   recipientName: string;
   itemName: string; 
+  itemId: number;
   itemType: 'skill' | 'material';
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,24 +28,66 @@ interface ContactModalProps {
 const ContactModal = ({ 
   recipientName, 
   itemName, 
+  itemId,
   itemType, 
   isOpen, 
   onOpenChange 
 }: ContactModalProps) => {
-  const defaultSubject = `Interested in your ${itemName}`;
-  const defaultMessage = `Hi ${recipientName},\n\nI'm interested in your ${itemName}. Is this still available? Could we arrange...`;
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [senderName, setSenderName] = useState(""); 
+  const [senderEmail, setSenderEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const [subject, setSubject] = useState(defaultSubject);
-  const [message, setMessage] = useState(defaultMessage);
-  const [senderName] = useState("Current User"); // In a real app, this would be filled from user profile
-  const [senderEmail] = useState("user@example.com"); // In a real app, this would be filled from user profile
+  useEffect(() => {
+    if (isOpen) {
+      const defaultSubject = `Interested in your ${itemName}`;
+      const defaultMessage = `Hi ${recipientName},\n\nI'm interested in your ${itemName}. Is this still available? Could we arrange...`;
+      
+      setSubject(defaultSubject);
+      setMessage(defaultMessage);
+      
+      // Get user info from local storage or state management
+      const userName = localStorage.getItem('userName') || "";
+      const userEmail = localStorage.getItem('userEmail') || "";
+      
+      setSenderName(userName);
+      setSenderEmail(userEmail);
+    }
+  }, [isOpen, recipientName, itemName]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would typically send this data to your backend
-    toast.success(`Message sent to ${recipientName}!`);
-    onOpenChange(false);
+    if (!message.trim()) {
+      toast.error("Please provide a message");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      
+      const contactData = {
+        message: `${subject ? `Subject: ${subject}\n\n` : ''}${message}`,
+        skill_id: itemType === 'skill' ? itemId : undefined,
+        material_id: itemType === 'material' ? itemId : undefined
+      };
+      
+      // Submit contact based on type
+      if (itemType === 'skill') {
+        await submitSkillContact({ skill_id: itemId, message: contactData.message });
+      } else {
+        await submitMaterialContact({ material_id: itemId, message: contactData.message });
+      }
+      
+      toast.success(`Message sent to ${recipientName}!`);
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error(`Error submitting ${itemType} contact:`, error);
+      toast.error(error.response?.data?.message || "Failed to send message. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,6 +141,7 @@ const ContactModal = ({
             <Button 
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+              disabled={isSubmitting}
             >
               <Send className="h-4 w-4" /> Send Message
             </Button>
