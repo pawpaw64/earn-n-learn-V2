@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
@@ -9,46 +8,74 @@ interface MaterialCardProps {
   condition: string;
   price: string;
   availability: string;
+  description: string;
   onContact: () => void;
   onViewDetails: () => void;
 }
 
 const MaterialCard = ({
-  name,
-  material,
-  condition,
-  price,
-  availability,
+  name = "Anonymous",
+  material = "Item not specified",
+  condition = "Unknown",
+  price = "Not specified",
+  availability = "Available",
+  description = "No description provided",
   onContact,
   onViewDetails,
 }: MaterialCardProps) => {
+  // Format price to be consistent
+  const formatPrice = (priceString: string) => {
+    if (priceString.toLowerCase() === "free") return "Free";
+    if (priceString.toLowerCase() === "not specified") return "Not specified";
+    if (/^\$?\d+(\/\w+)?$/.test(priceString)) {
+      return priceString.replace('$', '') + (priceString.includes('/') ? '' : 'tk');
+    }
+    return priceString;
+  };
+
+  const formattedPrice = formatPrice(price);
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-      <div className="flex justify-between items-start mb-3">
-        <h3 className="text-lg font-semibold text-gray-900">{material}</h3>
-        <Badge variant="outline" className="text-emerald-600 border-emerald-600">
-          {condition}
-        </Badge>
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow w-full">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+        <div>
+        <h3 className="text-lg font-semibold text-gray-900">{material}</h3>  
+        <p className="text-sm text-gray-600 mb-2">By {name}</p>        </div>
+        <div className="flex gap-2 self-start sm:self-auto">
+          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            {condition}
+          </Badge>
+          <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+            {availability}
+          </Badge>
+        </div>
       </div>
-      <p className="text-sm text-gray-600 mb-2">By {name}</p>
-      <div className="mb-4">
-        <p className="text-emerald-600 font-medium">{price}</p>
-        <p className="text-sm text-gray-500">{availability}</p>
-      </div>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          onClick={onViewDetails}
-          className="flex-1 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-        >
-          Details <ArrowUpRight className="ml-1 h-4 w-4" />
-        </Button>
-        <Button
-          onClick={onContact}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          Contact
-        </Button>
+
+      <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
+
+      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
+        <span className="text-emerald-600 font-medium whitespace-nowrap">
+          {formattedPrice}
+        </span>
+
+        <div className="flex flex-col sm:flex-row gap-2 w-full xs:w-auto">
+          <Button
+            variant="outline"
+            onClick={onViewDetails}
+            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
+            size="sm"
+          >
+            <span className="hidden sm:inline">Details</span>
+            <ArrowUpRight className="ml-1 h-4 w-4" />
+          </Button>
+          <Button
+            onClick={onContact}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
+            size="sm"
+          >
+            Contact
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ export interface JobType {
   location?: string;
   deadline?: string;
   requirements?: string;
+  created_at?: string;
 }
 
 export interface SkillType {
@@ -24,7 +25,6 @@ export interface SkillType {
   experienceLevel?: string;
   availability?: string;
 }
-
 export interface MaterialType {
   id: number;
   name: string;

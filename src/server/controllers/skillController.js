@@ -16,12 +16,11 @@ export async function getSkillById(req, res) {
   try {
     const skill = await SkillModel.getSkillById(req.params.id);
     if (!skill) {
-      return res.status(404).json({ message: 'Skill not found' });
+      return res.status(404).json({ error: 'Skill not found' });
     }
     res.json(skill);
   } catch (error) {
-    console.error('Get skill by ID error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ error: error.message });
   }
 }
 
@@ -92,3 +91,5 @@ export async function getUserSkills(req, res) {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+// REMOVE the export block at the bottom completely

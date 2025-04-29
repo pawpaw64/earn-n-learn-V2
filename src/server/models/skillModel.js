@@ -1,33 +1,66 @@
 import { execute } from '../config/db.js';
 
+function formatDate(dateString) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+}
+
 class SkillModel {
   // Get all skills in marketplace
   static async getAllSkills() {
     try {
-      const [rows] = await execute(`
-        SELECT s.*, u.name as user_name, u.avatar as user_avatar
+      const rows = await execute(`
+        SELECT 
+          s.id,
+          u.name,
+          s.skill_name as skill,
+          s.pricing,
+          s.description,
+          u.email,
+          u.avatar as avatarUrl,
+          s.availability,
+          s.created_at,
+          s.image_url as imageUrl
         FROM skill_marketplace s
         JOIN users u ON s.user_id = u.id
         ORDER BY s.created_at DESC
       `);
-      return rows;
+
+      if (!Array.isArray(rows)) {
+        console.error('Unexpected result format:', { type: typeof rows, value: rows });
+        throw new Error('Invalid data format received from database');
+      }
+      
+
+      return rows.map(row => ({
+        ...row,
+        created_at: formatDate(row.created_at),
+      }));
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Database error in SkillModel.getAll:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error('Failed to fetch skills. Please try again later.');
     }
   }
-
   // Get skill by ID
-  static async getSkillById(id) {
+   static async getByUserId(userId) {
     try {
-      const [rows] = await execute(`
-        SELECT s.*, u.name as user_name, u.avatar as user_avatar, u.email as user_email
-        FROM skill_marketplace s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.id = ?
-      `, [id]);
-      return rows[0];
+      const [rows] = await execute(
+        `SELECT s.*, u.name, u.avatar as avatarUrl 
+         FROM skill_marketplace s
+         JOIN users u ON s.user_id = u.id
+         WHERE s.user_id = ?`,
+        [userId]
+      );
+
+      return rows || [];
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Error in SkillModel.getByUserId:', error);
+      throw new Error('Failed to fetch user skills');
     }
   }
 
@@ -36,13 +69,33 @@ class SkillModel {
     const { user_id, skill_name, description, pricing, availability } = skillData;
     
     try {
-      const [result] = await execute(
+      // Validate required fields
+      if (!user_id || !skill_name || !description) {
+        throw new Error('Missing required fields');
+      }
+  
+      // Execute the query with better error handling
+      const result = await execute(
         'INSERT INTO skill_marketplace (user_id, skill_name, description, pricing, availability) VALUES (?, ?, ?, ?, ?)',
         [user_id, skill_name, description, pricing, availability]
       );
-      return result.insertId;
+  
+      // Check if the result is valid
+      if (!result || !result.insertId) {
+        throw new Error('Failed to create skill - no insert ID returned');
+      }
+  
+      // Return the full created skill object by fetching it
+      const [createdSkill] = await execute(
+        'SELECT * FROM skill_marketplace WHERE id = ?',
+        [result.insertId]
+      );
+  
+      return createdSkill[0] || null;
+  
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Error in createSkill:', error);
+      throw new Error(`Could not create skill: ${error.message}`);
     }
   }
 

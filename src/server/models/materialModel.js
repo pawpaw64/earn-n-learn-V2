@@ -1,18 +1,48 @@
 import { execute } from '../config/db.js';
 
+function formatDate(dateString) {
+  if (!dateString) return null;
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? dateString : date.toISOString().split('T')[0];
+}
+
 class MaterialModel {
-  // Get all materials
+  // Get all materials (single, unified version)
   static async getAll() {
     try {
+      // mysql2/promise returns [rows, fields] format
       const [rows] = await execute(`
-        SELECT m.*, u.name as user_name, u.avatar as user_avatar
+        SELECT 
+          m.id,
+          u.name,
+          m.title as material,
+          m.conditions,
+          m.price,
+          m.availability,
+          m.description,
+          u.email,
+          u.avatar as avatarUrl,
+          m.image_url as imageUrl,
+          m.created_at
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
         ORDER BY m.created_at DESC
       `);
-      return rows;
+
+      // Ensure we always have an array
+      const resultRows = Array.isArray(rows) ? rows : [rows].filter(Boolean);
+
+      return resultRows.map(row => ({
+        ...row,
+        created_at: formatDate(row.created_at)
+      }));
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Database error in MaterialModel.getAll:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      throw new Error('Failed to fetch materials. Please try again later.');
     }
   }
 
@@ -25,38 +55,64 @@ class MaterialModel {
         JOIN users u ON m.user_id = u.id
         WHERE m.id = ?
       `, [id]);
+
+      if (!rows || rows.length === 0) {
+        throw new Error('Material not found');
+      }
+      
       return rows[0];
     } catch (error) {
+      console.error('Error in getById:', error);
       throw new Error(error.message);
     }
   }
 
-  // Create material
+  // Create material (simplified version)
   static async create(materialData) {
-    const { user_id, title, description, condition, price, availability } = materialData;
+    const { user_id, title, description, conditions, price, availability } = materialData;
     
     try {
-      const [result] = await execute(
-        'INSERT INTO material_marketplace (user_id, title, description, condition, price, availability) VALUES (?, ?, ?, ?, ?, ?)',
-        [user_id, title, description, condition, price, availability]
+      if (!user_id || !title) {
+        throw new Error('user_id and title are required fields');
+      }
+
+      const { insertId } = await execute(
+        'INSERT INTO material_marketplace (user_id, title, description, `conditions`, price, availability) VALUES (?, ?, ?, ?, ?, ?)',
+        [user_id, title, description || null, conditions || null, price || null, availability || null]
       );
-      return result.insertId;
+
+      if (!insertId) {
+        throw new Error('Failed to create material - no insert ID returned');
+      }
+
+      const [created] = await execute(
+        'SELECT * FROM material_marketplace WHERE id = ?',
+        [insertId]
+      );
+
+      return created[0] || null;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('Material creation failed:', {
+        error: error.message,
+        stack: error.stack,
+        params: materialData
+      });
+      throw new Error(`Material creation failed: ${error.message}`);
     }
   }
 
   // Update material
   static async update(id, materialData) {
-    const { title, description, condition, price, availability } = materialData;
+    const { title, description, conditions, price, availability } = materialData;
     
     try {
       const [result] = await execute(
-        'UPDATE material_marketplace SET title = ?, description = ?, condition = ?, price = ?, availability = ? WHERE id = ?',
-        [title, description, condition, price, availability, id]
+        'UPDATE material_marketplace SET title = ?, description = ?, `conditions` = ?, price = ?, availability = ? WHERE id = ?',
+        [title, description, conditions, price, availability, id]
       );
       return result.affectedRows > 0;
     } catch (error) {
+      console.error('Update material failed:', error);
       throw new Error(error.message);
     }
   }
@@ -64,9 +120,13 @@ class MaterialModel {
   // Delete material
   static async remove(id) {
     try {
-      const [result] = await execute('DELETE FROM material_marketplace WHERE id = ?', [id]);
+      const [result] = await execute(
+        'DELETE FROM material_marketplace WHERE id = ?',
+        [id]
+      );
       return result.affectedRows > 0;
     } catch (error) {
+      console.error('Delete material failed:', error);
       throw new Error(error.message);
     }
   }
@@ -80,6 +140,7 @@ class MaterialModel {
       );
       return rows;
     } catch (error) {
+      console.error('Get user materials failed:', error);
       throw new Error(error.message);
     }
   }

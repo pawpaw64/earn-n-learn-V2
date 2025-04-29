@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS material_marketplace (
   user_id INT NOT NULL,
   title VARCHAR(100) NOT NULL,
   description TEXT,
-  `condition` VARCHAR(50),  -- Backticks around reserved word
+  conditions VARCHAR(50),  -- Backticks around reserved word
   price VARCHAR(100),
   availability VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

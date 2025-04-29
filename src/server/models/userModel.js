@@ -35,6 +35,13 @@ class UserModel {
       throw new Error(error.message);
     }
   }
+  static async getById(id) {
+    const [rows] = await execute(
+      'SELECT * FROM users WHERE id = ?', 
+      [id]
+    );
+    return rows[0];
+  }
 
   // Create user
   static async create(userData) {

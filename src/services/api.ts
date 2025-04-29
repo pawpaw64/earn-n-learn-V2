@@ -43,15 +43,22 @@ export const getCurrentUser = async () => {
 
 // Job services
 export const fetchJobs = async (): Promise<JobType[]> => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    console.error('No authentication token found');
+    return [];
+  }
+  
+  setAuthToken(token);
   try {
     const response = await axios.get(`${API_URL}/jobs`);
+    console.log('API Response:', response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     return [];
   }
 };
-
 export const createJob = async (jobData: Omit<JobType, 'id'>): Promise<{ jobId: number }> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.post(`${API_URL}/jobs`, jobData);
@@ -168,31 +175,41 @@ export const fetchMyWorks = async () => {
   }
 };
 
-export const fetchMyPosts = async () => {
+export const fetchMyPosts = async (): Promise<{
+  jobs: any[];
+  skills: any[];
+  materials: any[];
+}> => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    // Get user's jobs, skills and materials
+    const userId = getUserIdFromToken(localStorage.getItem('token'));
+    if (!userId) return emptyPosts();
+
     const [jobs, skills, materials] = await Promise.all([
-      axios.get(`${API_URL}/jobs/user`).then(res => res.data),
-      axios.get(`${API_URL}/skills/user/skills`).then(res => res.data),
-      axios.get(`${API_URL}/materials/user/materials`).then(res => res.data)
+      axios.get(`${API_URL}/jobs/user/${userId}`),
+      axios.get(`${API_URL}/skills/user/${userId}`),
+      axios.get(`${API_URL}/materials/user/${userId}`)
     ]);
-    
+
     return {
-      jobs,
-      skills,
-      materials
+      jobs: jobs.data || [],
+      skills: skills.data || [],
+      materials: materials.data || []
     };
   } catch (error) {
-    console.error("Error fetching posts:", error);
-    return {
-      jobs: [],
-      skills: [],
-      materials: []
-    };
+    console.error('Error fetching posts:', error);
+    return emptyPosts();
   }
 };
+function emptyPosts() {
+  return { jobs: [], skills: [], materials: [] };
+}
 
+
+function validateResponse(res) {
+  if (!res.data) throw new Error('Empty response');
+  return Array.isArray(res.data) ? res.data : [res.data];
+}
 export const fetchMyInvoices = async () => {
   setAuthToken(localStorage.getItem('token'));
   // TODO: Replace with actual API call when backend is implemented
@@ -250,3 +267,22 @@ export const uploadProfileImage = async (userId: string, imageFile: File) => {
   
   return response.data.imageUrl;
 };
+
+function getUserIdFromToken(token: string): number | null {
+  try {
+    // JWT tokens are made of 3 parts separated by dots
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    // The middle part contains the payload
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Most JWT implementations store user ID as 'id', 'sub', or 'userId'
+    const userId = payload.id || payload.sub || payload.userId;
+    return userId ? Number(userId) : null;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+}
+

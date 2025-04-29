@@ -7,6 +7,7 @@ import initDatabase from './src/server/database/initDb.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+
 // Initialize database (optional, can be commented out if already initialized)
 initDatabase().then(() => {
   console.log('Database initialization completed');

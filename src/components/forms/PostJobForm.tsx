@@ -69,6 +69,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
         deadline: values.deadline,
         requirements: "",
         location: values.type === "Remote" ? "Remote" : "On Campus",
+        
       };
       
       if (isEditing && itemToEdit?.id) {

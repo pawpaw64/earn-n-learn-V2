@@ -1,18 +1,21 @@
-import JobModel from '../models/jobModel.js';
+import JobModel from '../models/JobModel.js';
 
 // Get all jobs
-export async function getAllJobs(req, res) {
+export const getAllJobs = async (req, res) => {
   try {
     const jobs = await JobModel.getAll();
     res.json(jobs);
   } catch (error) {
     console.error('Get all jobs error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Failed to fetch jobs',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-}
+};
 
 // Get job by ID
-export async function getJobById(req, res) {
+export const getJobById = async (req, res) => {
   try {
     const job = await JobModel.getById(req.params.id);
     if (!job) {
@@ -21,48 +24,59 @@ export async function getJobById(req, res) {
     res.json(job);
   } catch (error) {
     console.error('Get job by ID error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Failed to fetch job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-}
+};
+
+// Get jobs by user ID
+export const getJobsByUserId = async (req, res) => {
+  try {
+    // Verify the requesting user matches the userId param
+    if (req.user.id !== parseInt(req.params.userId)) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    const jobs = await JobModel.getByUserId(req.params.userId);
+    res.json(jobs);
+  } catch (error) {
+    console.error('Get jobs by user ID error:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch jobs',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 
 // Create new job
-export async function createJob(req, res) {
+export const createJob = async (req, res) => {
   try {
     const jobData = {
-      title: req.body.title,
-      description: req.body.description,
-      type: req.body.type || 'General', // Default value
-      payment: req.body.payment || '0', // Match varchar(100) type
-      deadline: req.body.deadline,
-      requirements: req.body.requirements || '',
-      location: req.body.location || 'Remote',
-      user_id: req.user.id // Changed from clientId to match schema
+      ...req.body,
+      user_id: req.user.id
     };
 
-    console.log('Creating job with data:', {
-      ...jobData,
-      description: jobData.description.substring(0, 50) + '...',
-      requirements: jobData.requirements.substring(0, 50) + '...'
-    });
-
-    const jobId = await JobModel.create(jobData);
+    const createdJob = await JobModel.create(jobData);
     
     return res.status(201).json({
       success: true,
-      jobId,
+      data: createdJob,
       message: 'Job created successfully'
     });
   } catch (error) {
-    console.error('Create job controller error:', error);
+    console.error('Create job error:', error);
     return res.status(500).json({
       success: false,
       message: 'Failed to create job',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
-}
+};
+
 // Update job
-export async function updateJob(req, res) {
+export const updateJob = async (req, res) => {
   try {
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
@@ -82,12 +96,15 @@ export async function updateJob(req, res) {
     }
   } catch (error) {
     console.error('Update job error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Failed to update job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-}
+};
 
 // Delete job
-export async function deleteJob(req, res) {
+export const deleteJob = async (req, res) => {
   try {
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
@@ -107,17 +124,9 @@ export async function deleteJob(req, res) {
     }
   } catch (error) {
     console.error('Delete job error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Failed to delete job',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-}
-
-// Get user's jobs
-export async function getUserJobs(req, res) {
-  try {
-    const jobs = await JobModel.getUserJobs(req.user.id);
-    res.json(jobs);
-  } catch (error) {
-    console.error('Get user jobs error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
+};
