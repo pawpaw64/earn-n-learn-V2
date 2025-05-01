@@ -19,7 +19,7 @@ import { submitSkillContact, submitMaterialContact } from "@/services/api";
 interface ContactModalProps {
   recipientName: string;
   itemName: string; 
-  itemId: number;
+  itemId?: number; // Made optional
   itemType: 'skill' | 'material';
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -61,6 +61,11 @@ const ContactModal = ({
     
     if (!message.trim()) {
       toast.error("Please provide a message");
+      return;
+    }
+    
+    if (!itemId) {
+      toast.error("Item ID is required to send a contact message");
       return;
     }
     
@@ -141,7 +146,7 @@ const ContactModal = ({
             <Button 
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !itemId}
             >
               <Send className="h-4 w-4" /> Send Message
             </Button>

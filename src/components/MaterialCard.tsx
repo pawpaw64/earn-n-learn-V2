@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
@@ -8,7 +9,7 @@ interface MaterialCardProps {
   condition: string;
   price: string;
   availability: string;
-  description: string;
+  description?: string; // Made optional
   onContact: () => void;
   onViewDetails: () => void;
 }

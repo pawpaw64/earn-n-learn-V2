@@ -12,6 +12,19 @@ interface PostingSectionProps {
   setPostTab: (tab: string) => void;
 }
 
+// Create wrapper components that handle the initialData prop properly
+const PostJobFormWrapper = ({ initialData }: { initialData?: any }) => {
+  return <PostJobForm initialData={initialData} />;
+};
+
+const ShareSkillFormWrapper = ({ initialData }: { initialData?: any }) => {
+  return <ShareSkillForm initialData={initialData} />;
+};
+
+const ListMaterialFormWrapper = ({ initialData }: { initialData?: any }) => {
+  return <ListMaterialForm initialData={initialData} />;
+};
+
 const PostingSectionContent: React.FC<PostingSectionProps> = ({ postTab, setPostTab }) => {
   const { editItem, editType } = useEditableItem();
   
@@ -51,16 +64,15 @@ const PostingSectionContent: React.FC<PostingSectionProps> = ({ postTab, setPost
         
         <CardContent className="mt-4">
           <TabsContent value="job">
-            {/* Use curly braces to ensure initialData is passed as a prop and not component content */}
-            <PostJobForm initialData={editType === 'job' ? editItem : undefined} />
+            <PostJobFormWrapper initialData={editType === 'job' ? editItem : undefined} />
           </TabsContent>
           
           <TabsContent value="skill">
-            <ShareSkillForm initialData={editType === 'skill' ? editItem : undefined} />
+            <ShareSkillFormWrapper initialData={editType === 'skill' ? editItem : undefined} />
           </TabsContent>
           
           <TabsContent value="material">
-            <ListMaterialForm initialData={editType === 'material' ? editItem : undefined} />
+            <ListMaterialFormWrapper initialData={editType === 'material' ? editItem : undefined} />
           </TabsContent>
         </CardContent>
       </Tabs>

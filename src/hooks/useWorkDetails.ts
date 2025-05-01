@@ -16,7 +16,6 @@ import {
   deleteSkill,
   deleteMaterial,
 } from "@/services/api";
-import { Badge } from "@/components/ui/badge";
 
 interface UseWorkDetailsProps {
   setDetailsItem: React.Dispatch<React.SetStateAction<any>>;
@@ -138,7 +137,6 @@ export const useWorkDetails = ({
     }
   };
 
-  // We'll move the JSX rendering to component files
   return {
     handleViewDetails,
     handleEdit,

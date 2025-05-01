@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { createJob, updateJob } from "@/services/api";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
+import { JobType } from "@/types/marketplace";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -20,7 +21,6 @@ const formSchema = z.object({
   deadline: z.string().optional(),
   requirements: z.string().optional(),
   location: z.string().optional(),
-  status: z.string().optional()
 });
 
 type PostJobFormValues = z.infer<typeof formSchema>;
@@ -44,7 +44,6 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       deadline: "",
       requirements: "",
       location: "",
-      status: "Active"
     }
   });
 
@@ -59,7 +58,6 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
         deadline: itemToEdit.deadline || "",
         requirements: itemToEdit.requirements || "",
         location: itemToEdit.location || "",
-        status: itemToEdit.status || "Active"
       });
     }
   }, [itemToEdit, form]);
@@ -78,7 +76,6 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           deadline: values.deadline,
           requirements: values.requirements || "",
           location: values.location || values.type === "Remote" ? "Remote" : "On Campus",
-          status: "Active",
           poster: localStorage.getItem('userName') || "",
           posterEmail: localStorage.getItem('userEmail') || ""
         });

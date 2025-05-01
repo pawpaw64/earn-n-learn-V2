@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
@@ -5,9 +6,9 @@ import { ArrowUpRight } from "lucide-react";
 interface SkillCardProps {
   name: string;
   skill: string;
-  description: string;
+  description?: string; // Made optional
   pricing: string;
-  experienceLevel: string;
+  experienceLevel?: string; // Made optional
   onContact: () => void;
   onViewDetails: () => void;
 }

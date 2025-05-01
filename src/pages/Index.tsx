@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,8 @@ const Index = () => {
               name="Alex M."
               skill="Python Programming"
               pricing="$20/hour"
+              description="Expert Python developer with 5+ years of experience in web and data projects."
+              experienceLevel="Advanced"
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -103,6 +106,8 @@ const Index = () => {
               name="Sarah K."
               skill="Digital Marketing"
               pricing="$15/hour"
+              description="Specializing in social media campaigns and content strategy for small businesses."
+              experienceLevel="Intermediate"
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -110,6 +115,8 @@ const Index = () => {
               name="James R."
               skill="Guitar Lessons"
               pricing="$25/hour"
+              description="Personalized guitar lessons for beginners to intermediate players. All styles covered."
+              experienceLevel="Expert"
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -117,6 +124,8 @@ const Index = () => {
               name="Emily W."
               skill="Academic Writing"
               pricing="$18/hour"
+              description="Assistance with essays, research papers, and academic editing. English major."
+              experienceLevel="Advanced"
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -137,6 +146,7 @@ const Index = () => {
               condition="Like New"
               price="$45"
               availability="For Sale"
+              description="Chemistry 101 textbook, 12th edition. Used for one semester, no highlights."
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -146,6 +156,7 @@ const Index = () => {
               condition="Good Condition"
               price="$30"
               availability="For Sale"
+              description="Set of acrylic paints, brushes, and small canvases. Perfect starter kit."
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />
@@ -155,6 +166,7 @@ const Index = () => {
               condition="Excellent"
               price="$5/week"
               availability="Available for Rent"
+              description="TI-84 Plus graphing calculator. Perfect for statistics and calculus courses."
               onContact={handleApply}
               onViewDetails={handleViewDetails}
             />

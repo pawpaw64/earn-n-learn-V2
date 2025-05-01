@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import JobCard from "@/components/JobCard";
 import SkillCard from "@/components/SkillCard";
@@ -119,9 +120,11 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
           {filteredSkills.map(skill => (
             <SkillCard 
               key={skill.id}
-              name={skill.name}
-              skill={skill.skill}
+              name={skill.name || ''}
+              skill={skill.skill || skill.skill_name || ''}
+              description={skill.description || ''}
               pricing={skill.pricing}
+              experienceLevel={skill.experienceLevel || 'Beginner'}
               onContact={() => handleContactSkill(skill.id)}
               onViewDetails={() => handleViewSkillDetails(skill.id)}
             />
@@ -135,11 +138,12 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
           {filteredMaterials.map(material => (
             <MaterialCard 
               key={material.id}
-              name={material.name}
-              material={material.material}
-              condition={material.condition}
+              name={material.name || ''}
+              material={material.material || material.title || ''}
+              condition={material.condition || material.conditions || 'Unknown'}
               price={material.price}
               availability={material.availability}
+              description={material.description || ''}
               onContact={() => handleContactMaterial(material.id)}
               onViewDetails={() => handleViewMaterialDetails(material.id)}
             />
@@ -178,8 +182,9 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
       
       {selectedSkill && (
         <ContactModal 
-          recipientName={selectedSkill.name}
-          itemName={selectedSkill.skill}
+          recipientName={selectedSkill.name || ''}
+          itemName={selectedSkill.skill || selectedSkill.skill_name || ''}
+          itemId={selectedSkill.id}
           itemType="skill"
           isOpen={skillContactOpen} 
           onOpenChange={setSkillContactOpen} 
@@ -188,8 +193,9 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
       
       {selectedMaterial && (
         <ContactModal 
-          recipientName={selectedMaterial.name}
-          itemName={selectedMaterial.material}
+          recipientName={selectedMaterial.name || ''}
+          itemName={selectedMaterial.material || selectedMaterial.title || ''}
+          itemId={selectedMaterial.id}
           itemType="material"
           isOpen={materialContactOpen} 
           onOpenChange={setMaterialContactOpen} 
