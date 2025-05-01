@@ -1,12 +1,13 @@
 
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Filter } from "lucide-react";
-import { JobPostCard } from "@/components/JobPostCard";
-import { SkillPostCard } from "@/components/SkillPostCard";
-import { MaterialPostCard } from "@/components/MaterialPostCard";
 import { fetchMyPosts } from "@/services/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
+import { PostsHeader } from "./posts/PostsHeader";
+import { JobPostsSection } from "./posts/JobPostsSection";
+import { SkillPostsSection } from "./posts/SkillPostsSection";
+import { MaterialPostsSection } from "./posts/MaterialPostsSection";
 
 interface MyPostsTabProps {
   onViewDetails: (item: any, type: string) => void;
@@ -14,11 +15,16 @@ interface MyPostsTabProps {
   onDelete: (id: number, type: string) => void;
 }
 
+/**
+ * Main component for the My Posts tab
+ * Handles data fetching and displays different types of posts
+ */
 export function MyPostsTab({ 
   onViewDetails, 
   onEdit, 
   onDelete 
 }: MyPostsTabProps) {
+  // Fetch posts data with React Query
   const { 
     data: posts = { jobs: [], skills: [], materials: [] },
     isLoading: isLoadingPosts,
@@ -34,10 +40,12 @@ export function MyPostsTab({
   const safeSkills = Array.isArray(posts?.skills) ? posts.skills : [];
   const safeMaterials = Array.isArray(posts?.materials) ? posts.materials : [];
 
+  // Show loading state while fetching data
   if (isLoadingPosts) {
     return <LoadingSkeleton />;
   }
 
+  // Show error state if data fetch failed
   if (isPostsError) {
     return (
       <div className="text-center py-10 text-red-500">
@@ -51,79 +59,32 @@ export function MyPostsTab({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">My Posts</h2>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Filter className="w-4 h-4" /> Filter
-        </Button>
-      </div>
+      <PostsHeader />
 
       <div className="space-y-8">
         {/* Jobs Section */}
-        <div>
-          <h3 className="text-md font-semibold mb-4">Jobs</h3>
-          {safeJobs.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {safeJobs.map((job) => (
-                <JobPostCard
-                  key={job.id}
-                  job={job}
-                  onView={() => onViewDetails(job, 'job')}
-                  onEdit={() => onEdit(job, 'job')}
-                  onDelete={() => onDelete(job.id, 'job')}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              No jobs posted yet
-            </div>
-          )}
-        </div>
+        <JobPostsSection 
+          jobs={safeJobs} 
+          onViewDetails={onViewDetails} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+        />
 
         {/* Skills Section */}
-        <div>
-          <h3 className="text-md font-semibold mb-4">Skills</h3>
-          {safeSkills.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {safeSkills.map((skill) => (
-                <SkillPostCard
-                  key={skill.id}
-                  skill={skill}
-                  onView={() => onViewDetails(skill, 'skill')}
-                  onEdit={() => onEdit(skill, 'skill')}
-                  onDelete={() => onDelete(skill.id, 'skill')}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              No skills posted yet
-            </div>
-          )}
-        </div>
+        <SkillPostsSection 
+          skills={safeSkills} 
+          onViewDetails={onViewDetails} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+        />
 
         {/* Materials Section */}
-        <div>
-          <h3 className="text-md font-semibold mb-4">Materials</h3>
-          {safeMaterials.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {safeMaterials.map((material) => (
-                <MaterialPostCard
-                  key={material.id}
-                  material={material}
-                  onView={() => onViewDetails(material, 'material')}
-                  onEdit={() => onEdit(material, 'material')}
-                  onDelete={() => onDelete(material.id, 'material')}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-muted-foreground">
-              No materials posted yet
-            </div>
-          )}
-        </div>
+        <MaterialPostsSection 
+          materials={safeMaterials} 
+          onViewDetails={onViewDetails} 
+          onEdit={onEdit} 
+          onDelete={onDelete} 
+        />
       </div>
     </>
   );

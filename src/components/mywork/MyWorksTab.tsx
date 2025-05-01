@@ -1,18 +1,22 @@
 
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Filter, Eye, Check, X } from "lucide-react";
 import { fetchMyWorks } from "@/services/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
+import { WorksHeader } from "./works/WorksHeader";
+import { WorksGrid } from "./works/WorksGrid";
 
 interface MyWorksTabProps {
   onViewDetails: (item: any, type: string) => void;
   onStatusChange: (id: number, type: string, status: string) => void;
 }
 
+/**
+ * Main component for the My Works tab
+ * Handles data fetching and displaying work items
+ */
 export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
+  // Fetch works data with React Query
   const { 
     data: works = [], 
     isLoading: isLoadingWorks
@@ -24,80 +28,19 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
   // Ensure works is always an array
   const worksArray = Array.isArray(works) ? works : [];
 
+  // Show loading state while fetching data
+  if (isLoadingWorks) {
+    return <LoadingSkeleton />;
+  }
+
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">My Works</h2>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Filter className="w-4 h-4" /> Filter
-        </Button>
-      </div>
-      
-      {isLoadingWorks ? <LoadingSkeleton /> : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {worksArray.length > 0 ? (
-            worksArray.map((work) => (
-              <Card key={work.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">{work.title}</h3>
-                      <p className="text-sm text-muted-foreground">{work.company}</p>
-                    </div>
-                    <Badge variant={work.status === "In Progress" ? "secondary" : "outline"}>
-                      {work.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{work.description}</p>
-                  {work.payment && (
-                    <p className="mt-2 font-medium text-emerald-600">{work.payment}</p>
-                  )}
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {work.startDate} - {work.endDate || "Ongoing"}
-                  </span>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => onViewDetails(work, 'work')}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    {!['Completed', 'Cancelled'].includes(work.status) && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-green-600"
-                          onClick={() => onStatusChange(work.id, 'work', 'Completed')}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600"
-                          onClick={() => onStatusChange(work.id, 'work', 'Cancelled')}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardFooter>
-              </Card>
-            ))
-          ) : (
-            <div className="col-span-2 text-center py-10 text-muted-foreground">
-              No works found
-            </div>
-          )}
-        </div>
-      )}
+      <WorksHeader />
+      <WorksGrid 
+        works={worksArray}
+        onViewDetails={onViewDetails}
+        onStatusChange={onStatusChange}
+      />
     </>
   );
 }

@@ -1,24 +1,21 @@
 
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Filter, Eye } from "lucide-react";
 import { fetchMyInvoices } from "@/services/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
+import { InvoicesHeader } from "./invoices/InvoicesHeader";
+import { InvoicesTable } from "./invoices/InvoicesTable";
 
 interface InvoicesTabProps {
   onViewDetails: (item: any, type: string) => void;
 }
 
+/**
+ * Main component for the Invoices tab
+ * Handles data fetching and displaying invoice data
+ */
 export function InvoicesTab({ onViewDetails }: InvoicesTabProps) {
+  // Fetch invoices data
   const { 
     data: invoices = [], 
     isLoading: isLoadingInvoices
@@ -30,65 +27,18 @@ export function InvoicesTab({ onViewDetails }: InvoicesTabProps) {
   // Ensure invoices is always an array
   const invoicesArray = Array.isArray(invoices) ? invoices : [];
 
+  // Show loading state while fetching data
   if (isLoadingInvoices) {
     return <LoadingSkeleton />;
   }
 
   return (
     <>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Invoices</h2>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Filter className="w-4 h-4" /> Filter
-        </Button>
-      </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Invoice #</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Client</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoicesArray.length > 0 ? (
-            invoicesArray.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell>{invoice.invoiceNumber}</TableCell>
-                <TableCell>{invoice.title}</TableCell>
-                <TableCell>{invoice.client}</TableCell>
-                <TableCell>{invoice.amount}</TableCell>
-                <TableCell>{invoice.date}</TableCell>
-                <TableCell>
-                  <Badge variant={invoice.status === "Paid" ? "secondary" : "outline"}>
-                    {invoice.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => onViewDetails(invoice, 'invoice')}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                No invoices found
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <InvoicesHeader />
+      <InvoicesTable 
+        invoices={invoicesArray}
+        onViewDetails={onViewDetails}
+      />
     </>
   );
 }
