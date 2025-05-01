@@ -58,3 +58,4 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
     </Card>
   );
 }
+export default PostingSection;
