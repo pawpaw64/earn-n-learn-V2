@@ -6,13 +6,16 @@ import { ArrowUpRight } from "lucide-react";
 interface SkillCardProps {
   name: string;
   skill: string;
-  description?: string; // Optional
+  description?: string; // Optional with default value
   pricing: string;
-  experienceLevel?: string; // Optional
+  experienceLevel?: string; // Optional with default value
   onContact: () => void;
   onViewDetails: () => void;
 }
 
+/**
+ * Card component for displaying skill offerings
+ */
 const SkillCard = ({
   name = "Anonymous",
   skill = "Skill not specified",

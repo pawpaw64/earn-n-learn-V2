@@ -1,91 +1,60 @@
 
-import React, { useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import PostJobForm from "@/components/forms/PostJobForm";
-import ShareSkillForm from "@/components/forms/ShareSkillForm";
-import ListMaterialForm from "@/components/forms/ListMaterialForm";
-import { EditableItemProvider, useEditableItem } from "./EditableItemContext";
+import React, { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PostJobFormWrapper } from "./wrappers/PostJobFormWrapper";
+import { ShareSkillFormWrapper } from "./wrappers/ShareSkillFormWrapper";
+import { ListMaterialFormWrapper } from "./wrappers/ListMaterialFormWrapper";
 
 interface PostingSectionProps {
-  postTab: string;
-  setPostTab: (tab: string) => void;
+  activePostTab: string;
+  setActivePostTab: (value: string) => void;
 }
 
-// Create wrapper components that properly use initialData as a prop
-const PostJobFormWrapper = ({ initialData }: { initialData?: any }) => {
-  return <PostJobForm initialData={initialData} />;
-};
+export function PostingSection({ activePostTab, setActivePostTab }: PostingSectionProps) {
+  const [initialData, setInitialData] = useState<any>(null);
 
-const ShareSkillFormWrapper = ({ initialData }: { initialData?: any }) => {
-  return <ShareSkillForm initialData={initialData} />;
-};
-
-const ListMaterialFormWrapper = ({ initialData }: { initialData?: any }) => {
-  return <ListMaterialForm initialData={initialData} />;
-};
-
-const PostingSectionContent: React.FC<PostingSectionProps> = ({ postTab, setPostTab }) => {
-  const { editItem, editType } = useEditableItem();
-  
-  // If we have an edit item, switch to the appropriate tab
   useEffect(() => {
-    if (editType) {
-      switch (editType) {
-        case 'job':
-          setPostTab('job');
-          break;
-        case 'skill':
-          setPostTab('skill');
-          break;
-        case 'material':
-          setPostTab('material');
-          break;
-        default:
-          break;
-      }
+    // Check for edit data in localStorage
+    const editItem = localStorage.getItem("editItem");
+    const editType = localStorage.getItem("editType");
+    
+    if (editItem && editType) {
+      const parsedItem = JSON.parse(editItem);
+      setInitialData(parsedItem);
+      
+      // Set the active tab based on the edit type
+      setActivePostTab(editType);
+      
+      // Clear localStorage after loading data
+      localStorage.removeItem("editItem");
+      localStorage.removeItem("editType");
     }
-  }, [editType, setPostTab]);
-  
+  }, [setActivePostTab]);
+
   return (
-    <Card>
-      <Tabs value={postTab} onValueChange={setPostTab}>
-        <TabsList className="grid grid-cols-3 w-full">
-          <TabsTrigger value="job">
-            {editType === 'job' ? 'Edit Job' : 'Post a Job'}
-          </TabsTrigger>
-          <TabsTrigger value="skill">
-            {editType === 'skill' ? 'Edit Skill' : 'Share a Skill'}
-          </TabsTrigger>
-          <TabsTrigger value="material">
-            {editType === 'material' ? 'Edit Material' : 'List a Material'}
-          </TabsTrigger>
-        </TabsList>
-        
-        <CardContent className="mt-4">
+    <Card className="border-none shadow-none">
+      <CardHeader>
+        <CardTitle>Post a Listing</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activePostTab} onValueChange={setActivePostTab}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="job">Post a Job</TabsTrigger>
+            <TabsTrigger value="skill">Share a Skill</TabsTrigger>
+            <TabsTrigger value="material">List Materials</TabsTrigger>
+          </TabsList>
           <TabsContent value="job">
-            <PostJobFormWrapper initialData={editType === 'job' ? editItem : undefined} />
+            <PostJobFormWrapper initialData={initialData} />
           </TabsContent>
-          
           <TabsContent value="skill">
-            <ShareSkillFormWrapper initialData={editType === 'skill' ? editItem : undefined} />
+            <ShareSkillFormWrapper initialData={initialData} />
           </TabsContent>
-          
           <TabsContent value="material">
-            <ListMaterialFormWrapper initialData={editType === 'material' ? editItem : undefined} />
+            <ListMaterialFormWrapper initialData={initialData} />
           </TabsContent>
-        </CardContent>
-      </Tabs>
+        </Tabs>
+      </CardContent>
     </Card>
   );
-};
-
-const PostingSection: React.FC<PostingSectionProps> = (props) => {
-  return (
-    <EditableItemProvider>
-      <PostingSectionContent {...props} />
-    </EditableItemProvider>
-  );
-};
-
-export default PostingSection;
+}

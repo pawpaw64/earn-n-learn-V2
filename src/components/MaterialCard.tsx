@@ -9,11 +9,14 @@ interface MaterialCardProps {
   condition: string;
   price: string;
   availability: string;
-  description?: string; // Made optional with default value
+  description: string; // Now required with default value below
   onContact: () => void;
   onViewDetails: () => void;
 }
 
+/**
+ * Card component for displaying material listings
+ */
 const MaterialCard = ({
   name = "Anonymous",
   material = "Item not specified",
