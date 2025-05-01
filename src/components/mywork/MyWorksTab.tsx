@@ -21,6 +21,9 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
     queryFn: fetchMyWorks
   });
 
+  // Ensure works is always an array
+  const worksArray = Array.isArray(works) ? works : [];
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
@@ -32,62 +35,63 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
       
       {isLoadingWorks ? <LoadingSkeleton /> : (
         <div className="grid gap-4 md:grid-cols-2">
-          {works?.map((work) => (
-            <Card key={work.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{work.title}</h3>
-                    <p className="text-sm text-muted-foreground">{work.company}</p>
+          {worksArray.length > 0 ? (
+            worksArray.map((work) => (
+              <Card key={work.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{work.title}</h3>
+                      <p className="text-sm text-muted-foreground">{work.company}</p>
+                    </div>
+                    <Badge variant={work.status === "In Progress" ? "secondary" : "outline"}>
+                      {work.status}
+                    </Badge>
                   </div>
-                  <Badge variant={work.status === "In Progress" ? "secondary" : "outline"}>
-                    {work.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground line-clamp-2">{work.description}</p>
-                {work.payment && (
-                  <p className="mt-2 font-medium text-emerald-600">{work.payment}</p>
-                )}
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <span className="text-sm text-muted-foreground">
-                  {work.startDate} - {work.endDate || "Ongoing"}
-                </span>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onViewDetails(work, 'work')}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
-                  {!['Completed', 'Cancelled'].includes(work.status) && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-green-600"
-                        onClick={() => onStatusChange(work.id, 'work', 'Completed')}
-                      >
-                        <Check className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600"
-                        onClick={() => onStatusChange(work.id, 'work', 'Cancelled')}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{work.description}</p>
+                  {work.payment && (
+                    <p className="mt-2 font-medium text-emerald-600">{work.payment}</p>
                   )}
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
-          {works?.length === 0 && (
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    {work.startDate} - {work.endDate || "Ongoing"}
+                  </span>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => onViewDetails(work, 'work')}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    {!['Completed', 'Cancelled'].includes(work.status) && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600"
+                          onClick={() => onStatusChange(work.id, 'work', 'Completed')}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600"
+                          onClick={() => onStatusChange(work.id, 'work', 'Cancelled')}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
             <div className="col-span-2 text-center py-10 text-muted-foreground">
               No works found
             </div>

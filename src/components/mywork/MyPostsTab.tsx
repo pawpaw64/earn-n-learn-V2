@@ -29,6 +29,11 @@ export function MyPostsTab({
     queryFn: fetchMyPosts
   });
 
+  // Ensure all post arrays are valid arrays
+  const safeJobs = Array.isArray(posts?.jobs) ? posts.jobs : [];
+  const safeSkills = Array.isArray(posts?.skills) ? posts.skills : [];
+  const safeMaterials = Array.isArray(posts?.materials) ? posts.materials : [];
+
   if (isLoadingPosts) {
     return <LoadingSkeleton />;
   }
@@ -57,9 +62,9 @@ export function MyPostsTab({
         {/* Jobs Section */}
         <div>
           <h3 className="text-md font-semibold mb-4">Jobs</h3>
-          {posts.jobs.length > 0 ? (
+          {safeJobs.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {posts.jobs.map((job) => (
+              {safeJobs.map((job) => (
                 <JobPostCard
                   key={job.id}
                   job={job}
@@ -79,9 +84,9 @@ export function MyPostsTab({
         {/* Skills Section */}
         <div>
           <h3 className="text-md font-semibold mb-4">Skills</h3>
-          {posts.skills.length > 0 ? (
+          {safeSkills.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {posts.skills.map((skill) => (
+              {safeSkills.map((skill) => (
                 <SkillPostCard
                   key={skill.id}
                   skill={skill}
@@ -101,9 +106,9 @@ export function MyPostsTab({
         {/* Materials Section */}
         <div>
           <h3 className="text-md font-semibold mb-4">Materials</h3>
-          {posts.materials.length > 0 ? (
+          {safeMaterials.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2">
-              {posts.materials.map((material) => (
+              {safeMaterials.map((material) => (
                 <MaterialPostCard
                   key={material.id}
                   material={material}

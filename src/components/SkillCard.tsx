@@ -6,9 +6,9 @@ import { ArrowUpRight } from "lucide-react";
 interface SkillCardProps {
   name: string;
   skill: string;
-  description?: string; // Made optional
+  description?: string; // Optional
   pricing: string;
-  experienceLevel?: string; // Made optional
+  experienceLevel?: string; // Optional
   onContact: () => void;
   onViewDetails: () => void;
 }
@@ -24,6 +24,7 @@ const SkillCard = ({
 }: SkillCardProps) => {
   // Format pricing to be consistent
   const formatPricing = (priceString: string) => {
+    if (!priceString) return "Not specified";
     if (priceString.toLowerCase() === "free") return "Free";
     if (priceString.toLowerCase() === "not specified") return "Not specified";
     if (priceString.toLowerCase().includes("exchange")) return priceString;

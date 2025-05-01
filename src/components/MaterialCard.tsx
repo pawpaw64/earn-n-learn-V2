@@ -9,7 +9,7 @@ interface MaterialCardProps {
   condition: string;
   price: string;
   availability: string;
-  description?: string; // Made optional
+  description?: string; // Made optional with default value
   onContact: () => void;
   onViewDetails: () => void;
 }
@@ -26,6 +26,7 @@ const MaterialCard = ({
 }: MaterialCardProps) => {
   // Format price to be consistent
   const formatPrice = (priceString: string) => {
+    if (!priceString) return "Not specified";
     if (priceString.toLowerCase() === "free") return "Free";
     if (priceString.toLowerCase() === "not specified") return "Not specified";
     if (/^\$?\d+(\/\w+)?$/.test(priceString)) {

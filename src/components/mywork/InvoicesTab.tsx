@@ -27,6 +27,9 @@ export function InvoicesTab({ onViewDetails }: InvoicesTabProps) {
     queryFn: fetchMyInvoices
   });
 
+  // Ensure invoices is always an array
+  const invoicesArray = Array.isArray(invoices) ? invoices : [];
+
   if (isLoadingInvoices) {
     return <LoadingSkeleton />;
   }
@@ -53,30 +56,31 @@ export function InvoicesTab({ onViewDetails }: InvoicesTabProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices?.map((invoice) => (
-            <TableRow key={invoice.id}>
-              <TableCell>{invoice.invoiceNumber}</TableCell>
-              <TableCell>{invoice.title}</TableCell>
-              <TableCell>{invoice.client}</TableCell>
-              <TableCell>{invoice.amount}</TableCell>
-              <TableCell>{invoice.date}</TableCell>
-              <TableCell>
-                <Badge variant={invoice.status === "Paid" ? "secondary" : "outline"}>
-                  {invoice.status}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => onViewDetails(invoice, 'invoice')}
-                >
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-          {invoices?.length === 0 && (
+          {invoicesArray.length > 0 ? (
+            invoicesArray.map((invoice) => (
+              <TableRow key={invoice.id}>
+                <TableCell>{invoice.invoiceNumber}</TableCell>
+                <TableCell>{invoice.title}</TableCell>
+                <TableCell>{invoice.client}</TableCell>
+                <TableCell>{invoice.amount}</TableCell>
+                <TableCell>{invoice.date}</TableCell>
+                <TableCell>
+                  <Badge variant={invoice.status === "Paid" ? "secondary" : "outline"}>
+                    {invoice.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => onViewDetails(invoice, 'invoice')}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                 No invoices found

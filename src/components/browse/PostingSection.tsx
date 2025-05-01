@@ -12,7 +12,7 @@ interface PostingSectionProps {
   setPostTab: (tab: string) => void;
 }
 
-// Create wrapper components that handle the initialData prop properly
+// Create wrapper components that properly use initialData as a prop
 const PostJobFormWrapper = ({ initialData }: { initialData?: any }) => {
   return <PostJobForm initialData={initialData} />;
 };

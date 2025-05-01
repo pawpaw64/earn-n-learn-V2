@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -96,6 +95,14 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
     queryKey: ['receivedMaterialContacts'],
     queryFn: fetchMaterialContacts
   });
+
+  // Ensure all data arrays are valid arrays
+  const applicationsArray = Array.isArray(applications) ? applications : [];
+  const jobApplicationsArray = Array.isArray(jobApplications) ? jobApplications : [];
+  const skillContactsArray = Array.isArray(skillContacts) ? skillContacts : [];
+  const materialContactsArray = Array.isArray(materialContacts) ? materialContacts : [];
+  const receivedSkillContactsArray = Array.isArray(receivedSkillContacts) ? receivedSkillContacts : [];
+  const receivedMaterialContactsArray = Array.isArray(receivedMaterialContacts) ? receivedMaterialContacts : [];
 
   // Render job applications card
   const renderJobApplicationCard = (app: any) => (
@@ -220,7 +227,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
       }
     };
 
-    if (jobApplications.length === 0) {
+    if (jobApplicationsArray.length === 0) {
       return (
         <div className="text-center py-10 text-muted-foreground">
           No applications received for your jobs
@@ -241,7 +248,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
             </TableRow>
           </TableHeader>
           <TableBody>
-            {jobApplications.map((app: any) => (
+            {jobApplicationsArray.map((app: any) => (
               <TableRow key={app.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -312,7 +319,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
 
   // Render received contacts table
   const renderReceivedContactsTable = (type: 'skill' | 'material') => {
-    const contacts = type === 'skill' ? receivedSkillContacts : receivedMaterialContacts;
+    const contacts = type === 'skill' ? receivedSkillContactsArray : receivedMaterialContactsArray;
     const isLoading = type === 'skill' ? isLoadingReceivedSkillContacts : isLoadingReceivedMaterialContacts;
     
     if (isLoading) {
@@ -449,12 +456,14 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
         
         {isLoadingApps ? <LoadingSkeleton /> : (
           <div className="grid gap-4 md:grid-cols-2">
-            {applications?.map((app) => renderJobApplicationCard(app))}
-            {applications?.length === 0 && (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No job applications found
-              </div>
-            )}
+            {applicationsArray.length > 0 ? 
+              applicationsArray.map((app) => renderJobApplicationCard(app)) 
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No job applications found
+                </div>
+              )
+            }
           </div>
         )}
       </TabsContent>
@@ -470,12 +479,14 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
         
         {isLoadingSkillContacts ? <LoadingSkeleton /> : (
           <div className="grid gap-4 md:grid-cols-2">
-            {skillContacts?.map((contact) => renderContactCard(contact, 'skill'))}
-            {skillContacts?.length === 0 && (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No skill inquiries found
-              </div>
-            )}
+            {skillContactsArray.length > 0 ? 
+              skillContactsArray.map((contact) => renderContactCard(contact, 'skill'))
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No skill inquiries found
+                </div>
+              )
+            }
           </div>
         )}
       </TabsContent>
@@ -491,12 +502,14 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
         
         {isLoadingMaterialContacts ? <LoadingSkeleton /> : (
           <div className="grid gap-4 md:grid-cols-2">
-            {materialContacts?.map((contact) => renderContactCard(contact, 'material'))}
-            {materialContacts?.length === 0 && (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No material inquiries found
-              </div>
-            )}
+            {materialContactsArray.length > 0 ? 
+              materialContactsArray.map((contact) => renderContactCard(contact, 'material'))
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No material inquiries found
+                </div>
+              )
+            }
           </div>
         )}
       </TabsContent>
