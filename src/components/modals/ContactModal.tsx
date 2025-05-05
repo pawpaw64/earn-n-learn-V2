@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
-import { submitSkillContact, submitMaterialContact } from "@/services/api";
+import { submitSkillContact, submitMaterialContact } from "@/services/api/api";
 
 interface ContactModalProps {
   recipientName: string;

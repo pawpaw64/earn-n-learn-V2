@@ -17,7 +17,7 @@ import {
   fetchJobApplications,
   fetchSkillContacts,
   fetchMaterialContacts
-} from "@/services/api";
+} from "@/services/api/api";
 
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => void;

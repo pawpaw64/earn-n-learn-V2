@@ -1,7 +1,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { JobType, SkillType, MaterialType } from "@/types/marketplace";
-import { fetchJobs, fetchMaterials, fetchSkills } from "@/services/api"; 
+import { fetchJobs, fetchMaterials, fetchSkills } from "@/services/api/api"; 
 import { getUserIdFromToken } from "@/services/api/auth";
 
 /**

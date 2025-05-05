@@ -15,7 +15,7 @@ import {
   deleteJob,
   deleteSkill,
   deleteMaterial,
-} from "@/services/api";
+} from "@/services/api/api";
 
 interface UseWorkDetailsProps {
   setDetailsItem: React.Dispatch<React.SetStateAction<any>>;

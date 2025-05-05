@@ -35,26 +35,35 @@ class ApplicationModel {
 
   // Create new application
   static async create(applicationData) {
+    // Validate input
+    if (!applicationData || typeof applicationData !== 'object') {
+      throw new Error('Invalid application data');
+    }
+  
     const { job_id, user_id, cover_letter } = applicationData;
     
-    const [result] = await execute(
-      'INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)',
-      [job_id, user_id, cover_letter]
-    );
-    
-    return result.insertId;
+    // Validate required fields
+    if (!job_id || !user_id || !cover_letter) {
+      throw new Error('Missing required application fields');
+    }
+  
+    try {
+      const result = await execute(
+        'INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)',
+        [job_id, user_id, cover_letter]
+      );
+      
+      // Handle different result formats
+      const insertId = Array.isArray(result) ? 
+        (result[0]?.insertId || result.insertId) : 
+        result.insertId;
+      
+      return insertId;
+    } catch (error) {
+      console.error('ApplicationModel.create() - Error:', error);
+      throw error;
+    }
   }
-
-  // Update application status
-  static async updateStatus(id, status) {
-    const [result] = await execute(
-      'UPDATE applications SET status = ? WHERE id = ?',
-      [status, id]
-    );
-    
-    return result.affectedRows > 0;
-  }
-
   // Get applications by user ID (applicant)
 // In getByUserId()
 static async getByUserId(userId) {

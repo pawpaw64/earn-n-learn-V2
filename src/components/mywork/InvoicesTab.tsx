@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMyInvoices } from "@/services/api";
+import { fetchMyInvoices } from "@/services/api/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { InvoicesHeader } from "./invoices/InvoicesHeader";
 import { InvoicesTable } from "./invoices/InvoicesTable";

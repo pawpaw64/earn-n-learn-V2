@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
-import { createMaterial } from "@/services/api";
+import { createMaterial } from "@/services/api/api";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { fetchUserProfile, updateUserProfile } from "@/services/api";
+import { fetchUserProfile, updateUserProfile } from "@/services/api/api";
 
 // Define interfaces for the profile data structure
 interface Skill {

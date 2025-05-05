@@ -2,7 +2,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { fetchMyPosts } from "@/services/api";
+import { fetchMyPosts } from "@/services/api/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { PostsHeader } from "./posts/PostsHeader";
 import { JobPostsSection } from "./posts/JobPostsSection";

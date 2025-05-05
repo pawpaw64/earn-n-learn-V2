@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMyWorks } from "@/services/api";
+import { fetchMyWorks } from "@/services/api/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { WorksHeader } from "./works/WorksHeader";
 import { WorksGrid } from "./works/WorksGrid";
