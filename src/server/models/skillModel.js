@@ -7,6 +7,41 @@ function formatDate(dateString) {
 }
 
 class SkillModel {
+  static async getAllExcludingUser(userId) {
+    try {
+      const rows = await execute(`
+        SELECT 
+          s.id,
+          u.name,
+          s.skill_name as skill,
+          s.pricing,
+          s.description,
+          u.email,
+          u.avatar as avatarUrl,
+          s.availability,
+          s.created_at,
+          s.image_url as imageUrl
+        FROM skill_marketplace s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.user_id != ?
+        ORDER BY s.created_at DESC
+      `, [userId]);
+  
+      if (!Array.isArray(rows)) {
+        console.error('Unexpected result format:', { type: typeof rows, value: rows });
+        throw new Error('Invalid data format received from database');
+      }
+      
+      return rows.map(row => ({
+        ...row,
+        created_at: formatDate(row.created_at),
+      }));
+    } catch (error) {
+      console.error('Database error in getAllExcludingUser:', error);
+      throw new Error('Failed to fetch skills');
+    }
+  }
+  
   // Get all skills in marketplace
   static async getAllSkills() {
     try {

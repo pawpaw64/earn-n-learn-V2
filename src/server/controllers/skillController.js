@@ -3,7 +3,15 @@ import SkillModel from '../models/skillModel.js';
 // Get all skills in marketplace
 export async function getAllSkills(req, res) {
   try {
-    const skills = await SkillModel.getAllSkills();
+    const excludeUserId = req.query.excludeUserId;
+    let skills;
+    
+    if (excludeUserId) {
+      skills = await SkillModel.getAllExcludingUser(excludeUserId);
+    } else {
+      skills = await SkillModel.getAllSkills();
+    }
+    
     res.json(skills);
   } catch (error) {
     console.error('Get all skills error:', error);

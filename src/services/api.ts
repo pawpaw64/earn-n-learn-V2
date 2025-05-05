@@ -42,23 +42,20 @@ export const getCurrentUser = async () => {
 };
 
 // Job services
-export const fetchJobs = async (): Promise<JobType[]> => {
+export const fetchJobs = async (excludeUserId?: number): Promise<JobType[]> => {
   const token = localStorage.getItem('token');
-  if (!token) {
-    console.error('No authentication token found');
-    return [];
-  }
-  
   setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/jobs`);
+    const url = excludeUserId 
+      ? `${API_URL}/jobs?excludeUserId=${excludeUserId}`
+      : `${API_URL}/jobs`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     return [];
   }
 };
-
 export const createJob = async (jobData: Omit<JobType, 'id'>): Promise<{ jobId: number }> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.post(`${API_URL}/jobs`, jobData);
@@ -84,15 +81,21 @@ export const getJobDetails = async (id: number): Promise<JobType> => {
 };
 
 // Skill services
-export const fetchSkills = async (): Promise<SkillType[]> => {
+export const fetchSkills = async (excludeUserId?: number): Promise<SkillType[]> => {
+  const token = localStorage.getItem('token');
+  setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/skills`);
+    const url = excludeUserId 
+      ? `${API_URL}/skills?excludeUserId=${excludeUserId}`
+      : `${API_URL}/skills`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching skills:", error);
     return [];
   }
 };
+
 
 export const createSkill = async (skillData: any): Promise<{ skillId: number }> => {
   setAuthToken(localStorage.getItem('token'));
@@ -119,9 +122,14 @@ export const getSkillDetails = async (id: number): Promise<any> => {
 };
 
 // Material services
-export const fetchMaterials = async (): Promise<MaterialType[]> => {
+export const fetchMaterials = async (excludeUserId?: number): Promise<MaterialType[]> => {
+  const token = localStorage.getItem('token');
+  setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/materials`);
+    const url = excludeUserId 
+      ? `${API_URL}/materials?excludeUserId=${excludeUserId}`
+      : `${API_URL}/materials`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching materials:", error);

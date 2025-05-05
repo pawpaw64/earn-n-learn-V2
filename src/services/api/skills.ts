@@ -8,9 +8,14 @@ const API_URL = 'http://localhost:8080/api';
 /**
  * Fetch all available skills
  */
-export const fetchSkills = async (): Promise<SkillType[]> => {
+export const fetchSkills = async (excludeUserId?: number): Promise<SkillType[]> => {
+  const token = localStorage.getItem('token');
+  setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/skills`);
+    const url = excludeUserId 
+      ? `${API_URL}/skills?excludeUserId=${excludeUserId}`
+      : `${API_URL}/skills`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching skills:", error);

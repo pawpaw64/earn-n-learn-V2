@@ -11,8 +11,9 @@ function formatDate(date) {
 }
 
 class JobModel {
+  // Unified method to handle query results
   static async #handleQueryResult(result) {
-
+    // Handle cases where result is already the rows array
     if (Array.isArray(result)) {
       return result;
     }
@@ -30,7 +31,32 @@ class JobModel {
     console.error('Unexpected query result format:', result);
     return [];
   }
-
+  static async getAllExcludingUser(userId) {
+    try {
+      const result = await execute(`
+        SELECT 
+          j.id, j.title, j.type, j.description, j.payment,
+          j.location, j.deadline, j.requirements, j.created_at,
+          u.name as poster, 
+          u.email as posterEmail, 
+          u.avatar as posterAvatar
+        FROM jobs j
+        JOIN users u ON j.user_id = u.id
+        WHERE j.user_id != ?
+        ORDER BY j.created_at DESC
+      `, [userId]);
+      
+      const rows = await this.#handleQueryResult(result);
+      
+      return rows.map(row => ({
+        ...row,
+        deadline: formatDate(row.deadline),
+      }));
+    } catch (error) {
+      console.error('Database error in getAllExcludingUser:', error);
+      throw new Error('Failed to fetch jobs');
+    }
+  }
   // Get all jobs
   static async getAll() {
     try {

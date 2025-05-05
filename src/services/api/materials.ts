@@ -8,9 +8,14 @@ const API_URL = 'http://localhost:8080/api';
 /**
  * Fetch all available materials
  */
-export const fetchMaterials = async (): Promise<MaterialType[]> => {
+export const fetchMaterials = async (excludeUserId?: number): Promise<MaterialType[]> => {
+  const token = localStorage.getItem('token');
+  setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/materials`);
+    const url = excludeUserId 
+      ? `${API_URL}/materials?excludeUserId=${excludeUserId}`
+      : `${API_URL}/materials`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching materials:", error);

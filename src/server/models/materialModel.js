@@ -7,6 +7,37 @@ function formatDate(dateString) {
 }
 
 class MaterialModel {
+  static async getAllExcludingUser(userId) {
+    try {
+      const [rows] = await execute(`
+        SELECT 
+          m.id,
+          u.name,
+          m.title as material,
+          m.conditions,
+          m.price,
+          m.availability,
+          m.description,
+          u.email,
+          u.avatar as avatarUrl,
+          m.image_url as imageUrl,
+          m.created_at
+        FROM material_marketplace m
+        JOIN users u ON m.user_id = u.id
+        WHERE m.user_id != ?
+        ORDER BY m.created_at DESC
+      `, [userId]);
+  
+      const resultRows = Array.isArray(rows) ? rows : [rows].filter(Boolean);
+      return resultRows.map(row => ({
+        ...row,
+        created_at: formatDate(row.created_at)
+      }));
+    } catch (error) {
+      console.error('Database error in getAllExcludingUser:', error);
+      throw new Error('Failed to fetch materials');
+    }
+  }
   // Get all materials (single, unified version)
   static async getAll() {
     try {

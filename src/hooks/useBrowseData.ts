@@ -34,29 +34,16 @@ const useBrowseData = () => {
       try {
         setLoading(prev => ({ ...prev, jobs: true, skills: true, materials: true }));
         
-        const jobsData = await fetchJobs();
-        const skillsData = await fetchSkills();   
-        const materialsData = await fetchMaterials();
+        const token = localStorage.getItem('token');
+        const userId = token ? getUserIdFromToken(token) : null;
         
-        // Filter out user's own listings if user is logged in
-        if (currentUserId) {
-          // Filter jobs that don't belong to current user
-          const filteredJobs = jobsData.filter(job => job.user_id !== currentUserId);
-          setJobs(filteredJobs);
-          
-          // Filter skills that don't belong to current user
-          const filteredSkills = skillsData.filter(skill => skill.user_id !== currentUserId);
-          setSkills(filteredSkills);
-          
-          // Filter materials that don't belong to current user
-          const filteredMaterials = materialsData.filter(material => material.user_id !== currentUserId);
-          setMaterials(filteredMaterials);
-        } else {
-          // If not logged in, show all listings
-          setJobs(jobsData);
-          setSkills(skillsData);
-          setMaterials(materialsData);
-        }
+        const jobsData = await fetchJobs(userId || undefined);
+        const skillsData = await fetchSkills(userId || undefined);   
+        const materialsData = await fetchMaterials(userId || undefined);
+       
+        setJobs(jobsData);
+        setSkills(skillsData);
+        setMaterials(materialsData);
         
       } catch (err: any) {
         setError({
@@ -74,7 +61,7 @@ const useBrowseData = () => {
       }
     };
     fetchData();
-  }, [currentUserId]);
+  });
 
   // Filter logic
   const filteredJobs = useMemo(() => {

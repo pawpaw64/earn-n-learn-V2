@@ -8,23 +8,20 @@ const API_URL = 'http://localhost:8080/api';
 /**
  * Fetch all available jobs
  */
-export const fetchJobs = async (): Promise<JobType[]> => {
+export const fetchJobs = async (excludeUserId?: number): Promise<JobType[]> => {
   const token = localStorage.getItem('token');
-  if (!token) {
-    console.error('No authentication token found');
-    return [];
-  }
-  
   setAuthToken(token);
   try {
-    const response = await axios.get(`${API_URL}/jobs`);
+    const url = excludeUserId 
+      ? `${API_URL}/jobs?excludeUserId=${excludeUserId}`
+      : `${API_URL}/jobs`;
+    const response = await axios.get(url);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
     return [];
   }
 };
-
 /**
  * Create a new job listing
  */

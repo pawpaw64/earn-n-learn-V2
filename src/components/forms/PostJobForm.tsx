@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { z } from "zod";
+import { string, z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -39,7 +39,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
     defaultValues: {
       title: "",
       description: "",
-      type: "On-campus",
+      type: "",
       payment: "",
       deadline: "",
       requirements: "",
@@ -53,7 +53,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       form.reset({
         title: itemToEdit.title || "",
         description: itemToEdit.description || "",
-        type: itemToEdit.type || "On-campus",
+        type: itemToEdit.type || "",
         payment: itemToEdit.payment || "",
         deadline: itemToEdit.deadline || "",
         requirements: itemToEdit.requirements || "",
@@ -78,6 +78,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           location: values.location || values.type === "Remote" ? "Remote" : "On Campus",
           poster: localStorage.getItem('userName') || "",
           posterEmail: localStorage.getItem('userEmail') || ""
+          
         });
         toast.success("Job posted successfully!");
       }

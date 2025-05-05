@@ -6,7 +6,7 @@ const API_URL = 'http://localhost:8080/api';
 /**
  * Sets the authentication token for API requests
  */
-export const setAuthToken = (token: string ) => {
+export const setAuthToken = (token: string | null) => {
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
@@ -53,7 +53,7 @@ export const getCurrentUser = async () => {
 /**
  * Get user ID from JWT token
  */
-export function getUserIdFromToken(token: string ): number | null {
+export function getUserIdFromToken(token: string | null): number | null {
   if (!token) return null;
   
   try {

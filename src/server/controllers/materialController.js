@@ -3,14 +3,21 @@ import MaterialModel from '../models/materialModel.js';
 // Get all materials
 export async function getAllMaterials(req, res) {
   try {
-    const materials = await MaterialModel.getAll();
+    const excludeUserId = req.query.excludeUserId;
+    let materials;
+    
+    if (excludeUserId) {
+      materials = await MaterialModel.getAllExcludingUser(excludeUserId);
+    } else {
+      materials = await MaterialModel.getAll();
+    }
+    
     res.json(materials);
   } catch (error) {
     console.error('Get all materials error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
-
 // Get material by ID
 export async function getMaterialById(req, res) {
   try {
