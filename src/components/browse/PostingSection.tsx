@@ -11,6 +11,9 @@ interface PostingSectionProps {
   setActivePostTab: (value: string) => void;
 }
 
+/**
+ * Section for posting new listings (jobs, skills, materials)
+ */
 export function PostingSection({ activePostTab, setActivePostTab }: PostingSectionProps) {
   const [initialData, setInitialData] = useState<any>(null);
 
@@ -58,4 +61,3 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
     </Card>
   );
 }
-export default PostingSection;

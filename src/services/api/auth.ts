@@ -29,25 +29,77 @@ export interface AuthResponse {
  * Register a new user
  */
 export const registerUser = async (userData: any): Promise<AuthResponse> => {
-  const response = await axios.post(`${API_URL}/users/register`, userData);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_URL}/users/register`, userData);
+    return response.data;
+  } catch (error: any) {
+    console.error("Registration error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 /**
  * Login an existing user
  */
 export const loginUser = async (credentials: any): Promise<AuthResponse> => {
-  const response = await axios.post(`${API_URL}/users/login`, credentials);
-  return response.data;
+  try {
+    const response = await axios.post(`${API_URL}/users/login`, credentials);
+    
+    // Store token and user ID in localStorage for persistent auth
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+      
+      // Extract and store user ID for convenience
+      const userId = getUserIdFromToken(response.data.token);
+      if (userId) localStorage.setItem('userId', userId.toString());
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    console.error("Login error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 /**
  * Get current logged in user
  */
 export const getCurrentUser = async () => {
-  setAuthToken(localStorage.getItem('token'));
-  const response = await axios.get(`${API_URL}/users/me`);
-  return response.data;
+  try {
+    // Set token before making request
+    setAuthToken(localStorage.getItem('token'));
+    
+    const response = await axios.get(`${API_URL}/users/me`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Get current user error:", error.response?.data || error.message);
+    
+    // If token is invalid, clear it
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      setAuthToken(null);
+    }
+    
+    throw error;
+  }
+};
+
+/**
+ * Log out the current user
+ */
+export const logoutUser = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('userId');
+  setAuthToken(null);
+};
+
+/**
+ * Check if user is logged in
+ */
+export const isUserLoggedIn = (): boolean => {
+  const token = localStorage.getItem('token');
+  return !!token;
 };
 
 /**

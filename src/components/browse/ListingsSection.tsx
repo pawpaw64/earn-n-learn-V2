@@ -19,13 +19,16 @@ interface ListingsSectionProps {
   filteredMaterials: MaterialType[];
 }
 
+/**
+ * Component for displaying filtered listings in the browse page
+ */
 const ListingsSection: React.FC<ListingsSectionProps> = ({
-  jobs,
-  skills,
-  materials,
-  filteredJobs,
-  filteredSkills,
-  filteredMaterials,
+  jobs = [],
+  skills = [],
+  materials = [],
+  filteredJobs = [],
+  filteredSkills = [],
+  filteredMaterials = [],
 }) => {
   // State for Details Modals
   const [selectedJob, setSelectedJob] = useState<JobType | null>(null);
@@ -95,60 +98,77 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
     setMaterialContactOpen(true);
   };
 
+  // Ensure we have arrays to work with
+  const safeFilteredJobs = Array.isArray(filteredJobs) ? filteredJobs : [];
+  const safeFilteredSkills = Array.isArray(filteredSkills) ? filteredSkills : [];
+  const safeFilteredMaterials = Array.isArray(filteredMaterials) ? filteredMaterials : [];
+
   return (
     <>
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Jobs</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredJobs.map(job => (
-            <JobCard 
-              key={job.id}
-              title={job.title}
-              type={job.type}
-              description={job.description}
-              payment={job.payment}
-              onApply={() => handleApplyJob(job.id)}
-              onViewDetails={() => handleViewJobDetails(job.id)}
-            />
-          ))}
-        </div>
+        {safeFilteredJobs.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safeFilteredJobs.map(job => (
+              <JobCard 
+                key={job.id}
+                title={job.title || 'Untitled'}
+                type={job.type || 'General'}
+                description={job.description || ''}
+                payment={job.payment || 'Not specified'}
+                onApply={() => handleApplyJob(job.id)}
+                onViewDetails={() => handleViewJobDetails(job.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center py-10">No jobs found matching your criteria.</p>
+        )}
       </div>
       
       <div className="space-y-4 mt-8">
         <h2 className="text-xl font-semibold">Skills</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredSkills.map(skill => (
-            <SkillCard 
-              key={skill.id}
-              name={skill.name || ''}
-              skill={skill.skill || skill.skill_name || ''}
-              description={skill.description || ''}
-              pricing={skill.pricing}
-              experienceLevel={skill.experienceLevel || 'Beginner'}
-              onContact={() => handleContactSkill(skill.id)}
-              onViewDetails={() => handleViewSkillDetails(skill.id)}
-            />
-          ))}
-        </div>
+        {safeFilteredSkills.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safeFilteredSkills.map(skill => (
+              <SkillCard 
+                key={skill.id}
+                name={skill.name || ''}
+                skill={skill.skill || skill.skill_name || ''}
+                description={skill.description || ''}
+                pricing={skill.pricing || 'Not specified'}
+                experienceLevel={skill.experienceLevel || 'Beginner'}
+                onContact={() => handleContactSkill(skill.id)}
+                onViewDetails={() => handleViewSkillDetails(skill.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center py-10">No skills found matching your criteria.</p>
+        )}
       </div>
       
       <div className="space-y-4 mt-8">
         <h2 className="text-xl font-semibold">Materials</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredMaterials.map(material => (
-            <MaterialCard 
-              key={material.id}
-              name={material.name || ''}
-              material={material.material || material.title || ''}
-              condition={material.condition || material.conditions || 'Unknown'}
-              price={material.price}
-              availability={material.availability}
-              description={material.description || ''}
-              onContact={() => handleContactMaterial(material.id)}
-              onViewDetails={() => handleViewMaterialDetails(material.id)}
-            />
-          ))}
-        </div>
+        {safeFilteredMaterials.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {safeFilteredMaterials.map(material => (
+              <MaterialCard 
+                key={material.id}
+                name={material.name || ''}
+                material={material.material || material.title || ''}
+                condition={material.condition || 'Unknown'}
+                price={material.price || 'Not specified'}
+                availability={material.availability || 'Unknown'}
+                description={material.description || ''}
+                onContact={() => handleContactMaterial(material.id)}
+                onViewDetails={() => handleViewMaterialDetails(material.id)}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center py-10">No materials found matching your criteria.</p>
+        )}
       </div>
 
       {/* Details Modals */}

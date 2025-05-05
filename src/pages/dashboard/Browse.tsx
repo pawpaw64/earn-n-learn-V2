@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SearchFilters from "@/components/browse/SearchFilters";
 import ListingsSection from "@/components/browse/ListingsSection";
-import PostingSection from "@/components/browse/PostingSection";
+import { PostingSection } from "@/components/browse/PostingSection";
 import useBrowseData from "@/hooks/useBrowseData";
 
 export default function Browse() {
@@ -57,8 +57,8 @@ export default function Browse() {
         
         <TabsContent value="post" className="space-y-6">
           <PostingSection 
-            postTab={postTab}
-            setPostTab={setPostTab}
+            activePostTab={postTab}
+            setActivePostTab={setPostTab}
           />
         </TabsContent>
       </Tabs>
