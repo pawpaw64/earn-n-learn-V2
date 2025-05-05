@@ -6,16 +6,10 @@ import ListingsSection from "@/components/browse/ListingsSection";
 import { PostingSection } from "@/components/browse/PostingSection";
 import useBrowseData from "@/hooks/useBrowseData";
 
-/**
- * Browse page component
- * Allows users to explore marketplace listings and post their own
- */
 export default function Browse() {
-  // Tab state management
   const [mainTab, setMainTab] = useState("explore");
   const [postTab, setPostTab] = useState("job");
   
-  // Use the browse data hook for listings and filters
   const {
     searchQuery,
     setSearchQuery,

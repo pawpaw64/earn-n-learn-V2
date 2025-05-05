@@ -1,10 +1,17 @@
 
 import React from "react";
 import { JobPostCard } from "@/components/JobPostCard";
-import { JobType } from "@/types/marketplace";
+
+interface JobPost {
+  id: number;
+  title: string;
+  company?: string;
+  description?: string;
+  [key: string]: any;
+}
 
 interface JobPostsSectionProps {
-  jobs: JobType[];
+  jobs: JobPost[];
   onViewDetails: (item: any, type: string) => void;
   onEdit: (item: any, type: string) => void;
   onDelete: (id: number, type: string) => void;

@@ -13,7 +13,6 @@ interface PostingSectionProps {
 
 /**
  * Section for posting new listings (jobs, skills, materials)
- * Handles the tabs for different posting types and edit mode
  */
 export function PostingSection({ activePostTab, setActivePostTab }: PostingSectionProps) {
   const [initialData, setInitialData] = useState<any>(null);
@@ -24,21 +23,15 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
     const editType = localStorage.getItem("editType");
     
     if (editItem && editType) {
-      try {
-        const parsedItem = JSON.parse(editItem);
-        setInitialData(parsedItem);
-        
-        // Set the active tab based on the edit type
-        setActivePostTab(editType);
-        
-        // Clear localStorage after loading data
-        localStorage.removeItem("editItem");
-        localStorage.removeItem("editType");
-      } catch (error) {
-        console.error("Error parsing edit item:", error);
-        localStorage.removeItem("editItem");
-        localStorage.removeItem("editType");
-      }
+      const parsedItem = JSON.parse(editItem);
+      setInitialData(parsedItem);
+      
+      // Set the active tab based on the edit type
+      setActivePostTab(editType);
+      
+      // Clear localStorage after loading data
+      localStorage.removeItem("editItem");
+      localStorage.removeItem("editType");
     }
   }, [setActivePostTab]);
 
