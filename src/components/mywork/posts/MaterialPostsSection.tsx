@@ -1,15 +1,10 @@
 
 import React from "react";
 import { MaterialPostCard } from "@/components/MaterialPostCard";
-
-interface MaterialPost {
-  id: number;
-  title?: string;
-  [key: string]: any;
-}
+import { MaterialType } from "@/types/marketplace";
 
 interface MaterialPostsSectionProps {
-  materials: MaterialPost[];
+  materials: MaterialType[];
   onViewDetails: (item: any, type: string) => void;
   onEdit: (item: any, type: string) => void;
   onDelete: (id: number, type: string) => void;

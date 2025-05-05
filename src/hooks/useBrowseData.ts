@@ -6,14 +6,20 @@ import { getUserIdFromToken } from "@/services/api/auth";
 
 /**
  * Custom hook for managing browse data and filters
+ * Handles fetching, filtering, and sorting of marketplace listings
  */
 const useBrowseData = () => {
+  // State for search and filter parameters
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  
+  // State for marketplace data
   const [jobs, setJobs] = useState<JobType[]>([]);
   const [skills, setSkills] = useState<SkillType[]>([]);
   const [materials, setMaterials] = useState<MaterialType[]>([]);
+  
+  // State for tracking loading and error states
   const [loading, setLoading] = useState({
     jobs: false,
     skills: false,
@@ -34,9 +40,11 @@ const useBrowseData = () => {
       try {
         setLoading(prev => ({ ...prev, jobs: true, skills: true, materials: true }));
         
+        // Get current user ID to exclude their own listings
         const token = localStorage.getItem('token');
         const userId = token ? getUserIdFromToken(token) : null;
         
+        // Fetch data from API with user ID to exclude their own listings
         const jobsData = await fetchJobs(userId || undefined);
         const skillsData = await fetchSkills(userId || undefined);   
         const materialsData = await fetchMaterials(userId || undefined);
@@ -61,9 +69,9 @@ const useBrowseData = () => {
       }
     };
     fetchData();
-  });
+  }, []); // Added empty dependency array to prevent infinite renders
 
-  // Filter logic
+  // Filter jobs based on search query and category filter
   const filteredJobs = useMemo(() => {
     let filtered = jobs;
     
@@ -80,7 +88,6 @@ const useBrowseData = () => {
     
     // Sort logic
     if (sortBy === "price-low") {
-      // Simple sorting by extracting dollar amounts
       filtered = [...filtered].sort((a, b) => {
         const aPrice = parseInt(a.payment.replace(/[^0-9]/g, '')) || 0;
         const bPrice = parseInt(b.payment.replace(/[^0-9]/g, '')) || 0;
@@ -92,24 +99,24 @@ const useBrowseData = () => {
         const bPrice = parseInt(b.payment.replace(/[^0-9]/g, '')) || 0;
         return bPrice - aPrice;
       });
-      
     } else if (sortBy === "recent") {
       filtered = [...filtered].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
       );
     }
     
     return filtered;
   }, [jobs, searchQuery, categoryFilter, sortBy]);
 
-  // Filter skills
+  // Filter skills based on search query and category filter
   const filteredSkills = useMemo(() => {
     let filtered = skills;
     
     if (searchQuery) {
       filtered = filtered.filter(skill => {
-        const skillName = skill.skill || skill.skill_name || '';
-        return skillName.toLowerCase().includes(searchQuery.toLowerCase())
+        const skillName = skill.skill || skill.skill_name || skill.name || '';
+        return skillName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              (skill.description || '').toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
     
@@ -117,26 +124,31 @@ const useBrowseData = () => {
       return [];
     }
     
-    // Sort logic similar to jobs
+    // Sort logic
     if (sortBy === "price-low" || sortBy === "price-high") {
       filtered = [...filtered].sort((a, b) => {
         const aPrice = a.pricing?.includes("Free") ? 0 : parseInt((a.pricing || '0').replace(/[^0-9]/g, '')) || 0;
         const bPrice = b.pricing?.includes("Free") ? 0 : parseInt((b.pricing || '0').replace(/[^0-9]/g, '')) || 0;
         return sortBy === "price-low" ? aPrice - bPrice : bPrice - aPrice;
       });
+    } else if (sortBy === "recent") {
+      filtered = [...filtered].sort((a, b) => 
+        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+      );
     }
     
     return filtered;
   }, [skills, searchQuery, categoryFilter, sortBy]);
 
-  // Filter materials
+  // Filter materials based on search query and category filter
   const filteredMaterials = useMemo(() => {
     let filtered = materials;
     
     if (searchQuery) {
       filtered = filtered.filter(material => {
-        const materialName = material.material || material.title || '';
-        return materialName.toLowerCase().includes(searchQuery.toLowerCase())
+        const materialName = material.material || material.title || material.name || '';
+        return materialName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               (material.description || '').toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
     
@@ -144,13 +156,17 @@ const useBrowseData = () => {
       return [];
     }
     
-    // Sort logic similar to jobs and skills
+    // Sort logic
     if (sortBy === "price-low" || sortBy === "price-high") {
       filtered = [...filtered].sort((a, b) => {
         const aPrice = (a.price || '').includes("Free") ? 0 : parseInt((a.price || '0').replace(/[^0-9]/g, '')) || 0;
         const bPrice = (b.price || '').includes("Free") ? 0 : parseInt((b.price || '0').replace(/[^0-9]/g, '')) || 0;
         return sortBy === "price-low" ? aPrice - bPrice : bPrice - aPrice;
       });
+    } else if (sortBy === "recent") {
+      filtered = [...filtered].sort((a, b) => 
+        new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime()
+      );
     }
     
     return filtered;

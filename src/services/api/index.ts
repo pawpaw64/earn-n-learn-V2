@@ -1,5 +1,8 @@
 
-import { setAuthToken } from './auth';
+/**
+ * API Services index file
+ * Centralizes all API exports for easier importing throughout the application
+ */
 
 // Re-export all API functions from their modules
 export * from './auth';

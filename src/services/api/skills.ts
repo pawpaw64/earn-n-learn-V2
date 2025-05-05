@@ -7,6 +7,8 @@ const API_URL = 'http://localhost:8080/api';
 
 /**
  * Fetch all available skills
+ * @param excludeUserId - The user ID whose skills should be excluded from the results
+ * @returns A promise resolving to an array of skills
  */
 export const fetchSkills = async (excludeUserId?: number): Promise<SkillType[]> => {
   const token = localStorage.getItem('token');
@@ -25,8 +27,10 @@ export const fetchSkills = async (excludeUserId?: number): Promise<SkillType[]> 
 
 /**
  * Create a new skill offering
+ * @param skillData - The skill data to create
+ * @returns A promise resolving to the created skill ID
  */
-export const createSkill = async (skillData: any): Promise<{ skillId: number }> => {
+export const createSkill = async (skillData: Partial<SkillType>): Promise<{ skillId: number }> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.post(`${API_URL}/skills`, skillData);
   return response.data;
@@ -34,8 +38,11 @@ export const createSkill = async (skillData: any): Promise<{ skillId: number }> 
 
 /**
  * Update an existing skill
+ * @param id - The ID of the skill to update
+ * @param skillData - The new skill data
+ * @returns A promise resolving to the updated skill data
  */
-export const updateSkill = async (id: number, skillData: any): Promise<any> => {
+export const updateSkill = async (id: number, skillData: Partial<SkillType>): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.put(`${API_URL}/skills/${id}`, skillData);
   return response.data;
@@ -43,6 +50,8 @@ export const updateSkill = async (id: number, skillData: any): Promise<any> => {
 
 /**
  * Delete a skill offering
+ * @param id - The ID of the skill to delete
+ * @returns A promise resolving to the deleted skill data
  */
 export const deleteSkill = async (id: number): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
@@ -52,8 +61,10 @@ export const deleteSkill = async (id: number): Promise<any> => {
 
 /**
  * Get detailed information for a specific skill
+ * @param id - The ID of the skill to get details for
+ * @returns A promise resolving to the skill details
  */
-export const getSkillDetails = async (id: number): Promise<any> => {
+export const getSkillDetails = async (id: number): Promise<SkillType> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.get(`${API_URL}/skills/${id}`);
   return response.data;

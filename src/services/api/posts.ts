@@ -14,6 +14,7 @@ function emptyPosts() {
 
 /**
  * Fetch all postings made by the current user
+ * @returns Promise with user posts including jobs, skills, and materials
  */
 export const fetchMyPosts = async (): Promise<{
   jobs: any[];
@@ -25,6 +26,7 @@ export const fetchMyPosts = async (): Promise<{
     const userId = getUserIdFromToken(localStorage.getItem('token'));
     if (!userId) return emptyPosts();
 
+    // Fetch all user posts in parallel
     const [jobs, skills, materials] = await Promise.all([
       axios.get(`${API_URL}/jobs/user/${userId}`),
       axios.get(`${API_URL}/skills/user/${userId}`),

@@ -1,15 +1,10 @@
 
 import React from "react";
 import { SkillPostCard } from "@/components/SkillPostCard";
-
-interface SkillPost {
-  id: number;
-  skill_name?: string;
-  [key: string]: any;
-}
+import { SkillType } from "@/types/marketplace";
 
 interface SkillPostsSectionProps {
-  skills: SkillPost[];
+  skills: SkillType[];
   onViewDetails: (item: any, type: string) => void;
   onEdit: (item: any, type: string) => void;
   onDelete: (id: number, type: string) => void;
