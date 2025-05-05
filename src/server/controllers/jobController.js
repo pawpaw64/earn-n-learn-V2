@@ -47,7 +47,7 @@ export const getJobsByUserId = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized' });
     }
 
-    const jobs = await JobModel.getByUserId(req.params.userId);
+    const jobs = await JobModel.getUserJobs(req.params.userId);
     res.json(jobs);
   } catch (error) {
     console.error('Get jobs by user ID error:', error);

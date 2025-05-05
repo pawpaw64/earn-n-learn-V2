@@ -1,6 +1,6 @@
 
 import ApplicationModel from '../models/applicationModel.js';
-
+import JobModel from '../models/jobModel.js';
 import NotificationModel from '../models/notificationModel.js';
 import UserModel from '../models/userModel.js';
 

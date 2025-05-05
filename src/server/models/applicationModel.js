@@ -56,8 +56,11 @@ class ApplicationModel {
   }
 
   // Get applications by user ID (applicant)
-  static async getByUserId(userId) {
-    const [rows] = await execute(`
+// In getByUserId()
+static async getByUserId(userId) {
+  console.debug('ApplicationModel.getByUserId() - Start', { userId });
+  try {
+    const result = await execute(`
       SELECT a.*, j.title, j.type, j.payment, j.deadline, j.location,
       u.name as poster_name, u.email as poster_email
       FROM applications a
@@ -66,12 +69,33 @@ class ApplicationModel {
       WHERE a.user_id = ?
       ORDER BY a.created_at DESC
     `, [userId]);
+    
+    // Handle different result formats
+    const rows = Array.isArray(result) ? 
+      (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
+      [];
+    
+    console.debug('ApplicationModel.getByUserId() - Result', {
+      userId,
+      count: rows.length,
+      sample: rows.length > 0 ? rows[0] : null
+    });
     return rows;
+  } catch (error) {
+    console.error('ApplicationModel.getByUserId() - Error', {
+      userId,
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
+}
 
-  // Get applications to user's jobs (poster)
-  static async getToUserJobs(userId) {
-    const [rows] = await execute(`
+// In getToUserJobs()
+static async getToUserJobs(userId) {
+  console.debug('ApplicationModel.getToUserJobs() - Start', { userId });
+  try {
+    const result = await execute(`
       SELECT a.*, j.title, j.type, j.payment,
       u.name as applicant_name, u.email as applicant_email, u.avatar as applicant_avatar
       FROM applications a
@@ -80,8 +104,27 @@ class ApplicationModel {
       WHERE j.user_id = ?
       ORDER BY a.created_at DESC
     `, [userId]);
+    
+    // Handle different result formats
+    const rows = Array.isArray(result) ? 
+      (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
+      [];
+    
+    console.debug('ApplicationModel.getToUserJobs() - Result', {
+      userId,
+      count: rows.length,
+      sample: rows.length > 0 ? rows[0] : null
+    });
     return rows;
+  } catch (error) {
+    console.error('ApplicationModel.getToUserJobs() - Error', {
+      userId,
+      error: error.message,
+      stack: error.stack
+    });
+    throw error;
   }
+}
 
   // Check if user has already applied for a job
   static async checkDuplicate(jobId, userId) {
@@ -89,7 +132,7 @@ class ApplicationModel {
       'SELECT id FROM applications WHERE job_id = ? AND user_id = ?',
       [jobId, userId]
     );
-    return rows.length > 0;
+    return rows;
   }
 }
 

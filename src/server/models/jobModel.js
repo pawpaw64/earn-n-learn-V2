@@ -142,7 +142,7 @@ class JobModel {
       throw new Error('Failed to create job');
     }
   }
-  static async getByUserId(userId) {
+  static async getById(userId) {
     try {
       const result = await execute(
         `SELECT j.*, u.name as poster_name, u.avatar as poster_avatar
