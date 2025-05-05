@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 // Register
 export async function register(req, res) {
   try {
+    console.log('Registering new user... [userController.js.register]');
     const { name, email, password, studentId, university, course, mobile } = req.body;
 
     // Validate input
@@ -66,6 +67,7 @@ export async function register(req, res) {
 
 // Login
 export async function login(req, res) {
+  console.log('Logging in user... [userController.js.login]');
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -116,6 +118,7 @@ export async function login(req, res) {
 
 // Get current user
 export async function getMe(req, res) {
+  console.log('Getting current user... [userController.js.getMe]');
   try {
     const user = await UserModel.findById(req.user.id);
     if (!user) {
@@ -136,6 +139,7 @@ export async function getMe(req, res) {
 
 // Update user profile
 export async function updateProfile(req, res) {
+  console.log('Updating user profile... [userController.js.updateProfile]');
   try {
     const updated = await UserModel.updateProfile(req.user.id, req.body);
     res.json({ 
@@ -150,6 +154,7 @@ export async function updateProfile(req, res) {
 
 // Get user applications
 export async function getUserApplications(req, res) {
+  console.log('Getting user applications... [userController.js.getUserApplications]');
   try {
     // This is a mock response until the applications table is implemented
     // In a real app, you'd query the applications table
@@ -183,6 +188,7 @@ export async function getUserApplications(req, res) {
 
 // Get user works
 export async function getUserWorks(req, res) {
+  console.log('Getting user works... [userController.js.getUserWorks]');
   try {
     // This is a mock response until the works table is implemented
     // In a real app, you'd query the works table

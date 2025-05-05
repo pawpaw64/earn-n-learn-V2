@@ -3,6 +3,7 @@ import JobModel from '../models/JobModel.js';
 // Get all jobs
 export const getAllJobs = async (req, res) => {
   try {
+    console.log('Fetching all jobs...[jobController.js.getAllJobs]');
     const jobs = await JobModel.getAll();
     res.json(jobs);
   } catch (error) {
@@ -17,6 +18,7 @@ export const getAllJobs = async (req, res) => {
 // Get job by ID
 export const getJobById = async (req, res) => {
   try {
+    console.log('Fetching job by ID...[jobController.js.getJobById]');
     const job = await JobModel.getById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
@@ -34,6 +36,7 @@ export const getJobById = async (req, res) => {
 // Get jobs by user ID
 export const getJobsByUserId = async (req, res) => {
   try {
+    console.log('Fetching jobs by user ID...[jobController.js.getJobsByUserId]'); 
     // Verify the requesting user matches the userId param
     if (req.user.id !== parseInt(req.params.userId)) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -53,6 +56,7 @@ export const getJobsByUserId = async (req, res) => {
 // Create new job
 export const createJob = async (req, res) => {
   try {
+    console.log('Creating new job...[jobController.js.createJob]'); 
     const jobData = {
       ...req.body,
       user_id: req.user.id
@@ -78,6 +82,7 @@ export const createJob = async (req, res) => {
 // Update job
 export const updateJob = async (req, res) => {
   try {
+    console.log('Updating job...[jobController.js.updateJob]');
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
     if (!job) {
@@ -106,6 +111,7 @@ export const updateJob = async (req, res) => {
 // Delete job
 export const deleteJob = async (req, res) => {
   try {
+    console.log('Deleting job...[jobController.js.deleteJob]');
     // First check if job exists and belongs to user
     const job = await JobModel.getById(req.params.id);
     if (!job) {

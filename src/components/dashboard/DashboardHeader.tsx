@@ -1,9 +1,8 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Menu, Search, User } from "lucide-react";
+import { Bell, Menu, Search, User, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { fetchUnreadNotificationCount, fetchNotifications, markNotificationAsRead } from "@/services/api";
 import { toast } from "sonner";
@@ -12,15 +11,17 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-
+import { useNavigate } from "react-router-dom";
 import DashboardSidebar from "./DashboardSidebar";
 
 const DashboardHeader = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "https://github.com/shadcn.png",
+    name: "",
+    email: "",
+    avatar: "",
   });
   
   const [unreadCount, setUnreadCount] = useState(0);
@@ -28,16 +29,14 @@ const DashboardHeader = () => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
-    // Fetch user data from localStorage or global state
-    const userName = localStorage.getItem("userName");
-    const userEmail = localStorage.getItem("userEmail");
-    const userAvatar = localStorage.getItem("userAvatar");
+    // Fetch user data from localStorage or your auth context
+    const userData = JSON.parse(localStorage.getItem("user") || "{}");
     
-    if (userName && userEmail) {
+    if (userData) {
       setUser({
-        name: userName,
-        email: userEmail,
-        avatar: userAvatar || "https://github.com/shadcn.png",
+        name: userData.name || userData.email?.split('@')[0] || "User",
+        email: userData.email || "",
+        avatar: userData.avatar || userData.image || "",
       });
     }
     
@@ -58,6 +57,15 @@ const DashboardHeader = () => {
     
     return () => clearInterval(intervalId);
   }, []);
+
+  const handleLogout = () => {
+    // Clear user data from storage
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    // Redirect to login page
+    navigate("/");
+    // You might want to add a global state update here if using context
+  };
 
   const handleNotificationClick = async () => {
     try {
@@ -86,14 +94,22 @@ const DashboardHeader = () => {
     }
   };
 
+  const getAvatarFallback = () => {
+    if (user.name) {
+      return user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase();
+    }
+    return <User className="h-5 w-5" />;
+  };
+
   return (
     <div className="sticky top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px-8">
       <Sheet>
         <SheetTrigger className="md:hidden">
-          <Button
-            size="icon"
-            variant="outline"
-          >
+          <Button size="icon" variant="outline">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
@@ -105,10 +121,7 @@ const DashboardHeader = () => {
       <div className="flex-1 gap-2 flex md:flex items-center">
         <div className="relative md:w-64 lg:w-80">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="w-full pl-9"
-          />
+          <Input placeholder="Search..." className="w-full pl-9" />
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -148,12 +161,34 @@ const DashboardHeader = () => {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Avatar>
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback>
-            <User className="h-5 w-5" />
-          </AvatarFallback>
-        </Avatar>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <div className="flex items-center p-2">
+              <Avatar className="h-10 w-10 mr-2">
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

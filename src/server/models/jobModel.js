@@ -11,9 +11,8 @@ function formatDate(date) {
 }
 
 class JobModel {
-  // Unified method to handle query results
   static async #handleQueryResult(result) {
-    // Handle cases where result is already the rows array
+
     if (Array.isArray(result)) {
       return result;
     }
