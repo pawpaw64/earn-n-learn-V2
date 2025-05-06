@@ -1,4 +1,3 @@
-
 export interface MessageType {
   id: number;
   sender_id: number;
