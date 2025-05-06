@@ -1,28 +1,32 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Trash2, Plus } from "lucide-react";
+import { CreditCard, Trash2, Plus, Wallet } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import axios from 'axios';
 
 interface PaymentMethod {
   id: string;
   type: string;
+  provider: string;
   last4: string;
-  expiryMonth: string;
-  expiryYear: string;
+  expiryMonth?: string;
+  expiryYear?: string;
   isDefault: boolean;
 }
 
 export function PaymentMethods() {
   const { toast } = useToast();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
+    // Fallback data
     {
       id: "pm_1",
       type: "visa",
+      provider: "card",
       last4: "4242",
       expiryMonth: "12",
       expiryYear: "2025",
@@ -31,6 +35,7 @@ export function PaymentMethods() {
     {
       id: "pm_2",
       type: "mastercard",
+      provider: "card",
       last4: "5678",
       expiryMonth: "09",
       expiryYear: "2024",
@@ -38,22 +43,73 @@ export function PaymentMethods() {
     }
   ]);
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
+  const [isAddBkashOpen, setIsAddBkashOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleSetDefault = (id: string) => {
-    setPaymentMethods(methods => 
-      methods.map(method => ({
-        ...method,
-        isDefault: method.id === id
-      }))
-    );
-    
-    toast({
-      title: "Default Payment Method Updated",
-      description: "Your default payment method has been updated successfully."
-    });
+  const fetchPaymentMethods = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await axios.get('http://localhost:8080/api/wallet/payment-methods', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.length > 0) {
+        setPaymentMethods(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching payment methods:', error);
+      // Keep fallback data on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteCard = (id: string) => {
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, []);
+
+  const handleSetDefault = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.put(`http://localhost:8080/api/wallet/payment-methods/${id}/default`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setPaymentMethods(methods => 
+        methods.map(method => ({
+          ...method,
+          isDefault: method.id === id
+        }))
+      );
+      
+      toast({
+        title: "Default Payment Method Updated",
+        description: "Your default payment method has been updated successfully."
+      });
+    } catch (error) {
+      console.error('Error setting default payment method:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update default payment method.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteCard = async (id: string) => {
     // Don't allow deleting the default card
     const methodToDelete = paymentMethods.find(m => m.id === id);
     if (methodToDelete?.isDefault) {
@@ -65,50 +121,183 @@ export function PaymentMethods() {
       return;
     }
     
-    setPaymentMethods(methods => methods.filter(method => method.id !== id));
-    toast({
-      title: "Card Removed",
-      description: "Your payment method has been removed successfully."
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.delete(`http://localhost:8080/api/wallet/payment-methods/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Update local state
+      setPaymentMethods(methods => methods.filter(method => method.id !== id));
+      
+      toast({
+        title: "Payment Method Removed",
+        description: "Your payment method has been removed successfully."
+      });
+    } catch (error) {
+      console.error('Error deleting payment method:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete payment method.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAddCard = (cardDetails: {
+  const handleAddCard = async (cardDetails: {
     cardNumber: string;
     cardholderName: string;
     expiryMonth: string;
     expiryYear: string;
     cvc: string;
   }) => {
-    // In a real app, this would call a secure API to create a payment method
-    const newMethod: PaymentMethod = {
-      id: `pm_${Date.now()}`,
-      type: cardDetails.cardNumber.startsWith("4") ? "visa" : "mastercard",
-      last4: cardDetails.cardNumber.slice(-4),
-      expiryMonth: cardDetails.expiryMonth,
-      expiryYear: cardDetails.expiryYear,
-      isDefault: paymentMethods.length === 0 // Make it default if it's the first one
-    };
-    
-    setPaymentMethods([...paymentMethods, newMethod]);
-    setIsAddCardOpen(false);
-    
-    toast({
-      title: "Card Added",
-      description: "Your payment method has been added successfully."
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      // In a real app, this would call a secure API to create a payment method
+      // Simplified here for demonstration
+      const last4 = cardDetails.cardNumber.slice(-4);
+      const type = cardDetails.cardNumber.startsWith('4') ? 'visa' : 'mastercard';
+      const isDefault = paymentMethods.length === 0;
+      
+      // Call API to add payment method
+      const response = await axios.post('http://localhost:8080/api/wallet/payment-methods', 
+        {
+          type,
+          last4,
+          expiryMonth: cardDetails.expiryMonth,
+          expiryYear: cardDetails.expiryYear,
+          provider: 'card',
+          isDefault
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Add to local state
+      const newMethod: PaymentMethod = {
+        id: response.data.id || `pm_${Date.now()}`,
+        type,
+        provider: 'card',
+        last4,
+        expiryMonth: cardDetails.expiryMonth,
+        expiryYear: cardDetails.expiryYear,
+        isDefault
+      };
+      
+      setPaymentMethods([...paymentMethods, newMethod]);
+      setIsAddCardOpen(false);
+      
+      toast({
+        title: "Card Added",
+        description: "Your payment method has been added successfully."
+      });
+    } catch (error) {
+      console.error('Error adding payment method:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add payment method.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddBkash = async (details: {
+    phoneNumber: string;
+    isDefault: boolean;
+  }) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      // Call API to add bKash payment method
+      const response = await axios.post('http://localhost:8080/api/wallet/payment-methods', 
+        {
+          type: 'bkash',
+          last4: details.phoneNumber.slice(-4),
+          provider: 'bkash',
+          isDefault: details.isDefault
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Add to local state
+      const newMethod: PaymentMethod = {
+        id: response.data.id || `pm_${Date.now()}`,
+        type: 'bkash',
+        provider: 'bkash',
+        last4: details.phoneNumber.slice(-4),
+        isDefault: details.isDefault
+      };
+      
+      if (details.isDefault) {
+        setPaymentMethods(methods => methods.map(m => ({
+          ...m,
+          isDefault: false
+        })));
+      }
+      
+      setPaymentMethods(prev => [...prev, newMethod]);
+      setIsAddBkashOpen(false);
+      
+      toast({
+        title: "bKash Added",
+        description: "Your bKash account has been added successfully."
+      });
+    } catch (error) {
+      console.error('Error adding bKash account:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add bKash account.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getProviderIcon = (provider: string, type: string) => {
+    switch (provider) {
+      case 'bkash':
+        return <Wallet className="h-4 w-4 text-pink-500" />;
+      default:
+        return <CreditCard className="h-4 w-4" />;
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Your Payment Methods</h2>
-        <Button 
-          onClick={() => setIsAddCardOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add New
-        </Button>
+        
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setIsAddCardOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <CreditCard className="w-4 h-4" />
+            <span className="hidden sm:inline">Add Card</span>
+          </Button>
+          
+          <Button 
+            onClick={() => setIsAddBkashOpen(true)}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Wallet className="w-4 h-4 text-pink-500" />
+            <span className="hidden sm:inline">Add bKash</span>
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -118,11 +307,15 @@ export function PaymentMethods() {
               <div className="flex justify-between">
                 <div>
                   <CardTitle className="text-lg font-medium flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    {method.type.charAt(0).toUpperCase() + method.type.slice(1)}
+                    {getProviderIcon(method.provider, method.type)}
+                    {method.provider === 'bkash' 
+                      ? 'bKash' 
+                      : method.type.charAt(0).toUpperCase() + method.type.slice(1)}
                   </CardTitle>
                   <CardDescription>
-                    **** **** **** {method.last4}
+                    {method.provider === 'bkash' 
+                      ? `**** **** ${method.last4}` 
+                      : `**** **** **** ${method.last4}`}
                   </CardDescription>
                 </div>
                 {method.isDefault && (
@@ -133,9 +326,16 @@ export function PaymentMethods() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Expires: {method.expiryMonth}/{method.expiryYear}
-              </p>
+              {method.provider === 'card' && method.expiryMonth && method.expiryYear && (
+                <p className="text-sm text-muted-foreground">
+                  Expires: {method.expiryMonth}/{method.expiryYear}
+                </p>
+              )}
+              {method.provider === 'bkash' && (
+                <p className="text-sm text-muted-foreground">
+                  Mobile Wallet
+                </p>
+              )}
             </CardContent>
             <CardFooter className="flex justify-between">
               {!method.isDefault && (
@@ -160,16 +360,34 @@ export function PaymentMethods() {
         ))}
       </div>
       
-      {paymentMethods.length === 0 && (
+      {paymentMethods.length === 0 && !isLoading && (
         <div className="text-center py-8">
           <p className="text-muted-foreground">No payment methods added yet.</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => setIsAddCardOpen(true)}
-          >
-            Add Your First Card
-          </Button>
+          <div className="flex justify-center gap-2 mt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddCardOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <CreditCard className="w-4 h-4" />
+              Add Card
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddBkashOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Wallet className="w-4 h-4 text-pink-500" />
+              Add bKash
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading state */}
+      {isLoading && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading payment methods...</p>
         </div>
       )}
       
@@ -177,6 +395,12 @@ export function PaymentMethods() {
         isOpen={isAddCardOpen} 
         onClose={() => setIsAddCardOpen(false)} 
         onAdd={handleAddCard} 
+      />
+
+      <AddBkashDialog
+        isOpen={isAddBkashOpen}
+        onClose={() => setIsAddBkashOpen(false)}
+        onAdd={handleAddBkash}
       />
     </div>
   );
@@ -310,6 +534,88 @@ function AddCardDialog({ isOpen, onClose, onAdd }: AddCardDialogProps) {
           <DialogFooter>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? "Adding..." : "Add Card"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface AddBkashDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onAdd: (details: {
+    phoneNumber: string;
+    isDefault: boolean;
+  }) => void;
+}
+
+function AddBkashDialog({ isOpen, onClose, onAdd }: AddBkashDialogProps) {
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isDefault, setIsDefault] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      onAdd({ phoneNumber, isDefault });
+      setPhoneNumber("");
+      setIsDefault(false);
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Wallet className="h-5 w-5 text-pink-500" />
+            Add bKash Account
+          </DialogTitle>
+          <DialogDescription>
+            Enter your bKash mobile number to add it as a payment method.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="phoneNumber">bKash Mobile Number</Label>
+              <Input
+                id="phoneNumber"
+                placeholder="01XXXXXXXXX"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <RadioGroup value={isDefault ? "yes" : "no"} onValueChange={(val) => setIsDefault(val === "yes")}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="default-yes" />
+                  <Label htmlFor="default-yes">Set as default payment method</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="default-no" />
+                  <Label htmlFor="default-no">Keep current default</Label>
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              type="submit" 
+              disabled={isLoading || !phoneNumber}
+              className="bg-pink-600 hover:bg-pink-700"
+            >
+              {isLoading ? "Adding..." : "Add bKash"}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,63 +7,115 @@ import { useToast } from "@/hooks/use-toast";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { TopUpDialog } from './TopUpDialog';
 import { WithdrawDialog } from './WithdrawDialog';
+import axios from 'axios';
+
+interface WalletData {
+  balance: number;
+  pendingEscrow: number;
+  monthlyEarnings: number;
+  monthlySpending: number;
+  savingsProgress: number;
+}
 
 export function WalletOverview() {
   const { toast } = useToast();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-  const [walletData, setWalletData] = useState({
-    balance: 2580.42,
+  const [isLoading, setIsLoading] = useState(true);
+  const [walletData, setWalletData] = useState<WalletData>({
+    balance: 2580.42, // Fallback data
     pendingEscrow: 750.00,
     monthlyEarnings: 1200.00,
     monthlySpending: 450.50,
     savingsProgress: 65
   });
 
-  // For demonstration purposes, this would be fetched from an API in a real application
-  useEffect(() => {
-    // Simulate API call
-    const fetchWalletData = async () => {
-      // In a real app, this would be an API call
-      // const response = await fetch('/api/wallet');
-      // const data = await response.json();
-      // setWalletData(data);
-    };
+  const fetchWalletData = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setIsLoading(false);
+        return;
+      }
 
+      const response = await axios.get('http://localhost:8080/api/wallet/details', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setWalletData(response.data);
+    } catch (error) {
+      console.error('Error fetching wallet data:', error);
+      // We keep the fallback data in case of error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchWalletData();
   }, []);
 
-  const handleTopUp = (amount: number) => {
-    // In a real app, this would call an API
-    setWalletData(prev => ({
-      ...prev,
-      balance: prev.balance + amount
-    }));
-    
-    toast({
-      title: "Success",
-      description: `Added $${amount.toFixed(2)} to your wallet.`,
-    });
+  const handleTopUp = async (amount: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.post('http://localhost:8080/api/wallet/topup', 
+        { amount, paymentMethod: 'card' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update wallet data
+      fetchWalletData();
+      
+      toast({
+        title: "Success",
+        description: `Added $${amount.toFixed(2)} to your wallet.`,
+      });
+      
+    } catch (error) {
+      console.error('Top up error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to top up your wallet. Please try again.",
+        variant: "destructive"
+      });
+    }
     
     setIsTopUpOpen(false);
   };
 
-  const handleWithdraw = (amount: number) => {
-    // In a real app, this would call an API
-    if (amount <= walletData.balance) {
-      setWalletData(prev => ({
-        ...prev,
-        balance: prev.balance - amount
-      }));
+  const handleWithdraw = async (amount: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.post('http://localhost:8080/api/wallet/withdraw', 
+        { amount, withdrawMethod: 'bank' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update wallet data
+      fetchWalletData();
       
       toast({
         title: "Success",
         description: `Withdrew $${amount.toFixed(2)} from your wallet.`,
       });
-    } else {
+      
+    } catch (error: any) {
+      console.error('Withdraw error:', error);
       toast({
         title: "Error",
-        description: "Insufficient balance for withdrawal.",
+        description: error.response?.data?.message || "Failed to withdraw from your wallet.",
         variant: "destructive"
       });
     }
@@ -84,7 +135,9 @@ export function WalletOverview() {
           <CardContent>
             <div className="flex items-baseline space-x-2">
               <DollarSign className="h-5 w-5 text-emerald-500" />
-              <span className="text-3xl font-bold">${walletData.balance.toFixed(2)}</span>
+              <span className="text-3xl font-bold">
+                ${isLoading ? "..." : walletData.balance.toFixed(2)}
+              </span>
             </div>
             
             {walletData.pendingEscrow > 0 && (
@@ -101,6 +154,7 @@ export function WalletOverview() {
               variant="default" 
               className="flex-1"
               onClick={() => setIsTopUpOpen(true)}
+              disabled={isLoading}
             >
               Top Up
             </Button>
@@ -108,6 +162,7 @@ export function WalletOverview() {
               variant="outline" 
               className="flex-1"
               onClick={() => setIsWithdrawOpen(true)}
+              disabled={isLoading}
             >
               Withdraw
             </Button>
@@ -123,7 +178,9 @@ export function WalletOverview() {
           <CardContent>
             <div className="flex items-baseline space-x-2">
               <TrendingUp className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold">${walletData.monthlyEarnings.toFixed(2)}</span>
+              <span className="text-2xl font-bold">
+                ${isLoading ? "..." : walletData.monthlyEarnings.toFixed(2)}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -137,7 +194,9 @@ export function WalletOverview() {
           <CardContent>
             <div className="flex items-baseline space-x-2">
               <TrendingDown className="h-5 w-5 text-red-500" />
-              <span className="text-2xl font-bold">${walletData.monthlySpending.toFixed(2)}</span>
+              <span className="text-2xl font-bold">
+                ${isLoading ? "..." : walletData.monthlySpending.toFixed(2)}
+              </span>
             </div>
           </CardContent>
         </Card>

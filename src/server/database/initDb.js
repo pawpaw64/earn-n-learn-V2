@@ -1,3 +1,4 @@
+
 import { createConnection } from 'mysql2/promise';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
@@ -23,12 +24,18 @@ async function initDatabase() {
 
     console.log('Connected to MySQL server');
 
-    // Read schema file
+    // Read schema files
     const schemaPath = join(__dirname, 'schema.sql');
+    const walletSchemaPath = join(__dirname, 'wallet_schema.sql');
+    
     const schema = readFileSync(schemaPath, 'utf8');
+    const walletSchema = readFileSync(walletSchemaPath, 'utf8');
+
+    // Combine schemas
+    const fullSchema = schema + walletSchema;
 
     // Split schema into separate SQL statements
-    const statements = schema
+    const statements = fullSchema
       .split(';')
       .filter(statement => statement.trim() !== '');
 

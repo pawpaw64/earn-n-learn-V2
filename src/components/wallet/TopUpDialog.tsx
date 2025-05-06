@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Wallet } from "lucide-react";
 
 interface TopUpDialogProps {
   isOpen: boolean;
@@ -16,6 +16,7 @@ interface TopUpDialogProps {
 export function TopUpDialog({ isOpen, onClose, onTopUp }: TopUpDialogProps) {
   const [amount, setAmount] = useState<string>("50");
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
+  const [bkashNumber, setBkashNumber] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +36,10 @@ export function TopUpDialog({ isOpen, onClose, onTopUp }: TopUpDialogProps) {
         onTopUp(amountValue);
       }
       setIsLoading(false);
+      
+      // Reset form
+      setAmount("50");
+      setBkashNumber("");
     }, 1000);
   };
 
@@ -87,17 +92,45 @@ export function TopUpDialog({ isOpen, onClose, onTopUp }: TopUpDialogProps) {
                   <Label htmlFor="paypal">PayPal</Label>
                 </div>
                 <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="bkash" id="bkash" />
+                  <Label htmlFor="bkash" className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-pink-500" />
+                    bKash
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
                   <RadioGroupItem value="mobile" id="mobile" />
-                  <Label htmlFor="mobile">Mobile Wallet</Label>
+                  <Label htmlFor="mobile">Other Mobile Wallet</Label>
                 </div>
               </RadioGroup>
             </div>
+            
+            {/* Show bKash number field if bKash is selected */}
+            {paymentMethod === 'bkash' && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="bkashNumber" className="text-right">
+                  bKash Number
+                </Label>
+                <Input
+                  id="bkashNumber"
+                  className="col-span-3"
+                  value={bkashNumber}
+                  onChange={(e) => setBkashNumber(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                />
+              </div>
+            )}
           </div>
           
           <DialogFooter>
             <Button 
               type="submit" 
-              disabled={isLoading || !amount || parseFloat(amount) <= 0}
+              disabled={
+                isLoading || 
+                !amount || 
+                parseFloat(amount) <= 0 ||
+                (paymentMethod === 'bkash' && !bkashNumber)
+              }
             >
               {isLoading ? "Processing..." : "Top Up"}
             </Button>

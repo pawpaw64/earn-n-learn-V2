@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownLeft, Wallet } from "lucide-react";
 import { format } from 'date-fns';
+import axios from 'axios';
 
 interface Transaction {
   id: string;
@@ -17,7 +18,7 @@ interface Transaction {
   status: 'completed' | 'pending' | 'failed';
 }
 
-// Mock data - in a real app this would come from an API
+// Mock data as fallback
 const mockTransactions: Transaction[] = [
   {
     id: "tx1",
@@ -72,14 +73,48 @@ const mockTransactions: Transaction[] = [
 export function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchTransactions = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setTransactions(mockTransactions); // Fallback to mock data
+        setIsLoading(false);
+        return;
+      }
+
+      // Get filter parameter
+      const filterParam = filter !== 'all' ? `?filter=${filter}` : '';
+      
+      const response = await axios.get(`http://localhost:8080/api/wallet/transactions${filterParam}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.length > 0) {
+        // Transform the API response to match our Transaction interface
+        const transformedTransactions = response.data.map((tx: any) => ({
+          ...tx,
+          date: new Date(tx.date)
+        }));
+        setTransactions(transformedTransactions);
+      } else {
+        // Use mock data if no transactions returned
+        setTransactions(mockTransactions);
+      }
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setTransactions(mockTransactions); // Fallback to mock data
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // This would be a call to your API in a real application
-    // Simulate API call
-    setTimeout(() => {
-      setTransactions(mockTransactions);
-    }, 500);
-  }, []);
+    fetchTransactions();
+  }, [filter]);
 
   // Filter transactions based on selected filter
   const filteredTransactions = filter === "all" 
@@ -143,7 +178,11 @@ export function TransactionHistory() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {transactions.length > 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading transactions...</p>
+            </div>
+          ) : transactions.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
