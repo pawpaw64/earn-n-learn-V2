@@ -232,8 +232,8 @@ export default function Profile() {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-8">My Profile</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">My Profile</h1>
       
       {/* Basic User Information Section */}
       <Card className="mb-8">

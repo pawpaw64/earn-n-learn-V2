@@ -1,4 +1,8 @@
 
 export default function Campus() {
-  return <div>Campus Hub Page</div>
+  return (
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Campus Hub</h1>
+      </div>
+      );
 }

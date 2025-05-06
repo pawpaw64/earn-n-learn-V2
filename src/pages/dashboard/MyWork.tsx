@@ -30,8 +30,8 @@ export default function MyWork() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">My Work</h1>
+    <div className="space-y-6">
+      <h1 className="text-3xl font-bold">My Work</h1>
       
       <Tabs defaultValue="applications" className="w-full">
         <TabsList className="mb-6 grid grid-cols-3 gap-4">
