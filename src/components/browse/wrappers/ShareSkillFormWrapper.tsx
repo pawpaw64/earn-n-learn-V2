@@ -5,7 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { createSkill, updateSkill } from '@/services/skills';
 import { useNavigate } from 'react-router-dom';
 
-const ShareSkillFormWrapper = () => {
+interface ShareSkillFormWrapperProps {
+  // The component accepts any props that may be passed to it
+}
+
+const ShareSkillFormWrapper: React.FC<ShareSkillFormWrapperProps> = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

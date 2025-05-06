@@ -5,7 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { createMaterial, updateMaterial } from '@/services/materials';
 import { useNavigate } from 'react-router-dom';
 
-const ListMaterialFormWrapper = () => {
+interface ListMaterialFormWrapperProps {
+  // The component accepts any props that may be passed to it
+}
+
+const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

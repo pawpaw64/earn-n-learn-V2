@@ -12,14 +12,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { submitSkillContact, submitMaterialContact } from "@/services/contacts";
+import { sendMessage } from "@/services/messages";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface ContactModalProps {
   recipientName: string;
+  recipientId?: number;
   itemName: string; 
-  itemId?: number; // Made optional
+  itemId?: number;
   itemType: 'skill' | 'material';
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,6 +31,7 @@ interface ContactModalProps {
 
 const ContactModal = ({ 
   recipientName, 
+  recipientId,
   itemName, 
   itemId,
   itemType, 
@@ -38,6 +43,8 @@ const ContactModal = ({
   const [senderName, setSenderName] = useState(""); 
   const [senderEmail, setSenderEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (isOpen) {
@@ -85,6 +92,17 @@ const ContactModal = ({
         await submitMaterialContact({ material_id: itemId, message: contactData.message });
       }
       
+      // If recipient ID is available, also send a direct message
+      if (recipientId) {
+        try {
+          await sendMessage(recipientId, contactData.message);
+          queryClient.invalidateQueries({ queryKey: ['recentChats'] });
+        } catch (error) {
+          console.error('Failed to send direct message:', error);
+          // We don't want to show an error here, as the contact was still submitted
+        }
+      }
+      
       toast.success(`Message sent to ${recipientName}!`);
       onOpenChange(false);
     } catch (error: any) {
@@ -93,6 +111,21 @@ const ContactModal = ({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleOpenMessages = () => {
+    if (!recipientId) {
+      toast.error("Cannot start direct message - recipient information missing");
+      return;
+    }
+    
+    navigate('/dashboard/messages');
+    onOpenChange(false);
+    
+    // This sets a temporary localStorage value that the Messages page can use
+    // to open this conversation when loaded (optional)
+    localStorage.setItem('openChatWith', String(recipientId));
+    localStorage.setItem('openChatType', 'direct');
   };
 
   return (
@@ -143,13 +176,28 @@ const ContactModal = ({
                 <ArrowLeft className="h-4 w-4" /> Cancel
               </Button>
             </DialogClose>
-            <Button 
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-              disabled={isSubmitting || !itemId}
-            >
-              <Send className="h-4 w-4" /> Send Message
-            </Button>
+            
+            <div className="flex gap-2">
+              {recipientId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-1"
+                  onClick={handleOpenMessages}
+                >
+                  <MessageCircle className="h-4 w-4" /> 
+                  Open Messages
+                </Button>
+              )}
+              
+              <Button 
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                disabled={isSubmitting || !itemId}
+              >
+                <Send className="h-4 w-4" /> Send Message
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
