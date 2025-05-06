@@ -3,57 +3,101 @@ import React from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Calendar } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface ContactCardProps {
   contact: any;
-  type: 'skill' | 'material';
+  type: string;
   onViewDetails: (item: any, type: string) => void;
 }
 
 /**
- * Card component for displaying skill or material contacts
+ * Enhanced card component for displaying skill and material inquiries
+ * Styled similarly to the explore cards for consistency
  */
-export const ContactCard: React.FC<ContactCardProps> = ({ contact, type, onViewDetails }) => (
-  <Card key={contact.id} className="h-full flex flex-col">
-    <CardHeader>
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-lg font-semibold">
-            {type === 'skill' ? contact.skill_name : contact.title}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {type === 'skill' ? contact.provider_name : contact.seller_name}
+export const ContactCard: React.FC<ContactCardProps> = ({ contact, type, onViewDetails }) => {
+  // Format the date for better readability
+  const formattedDate = contact.created_at 
+    ? formatDistanceToNow(new Date(contact.created_at), { addSuffix: true })
+    : 'Unknown date';
+  
+  // Determine title based on type
+  const title = type === 'skill' 
+    ? (contact.skill_name || 'Skill Inquiry') 
+    : (contact.title || 'Material Inquiry');
+  
+  // Determine price/rate based on type
+  const pricing = type === 'skill' 
+    ? (contact.pricing || 'Rate not specified')
+    : (contact.price || 'Price not specified');
+  
+  // Determine the status badge variant
+  const getBadgeVariant = (status: string) => {
+    switch(status) {
+      case 'Agreement Reached': return 'bg-green-100 text-green-800';
+      case 'Declined': return 'bg-red-100 text-red-800';
+      case 'In Discussion': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  return (
+    <Card className="h-full flex flex-col overflow-hidden hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3 bg-gray-50">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold">{title}</h3>
+            <p className="text-sm text-muted-foreground">
+              {type === 'skill' ? contact.provider_name : contact.seller_name}
+            </p>
+          </div>
+          <Badge className={getBadgeVariant(contact.status)}>
+            {contact.status}
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="flex-grow py-4">
+        {/* Message preview */}
+        <div className="mb-3">
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {contact.message?.substring(0, 150)}...
           </p>
         </div>
-        <Badge variant={
-          contact.status === 'Agreement Reached' ? 'secondary' : 
-          contact.status === 'Declined' ? 'destructive' : 
-          'outline'
-        }>
-          {contact.status}
-        </Badge>
-      </div>
-    </CardHeader>
-    <CardContent className="flex-grow">
-      <p className="text-sm text-muted-foreground line-clamp-2">
-        {contact.message?.substring(0, 100)}...
-      </p>
-      <p className="mt-2 font-medium text-emerald-600">
-        {type === 'skill' ? contact.pricing : contact.price}
-      </p>
-    </CardContent>
-    <CardFooter className="flex justify-between">
-      <span className="text-sm text-muted-foreground">
-        Contacted: {new Date(contact.created_at).toLocaleDateString()}
-      </span>
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => onViewDetails(contact, 'contact')}
-      >
-        <Eye className="w-4 h-4" />
-      </Button>
-    </CardFooter>
-  </Card>
-);
+        
+        {/* Information Grid */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          {/* Type Badge */}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <Badge variant="outline" className="text-xs py-0 h-5">
+              {type === 'skill' ? 'Skill' : 'Material'}
+            </Badge>
+          </div>
+          
+          {/* Price/Rate */}
+          <div className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium">
+            {pricing}
+          </div>
+          
+          {/* Date sent */}
+          <div className="flex items-center gap-1.5 text-sm text-muted-foreground col-span-2">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>Sent: {formattedDate}</span>
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-2 pb-4 flex justify-between border-t bg-gray-50">
+        <Button 
+          variant="outline" 
+          size="sm"
+          className="gap-1.5"
+          onClick={() => onViewDetails(contact, 'contact')}
+        >
+          <Eye className="w-3.5 h-3.5" /> View Details
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};

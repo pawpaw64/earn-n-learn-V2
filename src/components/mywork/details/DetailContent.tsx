@@ -24,8 +24,9 @@ export const DetailContent: React.FC<DetailContentProps> = ({ detailsItem, detai
     case 'job':
       return <JobDetails item={detailsItem} />;
     case 'skill':
+      return <SkillMaterialDetails item={detailsItem} type="skill" />;
     case 'material':
-      return <SkillMaterialDetails item={detailsItem} type={detailsType as 'skill' | 'material'} />;
+      return <SkillMaterialDetails item={detailsItem} type="material" />;
     case 'work':
       return <WorkDetails item={detailsItem} />;
     case 'invoice':

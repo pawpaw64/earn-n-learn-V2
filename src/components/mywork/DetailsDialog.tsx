@@ -17,7 +17,6 @@ interface DetailsDialogProps {
   detailsType: string;
   onStatusChange?: (id: number, type: string, status: string) => void;
   onCreateWork?: (id: number, type: string) => void;
-  onEdit?: (item: any, type: string) => void;
 }
 
 /**
@@ -30,8 +29,7 @@ export function DetailsDialog({
   detailsItem,
   detailsType,
   onStatusChange,
-  onCreateWork,
-  onEdit
+  onCreateWork
 }: DetailsDialogProps) {
   // Get appropriate title for the dialog
   const dialogTitle = detailsItem?.title || 
@@ -41,14 +39,14 @@ export function DetailsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DetailsHeader title={dialogTitle} />
         
-        <div className="py-4 max-h-[70vh] overflow-y-auto">
+        <div className="py-4 flex-grow overflow-y-auto">
           <DetailContent detailsItem={detailsItem} detailsType={detailsType} />
         </div>
         
-        <DialogFooter className="flex items-center justify-between sm:justify-between">
+        <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
           <Button 
             variant="outline" 
             onClick={() => onOpenChange(false)}
@@ -61,7 +59,6 @@ export function DetailsDialog({
             item={detailsItem} 
             onStatusChange={onStatusChange}
             onCreateWork={onCreateWork}
-            onEdit={onEdit}
           />
         </DialogFooter>
       </DialogContent>

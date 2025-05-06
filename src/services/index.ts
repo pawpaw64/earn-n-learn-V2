@@ -1,31 +1,33 @@
-// src/api/index.ts
-export * from './auth.ts';
-export * from './jobs.ts';
-export * from './skills.ts';
-export * from './materials.ts';
-export * from './applications.ts';
-export * from './contacts.ts';
-export * from './works.ts';
-export * from './notifications.ts';
-export * from './invoices.ts';
-export * from './profile.ts';
+
+// src/services/index.ts
+export * from './auth';
+export * from './jobs';
+export * from './skills';
+export * from './materials';
+export * from './applications';
+export * from './contacts';
+export * from './works';
+export * from './notifications';
+export * from './invoices';
+export * from './profile';
 import axios from 'axios';
-import { getUserIdFromToken } from './auth.ts';
+import { getUserIdFromToken, setAuthToken } from './auth';
 
 const API_URL = 'http://localhost:8080/api'; 
-// Helper function
-function emptyPosts() {
-  return { jobs: [], skills: [], materials: [] };
-}
 
+/**
+ * Fetch all posts (jobs, skills, materials) created by the current user
+ * @returns Object containing arrays of user's jobs, skills, and materials
+ */
 export const fetchMyPosts = async (): Promise<{
   jobs: any[];
   skills: any[];
   materials: any[];
 }> => {
   const token = localStorage.getItem('token');
+  setAuthToken(token);
   const userId = getUserIdFromToken(token);
-  if (!userId) return emptyPosts();
+  if (!userId) return { jobs: [], skills: [], materials: [] };
 
   try {
     const [jobs, skills, materials] = await Promise.all([
@@ -51,6 +53,6 @@ export const fetchMyPosts = async (): Promise<{
     };
   } catch (error) {
     console.error('Error fetching posts:', error);
-    return emptyPosts();
+    return { jobs: [], skills: [], materials: [] };
   }
 };
