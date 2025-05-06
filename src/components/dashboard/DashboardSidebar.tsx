@@ -3,6 +3,7 @@ import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Cal
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "react-router-dom";
+
 const mainMenuItems = [
   {
     title: "Browse",
@@ -30,6 +31,7 @@ const mainMenuItems = [
     href: "/dashboard/messages"
   }
 ];
+
 const profileMenuItems = [{
   title: "View Profile",
   icon: User,
@@ -47,6 +49,7 @@ const profileMenuItems = [{
   icon: Calendar,
   href: "/dashboard/calendar"
 }];
+
 const DashboardSidebar = () => {
   const location = useLocation();
   return <Sidebar className="border-r rounded-none mx-0 px-0 py-0 w-[230px] bg-white shadow-lg">
@@ -93,4 +96,5 @@ const DashboardSidebar = () => {
       </SidebarContent>
     </Sidebar>;
 };
+
 export default DashboardSidebar;
