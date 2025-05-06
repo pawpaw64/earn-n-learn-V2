@@ -2,21 +2,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { NavigateFunction } from "react-router-dom";
-import {
-  getApplicationDetails,
-  getWorkDetails,
-  updateApplicationStatus,
-  updateWorkStatus,
-  updateSkillContactStatus,
-  updateMaterialContactStatus,
-  createWorkFromApplication,
-  createWorkFromSkillContact,
-  createWorkFromMaterialContact,
-  deleteJob,
-  deleteSkill,
-  deleteMaterial,
-} from "@/services/api/api";
-
+import { getApplicationDetails,updateApplicationStatus} from "@/services/applications";
+import { createWorkFromApplication, createWorkFromMaterialContact, createWorkFromSkillContact, getWorkDetails, updateWorkStatus } from "@/services/works";
+import { deleteJob} from "@/services/jobs";
+import { deleteSkill } from "@/services/skills";
+import { deleteMaterial } from "@/services/materials";
+import { updateSkillContactStatus } from "@/services/contacts";
+import { updateMaterialContactStatus } from "@/services/contacts";  
 interface UseWorkDetailsProps {
   setDetailsItem: React.Dispatch<React.SetStateAction<any>>;
   setDetailsType: React.Dispatch<React.SetStateAction<string>>;

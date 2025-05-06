@@ -2,12 +2,12 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { fetchMyPosts } from "@/services/api/api";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { PostsHeader } from "./posts/PostsHeader";
 import { JobPostsSection } from "./posts/JobPostsSection";
 import { SkillPostsSection } from "./posts/SkillPostsSection";
 import { MaterialPostsSection } from "./posts/MaterialPostsSection";
+import { fetchMyPosts } from "@/services";
 
 interface MyPostsTabProps {
   onViewDetails: (item: any, type: string) => void;

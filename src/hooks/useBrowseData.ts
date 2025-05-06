@@ -1,8 +1,10 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { JobType, SkillType, MaterialType } from "@/types/marketplace";
-import { fetchJobs, fetchMaterials, fetchSkills } from "@/services/api/api"; 
-import { getUserIdFromToken } from "@/services/api/auth";
+import { fetchSkills } from "@/services/skills";
+import { fetchJobs } from "@/services/jobs";
+import { fetchMaterials } from "@/services/materials"; 
+import { getUserIdFromToken } from "@/services/auth";
 
 /**
  * Custom hook for managing browse data and filters

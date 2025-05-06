@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { createSkill } from "@/services/api/api";
+import { createSkill } from "@/services/skills";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),

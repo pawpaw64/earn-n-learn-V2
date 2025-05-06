@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
-import { submitJobApplication } from "@/services/api/api";
+import { submitJobApplication } from "@/services/applications";
 
 interface JobApplicationModalProps {
   job: JobType | null;

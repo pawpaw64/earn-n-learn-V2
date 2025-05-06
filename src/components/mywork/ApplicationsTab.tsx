@@ -10,14 +10,9 @@ import { ContactCard } from "./applications/ContactCard";
 import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTable";
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
 
-import {
-  fetchMyApplications,
-  fetchUserSkillContacts,
-  fetchUserMaterialContacts,
-  fetchJobApplications,
-  fetchSkillContacts,
-  fetchMaterialContacts
-} from "@/services/api/api";
+import { fetchMyApplications, fetchJobApplications } from "@/services/applications";
+import { fetchUserSkillContacts, fetchUserMaterialContacts } from "@/services/contacts";
+import { fetchSkillContacts, fetchMaterialContacts } from "@/services/contacts";
 
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => void;

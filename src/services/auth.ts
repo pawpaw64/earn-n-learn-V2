@@ -1,4 +1,4 @@
-
+// src/api/auth.ts
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api';
@@ -57,14 +57,11 @@ export function getUserIdFromToken(token: string | null): number | null {
   if (!token) return null;
   
   try {
-    // JWT tokens are made of 3 parts separated by dots
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
-    // The middle part contains the payload
     const payload = JSON.parse(atob(parts[1]));
     
-    // Most JWT implementations store user ID as 'id', 'sub', or 'userId'
     const userId = payload.id || payload.sub || payload.userId;
     return userId ? Number(userId) : null;
   } catch (error) {

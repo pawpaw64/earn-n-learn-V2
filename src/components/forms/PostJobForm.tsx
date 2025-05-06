@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createJob, updateJob } from "@/services/api/api";
+import { createJob, updateJob } from "@/services/jobs";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { JobType } from "@/types/marketplace";
 
