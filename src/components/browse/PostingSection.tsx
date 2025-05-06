@@ -1,63 +1,49 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostJobFormWrapper } from "./wrappers/PostJobFormWrapper";
 import ShareSkillFormWrapper from "./wrappers/ShareSkillFormWrapper";
 import ListMaterialFormWrapper from "./wrappers/ListMaterialFormWrapper";
 
 interface PostingSectionProps {
-  activePostTab: string;
-  setActivePostTab: (value: string) => void;
+    className?: string;
 }
 
-/**
- * Section for posting new listings (jobs, skills, materials)
- */
-export function PostingSection({ activePostTab, setActivePostTab }: PostingSectionProps) {
-  const [initialData, setInitialData] = useState<any>(null);
+const PostingSection: React.FC<PostingSectionProps> = ({ className }) => {
+    const [activeTab, setActiveTab] = useState("postJob");
 
-  useEffect(() => {
-    // Check for edit data in localStorage
-    const editItem = localStorage.getItem("editItem");
-    const editType = localStorage.getItem("editType");
-    
-    if (editItem && editType) {
-      const parsedItem = JSON.parse(editItem);
-      setInitialData(parsedItem);
-      
-      // Set the active tab based on the edit type
-      setActivePostTab(editType);
-      
-      // Clear localStorage after loading data
-      localStorage.removeItem("editItem");
-      localStorage.removeItem("editType");
-    }
-  }, [setActivePostTab]);
+    return (
+        <Card className={className}>
+            <CardHeader>
+                <CardTitle>Create a Posting</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <TabsList>
+                        <TabsTrigger value="postJob">
+                            <Label>Post a Job</Label>
+                        </TabsTrigger>
+                        <TabsTrigger value="shareSkill">
+                            <Label>Share a Skill</Label>
+                        </TabsTrigger>
+                        <TabsTrigger value="listMaterial">
+                            <Label>List Material</Label>
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="postJob">
+                        <PostJobFormWrapper />
+                    </TabsContent>
+                    <TabsContent value="shareSkill">
+                        <ShareSkillFormWrapper />
+                    </TabsContent>
+                    <TabsContent value="listMaterial">
+                        <ListMaterialFormWrapper />
+                    </TabsContent>
+                </Tabs>
+            </CardContent>
+        </Card>
+    );
+};
 
-  return (
-    <Card className="border-none shadow-none">
-      <CardHeader>
-        <CardTitle>Post a Listing</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activePostTab} onValueChange={setActivePostTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="job">Post a Job</TabsTrigger>
-            <TabsTrigger value="skill">Share a Skill</TabsTrigger>
-            <TabsTrigger value="material">List Materials</TabsTrigger>
-          </TabsList>
-          <TabsContent value="job">
-            <PostJobFormWrapper initialData={initialData} />
-          </TabsContent>
-          <TabsContent value="skill">
-            <ShareSkillFormWrapper initialData={initialData} />
-          </TabsContent>
-          <TabsContent value="material">
-            <ListMaterialFormWrapper initialData={initialData} />
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
+export default PostingSection;
