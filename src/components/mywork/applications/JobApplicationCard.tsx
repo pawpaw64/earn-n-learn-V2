@@ -27,7 +27,7 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({ app, onV
       case 'Rejected': return 'bg-red-100 text-red-800';
       case 'Withdrawn': return 'bg-gray-100 text-gray-800';
       case 'Reviewing': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-blue-100 text-blue-800';
+      default: return 'bg-emerald-100 text-emerald-800';
     }
   };
 

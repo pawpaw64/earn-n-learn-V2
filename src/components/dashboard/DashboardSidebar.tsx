@@ -52,9 +52,8 @@ const DashboardSidebar = () => {
   return <Sidebar className="border-r rounded-none mx-0 px-0 py-0 w-[230px] bg-white shadow-lg">
       <SidebarContent className="px-0 py-[33px]">
       <div className="px-4 py- text-emerald-600 font-bold text-2xl">
-  Earn-n-Learn
-</div>
-
+      Earn-n-Learn
+      </div>
 
         <SidebarGroup>
           <SidebarGroupContent>
@@ -77,7 +76,7 @@ const DashboardSidebar = () => {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
                   <User />
-                  <span>John Doe</span>
+                  <span>Profile</span>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="right" align="start" className="w-56">
