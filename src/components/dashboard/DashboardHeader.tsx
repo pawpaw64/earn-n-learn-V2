@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu, Search, User, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { fetchUnreadNotificationCount, fetchNotifications, markNotificationAsRead } from "@/services/notifications";
-import { fetchUserProfile } from "@/services/profile";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -119,17 +118,14 @@ const DashboardHeader = () => {
         </SheetContent>
       </Sheet>
       <div className="hidden md:flex" />
+      
       <div className="flex-1 gap-2 flex md:flex items-center">
-        <div className="relative md:w-64 lg:w-80">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search..." className="w-full pl-9" />
-        </div>
       </div>
       <div className="flex items-center gap-2">
         <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="relative" onClick={handleNotificationClick}>
-              <Bell className="h-5 w-5" />
+            <Button variant="outline" size="icon" className="relative h-12 w-12 rounded-full" onClick={handleNotificationClick}>
+              <Bell className="h-12 w-12" />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
@@ -165,8 +161,8 @@ const DashboardHeader = () => {
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-              <Avatar className="h-8 w-8">
+            <Button variant="ghost" className="relative h-12 w-12 rounded-full">
+              <Avatar className="h-12 w-12">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
               </Avatar>
