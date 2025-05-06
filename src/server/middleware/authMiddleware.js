@@ -4,7 +4,7 @@ import { config } from 'dotenv';
 config();
 
 
-const auth = (req, res, next) => {
+export const authMiddleware = (req, res, next) => {
   // Get token from header
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -25,4 +25,4 @@ const auth = (req, res, next) => {
   }
 };
 
-export default auth;
+export default authMiddleware;
