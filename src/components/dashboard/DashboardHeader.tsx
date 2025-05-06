@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell, Menu, Search, User, LogOut } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { fetchUnreadNotificationCount, fetchNotifications, markNotificationAsRead } from "@/services/api/api";
+import { fetchUnreadNotificationCount, fetchNotifications, markNotificationAsRead } from "@/services/notifications";
+import { fetchUserProfile } from "@/services/profile";
 import { toast } from "sonner";
 import {
   DropdownMenu,

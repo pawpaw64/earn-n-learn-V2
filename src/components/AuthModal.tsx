@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { registerUser, loginUser, AuthResponse } from "@/services/api/api";
+import { registerUser, loginUser, AuthResponse } from "@/services/auth";
 
 interface AuthModalProps {
   isOpen: boolean;
