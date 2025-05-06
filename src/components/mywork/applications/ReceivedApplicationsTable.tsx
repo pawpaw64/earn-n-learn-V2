@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye } from "lucide-react";
+import { Check, X, Eye ,MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 
@@ -108,8 +108,16 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                     size="sm"
                     onClick={() => onViewDetails(app, 'application')}
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" />View Details
                   </Button>
+                  <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-600"
+                       // onClick={}
+                      >
+                        <MessageSquare className="w-4 h-4" /> Contact
+                      </Button>
                   {app.status === 'Applied' && (
                     <>
                       <Button 
@@ -118,17 +126,21 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                         className="text-green-600"
                         onClick={() => handleAcceptApplication(app.id)}
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4"/> Accept
+                        
                       </Button>
+                      
+                      
                       <Button 
                         variant="outline" 
                         size="sm"
                         className="text-red-600"
                         onClick={() => handleRejectApplication(app.id)}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" /> Reject
                       </Button>
                     </>
+                    
                   )}
                 </div>
               </TableCell>
