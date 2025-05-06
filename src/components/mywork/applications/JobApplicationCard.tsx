@@ -97,7 +97,7 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({ app, onV
           <Button 
             variant="outline" 
             size="sm"
-            className="gap-1.5 text-black-600 border-emerald-600 hover:bg-red-300"
+            className="gap-1.5 text-black-600  hover:bg-emerald-600 hover:text-white"
             onClick={() => onStatusChange(app.id, 'job_application', 'Withdrawn')}
           >
             <X className="w-3.5 h-3.5" /> Withdraw
