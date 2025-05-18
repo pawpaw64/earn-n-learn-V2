@@ -40,7 +40,7 @@ class UserModel {
       'SELECT * FROM users WHERE id = ?', 
       [id]
     );
-    return rows[0];
+    return rows;
   }
 
   // Create user

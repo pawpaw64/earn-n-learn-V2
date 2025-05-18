@@ -31,13 +31,7 @@ export async function execute(query, params = []) {
     const [rows] = await pool.query(query, params);
     return rows;
   } catch (error) {
-    console.error('Database error:', {
-      query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
-      params: params.map(p => 
-        typeof p === 'string' ? p.substring(0, 50) + (p.length > 50 ? '...' : '') : p
-      ),
-      error: error.message
-    });
+     console.error('Database error:', error.message); // Simplified error
     throw error;
   }
 }

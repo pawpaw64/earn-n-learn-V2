@@ -58,13 +58,14 @@ export const JobApplicationCard: React.FC<JobApplicationCardProps> = ({ app, onV
           {/* Job Type */}
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Badge variant="outline" className="text-xs py-0 h-5">
-              {app.type || 'Unspecified type'}
+              {app.type || 'Unspecified '}
             </Badge>
           </div>
           
           {/* Payment */}
-          <div className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium">
-            {app.payment || 'Payment not specified'}
+          <div className=" flex items-center gap-1.5 text-sm text-emerald-600 font-bold font-weight-500 ">
+            <span className="text-sm text-muted-foreground">Payment:</span>
+            {app.payment || 'Payment not specified'}-tk/hr
           </div>
           
           {/* Location if available */}
