@@ -1,44 +1,15 @@
-
-import React, { useState } from 'react';
-import ShareSkillForm from '../../forms/ShareSkillForm';
-import { useToast } from '@/hooks/use-toast';
-import { createSkill, updateSkill } from '@/services/skills';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import ShareSkillForm from "@/components/forms/ShareSkillForm";
+import { SkillType } from "@/types/marketplace";
 
 interface ShareSkillFormWrapperProps {
-  // The component accepts any props that may be passed to it
+  initialData?: SkillType;
+  onSuccess?: () => void;
 }
 
-const ShareSkillFormWrapper: React.FC<ShareSkillFormWrapperProps> = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  
-  const handleSubmit = async (formData: any) => {
-    setLoading(true);
-    try {
-      const response = await createSkill(formData);
-      toast({
-        title: "Success!",
-        description: "Skill has been shared successfully",
-      });
-      navigate('/dashboard/browse');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to share skill",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  return (
-    <div className="container max-w-4xl mx-auto py-4">
-      <ShareSkillForm onSubmit={handleSubmit} isLoading={loading} />
-    </div>
-  );
+export const ShareSkillFormWrapper: React.FC<ShareSkillFormWrapperProps> = ({ 
+  initialData,
+  onSuccess 
+}) => {
+  return <ShareSkillForm initialData={initialData} onSuccess={onSuccess} />;
 };
-
-export default ShareSkillFormWrapper;

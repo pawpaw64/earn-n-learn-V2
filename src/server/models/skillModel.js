@@ -7,6 +7,25 @@ function formatDate(dateString) {
 }
 
 class SkillModel {
+   static async #handleQueryResult(result) {
+    // Handle cases where result is already the rows array
+    if (Array.isArray(result)) {
+      return result;
+    }
+    
+    // Handle cases where result is an object with rows/first result set at index 0
+    if (result && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    // Handle cases where result is [rows, fields] array
+    if (Array.isArray(result) && result.length === 2 && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    console.error('Unexpected query result format:', result);
+    return [];
+  }
   static async getAllExcludingUser(userId) {
     try {
       const rows = await execute(`
@@ -41,7 +60,23 @@ class SkillModel {
       throw new Error('Failed to fetch skills');
     }
   }
-  
+  // Add this method to your SkillModel class
+static async getById(id) {
+  try {
+    const result= await execute(
+      `SELECT s.*, u.name, u.avatar as avatarUrl 
+       FROM skill_marketplace s
+       JOIN users u ON s.user_id = u.id
+       WHERE s.id = ?`,
+      [id]
+    );
+    const rows = await this.#handleQueryResult(result);
+    return rows;
+  } catch (error) {
+    console.error('Error in SkillModel.getById:', error);
+    throw new Error('Failed to fetch skill by ID');
+  }
+}
   // Get all skills in marketplace
   static async getAllSkills() {
     try {
@@ -91,7 +126,7 @@ class SkillModel {
          WHERE s.user_id = ?`,
         [userId]
       );
-
+    
       return rows || [];
     } catch (error) {
       console.error('Error in SkillModel.getByUserId:', error);

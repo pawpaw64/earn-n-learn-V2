@@ -1,9 +1,9 @@
-
 import { Router } from 'express';
 import { 
   register, 
   login, 
   getMe, 
+  getUserById,
   updateProfile,
   getUserApplications, 
   getUserWorks
@@ -18,6 +18,7 @@ router.post('/login', login);
 
 // Protected routes
 router.get('/me', auth, getMe);
+router.get('/user/:id', auth, getUserById);
 router.put('/profile', auth, updateProfile);
 
 // My applications and works

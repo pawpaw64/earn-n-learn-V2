@@ -14,17 +14,19 @@ export const submitSkillContact = async (req, res) => {
   }
   
   try {
+   
     // Check if skill exists
     const skill = await SkillModel.getById(skill_id);
     if (!skill) {
-      return res.status(404).json({ message: 'Skill not found' });
+      return res.status(404).json({ message: 'Skill not found'});
     }
     
     // Check if user is contacting their own skill
     if (skill.user_id === req.user.id) {
+      
       return res.status(400).json({ message: 'Cannot contact your own skill posting' });
     }
-    
+    console.log('Contacting skill:', skill_id, 'by user:', req.user.id);
     // Create contact
     const contactId = await ContactModel.createSkillContact({
       skill_id,

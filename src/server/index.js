@@ -33,7 +33,7 @@ const io = new Server(server, {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log('[socket] User connected:', socket.id);
   
   // Join a room (for direct messages or group chats)
   socket.on('join', (room) => {
@@ -104,17 +104,6 @@ app.get('/', (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log('Routes established:');
-  console.log('- /api/users');
-  console.log('- /api/jobs');
-  console.log('- /api/applications');
-  console.log('- /api/skills');
-  console.log('- /api/materials');
-  console.log('- /api/contacts');
-  console.log('- /api/works');
-  console.log('- /api/invoices');
-  console.log('- /api/notifications');
-  console.log('- /api/wallet');
-  console.log('- /api/messages');
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Database URL: ${process.env.DB_URL}`);
 });

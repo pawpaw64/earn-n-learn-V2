@@ -26,21 +26,33 @@ class UserModel {
   // Find user by ID
   static async findById(id) {
     try {
-      const [rows] = await execute(
-        'SELECT id, name, email, avatar, student_id, university, course, mobile, created_at FROM users WHERE id = ?', 
+      const result = await execute(
+        'SELECT id, name, email, avatar, bio, student_id, university, course, program, graduation_year, mobile, created_at FROM users WHERE id = ?', 
         [id]
       );
-      return rows[0];
+      
+      const user = Array.isArray(result) ? result[0] : result.rows?.[0];
+      return user;
     } catch (error) {
+      console.error('Database error in findById:', error);
       throw new Error(error.message);
     }
   }
+  
+  // Get user by ID with all fields
   static async getById(id) {
-    const [rows] = await execute(
-      'SELECT * FROM users WHERE id = ?', 
-      [id]
-    );
-    return rows;
+    try {
+      const result = await execute(
+        'SELECT * FROM users WHERE id = ?', 
+        [id]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows[0];
+    } catch (error) {
+      console.error('Database error in getById:', error);
+      throw new Error(error.message);
+    }
   }
 
   // Create user
@@ -73,13 +85,14 @@ class UserModel {
     const { name, bio, avatar, program, graduationYear } = userData;
     
     try {
-      const [result] = await execute(
+      const result = await execute(
         'UPDATE users SET name = ?, bio = ?, avatar = ?, program = ?, graduation_year = ? WHERE id = ?',
         [name, bio, avatar, program, graduationYear, id]
       );
       
-      return result.affectedRows > 0;
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
     } catch (error) {
+      console.error('Database error in updateProfile:', error);
       throw new Error(error.message);
     }
   }
@@ -87,12 +100,14 @@ class UserModel {
   // Get user skills
   static async getUserSkills(userId) {
     try {
-      const [rows] = await execute(
+      const result = await execute(
         'SELECT * FROM skills WHERE user_id = ?',
         [userId]
       );
-      return rows;
+      
+      return Array.isArray(result) ? result : result.rows || [];
     } catch (error) {
+      console.error('Database error in getUserSkills:', error);
       throw new Error(error.message);
     }
   }
@@ -100,12 +115,29 @@ class UserModel {
   // Get user portfolio
   static async getUserPortfolio(userId) {
     try {
-      const [rows] = await execute(
+      const result = await execute(
         'SELECT * FROM portfolio_items WHERE user_id = ?',
         [userId]
       );
-      return rows;
+      
+      return Array.isArray(result) ? result : result.rows || [];
     } catch (error) {
+      console.error('Database error in getUserPortfolio:', error);
+      throw new Error(error.message);
+    }
+  }
+  
+  // Get user websites/links
+  static async getUserWebsites(userId) {
+    try {
+      const result = await execute(
+        'SELECT * FROM user_websites WHERE user_id = ?',
+        [userId]
+      );
+      
+      return Array.isArray(result) ? result : result.rows || [];
+    } catch (error) {
+      console.error('Database error in getUserWebsites:', error);
       throw new Error(error.message);
     }
   }

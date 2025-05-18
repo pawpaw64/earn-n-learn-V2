@@ -4,14 +4,24 @@ import { execute } from '../config/db.js';
 class ContactModel {
   // Create new skill contact
   static async createSkillContact(contactData) {
+   
     const { skill_id, user_id, message } = contactData;
-    
-    const [result] = await execute(
+     console.log('[model] Creating skill contact:', { skill_id, user_id});
+    try {
+       const result = await execute(
       'INSERT INTO skill_contacts (skill_id, user_id, message) VALUES (?, ?, ?)',
       [skill_id, user_id, message]
     );
-    
-    return result.insertId;
+    // Handle different result formats
+      const insertId = Array.isArray(result) ? 
+        (result[0]?.insertId || result.insertId) : 
+        result.insertId;
+      
+      return insertId;
+    } catch (error) {
+      console.error('ContactModel.create() - Error:', error);
+      throw error;
+    }
   }
 
   // Create new material contact

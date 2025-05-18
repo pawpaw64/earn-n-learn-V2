@@ -10,7 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { createSkill } from "@/services/skills";
+import { createSkill, updateSkill } from "@/services/skills";
+import { useEditableItem } from "@/components/browse/EditableItemContext";
+import { SkillType } from "@/types/marketplace";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
@@ -25,7 +27,16 @@ const formSchema = z.object({
 
 type ShareSkillFormValues = z.infer<typeof formSchema>;
 
-export default function ShareSkillForm() {
+interface ShareSkillFormProps {
+  initialData?: SkillType;
+  onSuccess?: () => void;
+}
+
+export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFormProps) {
+  const { editItem, editType, clearEditItem } = useEditableItem();
+  const isEditing = Boolean(initialData || (editType === 'skill' && editItem));
+  const itemToEdit = initialData || (editType === 'skill' ? editItem : null);
+
   const form = useForm<ShareSkillFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -40,32 +51,56 @@ export default function ShareSkillForm() {
     }
   });
 
+  // Pre-fill form in edit mode
+  React.useEffect(() => {
+    if (itemToEdit) {
+      form.reset({
+        skillName: itemToEdit.skill_name || "",
+        description: itemToEdit.description || "",
+        pricingType: itemToEdit.pricing?.includes('Free') ? "free" : 
+                    itemToEdit.pricing?.includes('Trade') ? "trade" : "paid",
+        price: itemToEdit.pricing || "",
+        availability: itemToEdit.availability || "",
+        contactInfo: itemToEdit.contactInfo || "",
+        skillTrade: itemToEdit.pricing?.includes('Trade') || false,
+        tradeSkill: itemToEdit.pricing?.replace('Skill Trade: ', '') || ""
+      });
+    }
+  }, [itemToEdit, form]);
+
   const watchPricingType = form.watch("pricingType");
   const watchSkillTrade = form.watch("skillTrade");
 
   async function onSubmit(values: ShareSkillFormValues) {
     try {
-      // Prepare data for API
       const skillData = {
         skill_name: values.skillName,
         description: values.description,
         pricing: watchPricingType === 'paid' ? values.price : 
                 watchPricingType === 'free' ? 'Free' : 
                 'Skill Trade: ' + (values.tradeSkill || 'Open to offers'),
-        availability: values.availability
+        availability: values.availability,
+        contactInfo: values.contactInfo
       };
-      
-      // Call API to create skill
-      await createSkill(skillData);
-      
-      toast.success("Skill shared successfully!");
+
+      if (isEditing && itemToEdit?.id) {
+        await updateSkill(itemToEdit.id, skillData);
+        toast.success("Skill updated successfully!");
+      } else {
+        await createSkill(skillData);
+        toast.success("Skill shared successfully!");
+      }
+
       form.reset();
+      onSuccess?.();
+      if (clearEditItem) clearEditItem();
     } catch (error) {
       console.error("Error sharing skill:", error);
-      toast.error("Failed to share skill. Please try again.");
+      toast.error(isEditing 
+        ? "Failed to update skill. Please try again." 
+        : "Failed to share skill. Please try again.");
     }
   }
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

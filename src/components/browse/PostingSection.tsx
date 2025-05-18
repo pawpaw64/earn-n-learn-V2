@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PostJobFormWrapper } from "./wrappers/PostJobFormWrapper";
-import ShareSkillFormWrapper from "./wrappers/ShareSkillFormWrapper";
-import ListMaterialFormWrapper from "./wrappers/ListMaterialFormWrapper";
+import { ShareSkillFormWrapper } from "./wrappers/ShareSkillFormWrapper";
+import { ListMaterialFormWrapper } from "./wrappers/ListMaterialFormWrapper";
 
 interface PostingSectionProps {
   activePostTab: string;
