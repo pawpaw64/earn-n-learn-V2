@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useParams, useNavigate } from "react-router-dom";
 import { User, Pencil, Plus, Image, Trash2, Link } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,75 +9,66 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { fetchUserProfile, fetchUserById, updateUserProfile, uploadProfileImage, ProfileData } from "@/services/profile";
-import { getUserIdFromToken } from "@/services/auth";
 
 // Define interfaces for the profile data structure
 interface Skill {
   id: string;
   name: string;
-  description?: string;
-  acquiredFrom?: string;
-  user_id: string;
+  description: string;
+  acquiredFrom: string;
 }
 
 interface PortfolioItem {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   url: string;
-  type?: string;
-  user_id: string;
+  type: string;
 }
 
 interface Website {
   id: string;
   title: string;
   url: string;
-  icon?: string;
-  user_id: string;
+  icon: string;
 }
 
 interface UserProfile {
   id: string;
   name: string;
   email: string;
-  bio?: string;
-  avatar?: string;
-  student_id?: string;
-  university?: string;
-  course?: string;
-  program?: string;
-  graduation_year?: string;
-  mobile?: string;
-  created_at?: string;
+  bio: string;
+  avatar: string;
+  program: string;
+  graduationYear: string;
   skills: Skill[];
   portfolio: PortfolioItem[];
   websites: Website[];
 }
 
 export default function Profile() {
-  // Get userId from URL parameter or use current user
-  const { userId } = useParams<{ userId?: string }>();
-  const navigate = useNavigate();
-  const currentUserId = getUserIdFromToken(localStorage.getItem('token'));
-  const isOwnProfile = !userId || userId === currentUserId?.toString();
-  
   // State management
   const [profile, setProfile] = useState<UserProfile>({
-    id: "",
-    name: "",
-    email: "",
-    bio: "",
+    id: "1",
+    name: "John Doe",
+    email: "john.doe@example.com",
+    bio: "Student at Local University, passionate about technology and innovation.",
     avatar: "",
-    program: "",
-    graduation_year: "",
-    skills: [],
-    portfolio: [],
-    websites: []
+    program: "Computer Science",
+    graduationYear: "2025",
+    skills: [
+      { id: "1", name: "React", description: "Frontend development with React", acquiredFrom: "Online course" },
+      { id: "2", name: "MySQL", description: "Database management", acquiredFrom: "University course" }
+    ],
+    portfolio: [
+      { id: "1", title: "Campus Marketplace", description: "A platform for students to buy and sell items", url: "https://github.com/johndoe/campus-marketplace", type: "github" }
+    ],
+    websites: [
+      { id: "1", title: "GitHub", url: "https://github.com/johndoe", icon: "github" },
+      { id: "2", title: "LinkedIn", url: "https://linkedin.com/in/johndoe", icon: "linkedin" }
+    ]
   });
   
-  const [isLoading, setIsLoading] = useState(true);
   const [isEditingBasic, setIsEditingBasic] = useState(false);
   const [newSkill, setNewSkill] = useState<Partial<Skill>>({});
   const [newPortfolio, setNewPortfolio] = useState<Partial<PortfolioItem>>({});
@@ -93,55 +83,17 @@ export default function Profile() {
       email: profile.email,
       bio: profile.bio,
       program: profile.program,
-      graduationYear: profile.graduation_year,
+      graduationYear: profile.graduationYear,
     }
   });
 
   // Fetch user profile data
   useEffect(() => {
-    const loadProfile = async () => {
-      setIsLoading(true);
-      try {
-        let profileData: ProfileData | null;
-        
-        if (userId && userId !== currentUserId?.toString()) {
-          // Fetch other user's profile
-          profileData = await fetchUserById(userId);
-        } else {
-          // Fetch current user's profile
-          profileData = await fetchUserProfile();
-        }
-        
-        if (profileData) {
-          const { user, skills, portfolio, websites } = profileData;
-          setProfile({
-            ...user,
-            skills: skills || [],
-            portfolio: portfolio || [],
-            websites: websites || []
-          });
-          
-          // Update form defaults
-          reset({
-            name: user.name,
-            email: user.email,
-            bio: user.bio || "",
-            program: user.program || "",
-            graduationYear: user.graduation_year || "",
-          });
-        } else {
-          toast.error("Failed to load profile data");
-        }
-      } catch (error) {
-        console.error("Error loading profile:", error);
-        toast.error("Something went wrong while loading the profile");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // This would be replaced with actual API call in a real implementation
+    // fetchUserProfile().then(data => setProfile(data));
     
-    loadProfile();
-  }, [userId, currentUserId, reset]);
+    // For now, we'll use the mock data already in state
+  }, []);
 
   // Handle avatar upload
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,48 +109,24 @@ export default function Profile() {
   };
 
   // Save profile changes
-  const onSubmitBasicInfo = async (data: any) => {
-    try {
-      let avatarUrl = profile.avatar;
-      
-      // Upload avatar if changed
-      if (avatarFile) {
-        try {
-          avatarUrl = await uploadProfileImage(avatarFile);
-        } catch (error) {
-          console.error("Avatar upload failed:", error);
-          toast.error("Failed to upload profile picture");
-        }
-      }
-      
-      const profileData = {
-        name: data.name,
-        bio: data.bio,
-        avatar: avatarUrl,
-        program: data.program,
-        graduationYear: data.graduationYear
-      };
-      
-      const response = await updateUserProfile(profileData);
-      
-      if (response.success) {
-        setProfile({
-          ...profile,
-          name: data.name,
-          bio: data.bio,
-          avatar: avatarUrl,
-          program: data.program,
-          graduation_year: data.graduationYear
-        });
-        setIsEditingBasic(false);
-        toast.success("Profile updated successfully!");
-      } else {
-        toast.error(response.message || "Failed to update profile");
-      }
-    } catch (error) {
-      console.error("Profile update error:", error);
-      toast.error("Error updating profile");
-    }
+  const onSubmitBasicInfo = (data: any) => {
+    const updatedProfile = {
+      ...profile,
+      ...data,
+      avatar: avatarPreview || profile.avatar,
+    };
+    
+    // This would be an API call in a real implementation
+    // updateUserProfile(updatedProfile).then(() => {
+    //   setProfile(updatedProfile);
+    //   setIsEditingBasic(false);
+    //   toast.success("Profile updated successfully!");
+    // });
+    
+    // For now, we'll just update the state
+    setProfile(updatedProfile);
+    setIsEditingBasic(false);
+    toast.success("Profile updated successfully!");
   };
 
   // Add new skill
@@ -209,8 +137,7 @@ export default function Profile() {
       id: Date.now().toString(),
       name: newSkill.name || "",
       description: newSkill.description || "",
-      acquiredFrom: newSkill.acquiredFrom || "",
-      user_id: profile.id
+      acquiredFrom: newSkill.acquiredFrom || ""
     };
     
     setProfile({
@@ -220,8 +147,6 @@ export default function Profile() {
     
     setNewSkill({});
     toast.success("Skill added!");
-    
-    // TODO: Send to backend when API is ready
   };
 
   // Remove skill
@@ -231,8 +156,6 @@ export default function Profile() {
       skills: profile.skills.filter(skill => skill.id !== id)
     });
     toast.success("Skill removed!");
-    
-    // TODO: Send to backend when API is ready
   };
 
   // Add new portfolio item
@@ -244,8 +167,7 @@ export default function Profile() {
       title: newPortfolio.title || "",
       description: newPortfolio.description || "",
       url: newPortfolio.url || "",
-      type: newPortfolio.type || "other",
-      user_id: profile.id
+      type: newPortfolio.type || "other"
     };
     
     setProfile({
@@ -255,8 +177,6 @@ export default function Profile() {
     
     setNewPortfolio({});
     toast.success("Portfolio item added!");
-    
-    // TODO: Send to backend when API is ready
   };
 
   // Remove portfolio item
@@ -266,8 +186,6 @@ export default function Profile() {
       portfolio: profile.portfolio.filter(item => item.id !== id)
     });
     toast.success("Portfolio item removed!");
-    
-    // TODO: Send to backend when API is ready
   };
 
   // Add new website link
@@ -278,8 +196,7 @@ export default function Profile() {
       id: Date.now().toString(),
       title: newWebsite.title || "",
       url: newWebsite.url || "",
-      icon: newWebsite.icon || "link",
-      user_id: profile.id
+      icon: newWebsite.icon || "link"
     };
     
     setProfile({
@@ -289,8 +206,6 @@ export default function Profile() {
     
     setNewWebsite({});
     toast.success("Website link added!");
-    
-    // TODO: Send to backend when API is ready
   };
 
   // Remove website link
@@ -300,8 +215,6 @@ export default function Profile() {
       websites: profile.websites.filter(website => website.id !== id)
     });
     toast.success("Website link removed!");
-    
-    // TODO: Send to backend when API is ready
   };
   
   // Reset form when canceling edit
@@ -311,42 +224,30 @@ export default function Profile() {
       email: profile.email,
       bio: profile.bio,
       program: profile.program,
-      graduationYear: profile.graduation_year,
+      graduationYear: profile.graduationYear,
     });
     setIsEditingBasic(false);
     setAvatarPreview(null);
     setAvatarFile(null);
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <div className="flex items-center justify-center h-64">
-          <p>Loading profile information...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">{isOwnProfile ? 'My Profile' : `${profile.name}'s Profile`}</h1>
+      <h1 className="text-3xl font-bold">My Profile</h1>
       
       {/* Basic User Information Section */}
       <Card className="mb-8">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Basic Information</CardTitle>
-          {isOwnProfile && !isEditingBasic ? (
+          {!isEditingBasic ? (
             <Button onClick={() => setIsEditingBasic(true)} variant="outline" size="sm">
               <Pencil className="h-4 w-4 mr-2" /> Edit
             </Button>
-          ) : isOwnProfile && isEditingBasic ? (
+          ) : (
             <div className="flex gap-2">
               <Button onClick={handleCancelEdit} variant="outline" size="sm">Cancel</Button>
             </div>
-          ) : null}
+          )}
         </CardHeader>
         <CardContent>
           {!isEditingBasic ? (
@@ -365,28 +266,16 @@ export default function Profile() {
               <div className="flex-1">
                 <h2 className="text-2xl font-semibold">{profile.name}</h2>
                 <p className="text-gray-500 mb-2">{profile.email}</p>
-                <p className="text-gray-700 mb-4">{profile.bio || "No bio available"}</p>
+                <p className="text-gray-700 mb-4">{profile.bio}</p>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Program</h3>
-                    <p>{profile.program || "Not specified"}</p>
+                    <p>{profile.program}</p>
                   </div>
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Graduation Year</h3>
-                    <p>{profile.graduation_year || "Not specified"}</p>
+                    <p>{profile.graduationYear}</p>
                   </div>
-                  {profile.university && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">University</h3>
-                      <p>{profile.university}</p>
-                    </div>
-                  )}
-                  {profile.course && (
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-500">Course</h3>
-                      <p>{profile.course}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -494,81 +383,73 @@ export default function Profile() {
         <CardContent>
           <div className="space-y-4">
             <ul className="space-y-2">
-              {profile.skills.length > 0 ? (
-                profile.skills.map((skill) => (
-                  <li key={skill.id} className="flex items-start justify-between p-3 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">{skill.name}</h3>
-                      {skill.description && (
-                        <p className="text-sm text-gray-600">{skill.description}</p>
-                      )}
-                      {skill.acquiredFrom && (
-                        <p className="text-xs text-gray-500">
-                          <span className="font-medium">Acquired from:</span> {skill.acquiredFrom}
-                        </p>
-                      )}
-                    </div>
-                    {isOwnProfile && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => removeSkill(skill.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+              {profile.skills.map((skill) => (
+                <li key={skill.id} className="flex items-start justify-between p-3 border rounded-lg">
+                  <div>
+                    <h3 className="font-medium">{skill.name}</h3>
+                    {skill.description && (
+                      <p className="text-sm text-gray-600">{skill.description}</p>
                     )}
-                  </li>
-                ))
-              ) : (
-                <p className="text-gray-500">No skills added yet.</p>
-              )}
+                    {skill.acquiredFrom && (
+                      <p className="text-xs text-gray-500">
+                        <span className="font-medium">Acquired from:</span> {skill.acquiredFrom}
+                      </p>
+                    )}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeSkill(skill.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
             </ul>
             
-            {/* Add Skill Dialog - Only show for own profile */}
-            {isOwnProfile && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" /> Add Skill
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Skill</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-2">
-                    <div>
-                      <label htmlFor="skillName" className="block text-sm font-medium">Skill Name</label>
-                      <Input 
-                        id="skillName" 
-                        value={newSkill.name || ""}
-                        onChange={(e) => setNewSkill({...newSkill, name: e.target.value})}
-                        placeholder="e.g., JavaScript, Design, Project Management" 
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="skillDescription" className="block text-sm font-medium">Description</label>
-                      <Textarea 
-                        id="skillDescription" 
-                        value={newSkill.description || ""}
-                        onChange={(e) => setNewSkill({...newSkill, description: e.target.value})}
-                        placeholder="Describe your skill level or experience" 
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="skillAcquiredFrom" className="block text-sm font-medium">Acquired From</label>
-                      <Input 
-                        id="skillAcquiredFrom" 
-                        value={newSkill.acquiredFrom || ""}
-                        onChange={(e) => setNewSkill({...newSkill, acquiredFrom: e.target.value})}
-                        placeholder="e.g., University course, Online course, Self-taught" 
-                      />
-                    </div>
-                    <Button onClick={addSkill} className="w-full">Add Skill</Button>
+            {/* Add Skill Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" /> Add Skill
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Skill</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <label htmlFor="skillName" className="block text-sm font-medium">Skill Name</label>
+                    <Input 
+                      id="skillName" 
+                      value={newSkill.name || ""}
+                      onChange={(e) => setNewSkill({...newSkill, name: e.target.value})}
+                      placeholder="e.g., JavaScript, Design, Project Management" 
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
+                  <div>
+                    <label htmlFor="skillDescription" className="block text-sm font-medium">Description</label>
+                    <Textarea 
+                      id="skillDescription" 
+                      value={newSkill.description || ""}
+                      onChange={(e) => setNewSkill({...newSkill, description: e.target.value})}
+                      placeholder="Describe your skill level or experience" 
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="skillAcquiredFrom" className="block text-sm font-medium">Acquired From</label>
+                    <Input 
+                      id="skillAcquiredFrom" 
+                      value={newSkill.acquiredFrom || ""}
+                      onChange={(e) => setNewSkill({...newSkill, acquiredFrom: e.target.value})}
+                      placeholder="e.g., University course, Online course, Self-taught" 
+                    />
+                  </div>
+                  <Button onClick={addSkill} className="w-full">Add Skill</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
@@ -580,96 +461,88 @@ export default function Profile() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {profile.portfolio.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {profile.portfolio.map((item) => (
-                  <Card key={item.id}>
-                    <CardHeader className="p-4">
-                      <CardTitle className="text-lg">{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-0">
-                      <p className="text-sm text-gray-600 mb-2">{item.description || "No description provided"}</p>
-                      <a 
-                        href={item.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        {item.url}
-                      </a>
-                    </CardContent>
-                    {isOwnProfile && (
-                      <CardFooter className="p-4 pt-0 flex justify-end">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => removePortfolioItem(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </CardFooter>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500">No portfolio items added yet.</p>
-            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {profile.portfolio.map((item) => (
+                <Card key={item.id}>
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-lg">{item.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-sm text-gray-600 mb-2">{item.description}</p>
+                    <a 
+                      href={item.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      {item.url}
+                    </a>
+                  </CardContent>
+                  <CardFooter className="p-4 pt-0 flex justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removePortfolioItem(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
             
-            {/* Add Portfolio Dialog - Only show for own profile */}
-            {isOwnProfile && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" /> Add Portfolio Item
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Portfolio Item</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-2">
-                    <div>
-                      <label htmlFor="portfolioTitle" className="block text-sm font-medium">Title</label>
-                      <Input 
-                        id="portfolioTitle" 
-                        value={newPortfolio.title || ""}
-                        onChange={(e) => setNewPortfolio({...newPortfolio, title: e.target.value})}
-                        placeholder="Project Title" 
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="portfolioDescription" className="block text-sm font-medium">Description</label>
-                      <Textarea 
-                        id="portfolioDescription" 
-                        value={newPortfolio.description || ""}
-                        onChange={(e) => setNewPortfolio({...newPortfolio, description: e.target.value})}
-                        placeholder="Describe your project" 
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="portfolioURL" className="block text-sm font-medium">URL</label>
-                      <Input 
-                        id="portfolioURL" 
-                        value={newPortfolio.url || ""}
-                        onChange={(e) => setNewPortfolio({...newPortfolio, url: e.target.value})}
-                        placeholder="https://..." 
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="portfolioType" className="block text-sm font-medium">Type</label>
-                      <Input 
-                        id="portfolioType" 
-                        value={newPortfolio.type || ""}
-                        onChange={(e) => setNewPortfolio({...newPortfolio, type: e.target.value})}
-                        placeholder="e.g., GitHub, Website, Document" 
-                      />
-                    </div>
-                    <Button onClick={addPortfolioItem} className="w-full">Add Portfolio Item</Button>
+            {/* Add Portfolio Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" /> Add Portfolio Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Portfolio Item</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <label htmlFor="portfolioTitle" className="block text-sm font-medium">Title</label>
+                    <Input 
+                      id="portfolioTitle" 
+                      value={newPortfolio.title || ""}
+                      onChange={(e) => setNewPortfolio({...newPortfolio, title: e.target.value})}
+                      placeholder="Project Title" 
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
+                  <div>
+                    <label htmlFor="portfolioDescription" className="block text-sm font-medium">Description</label>
+                    <Textarea 
+                      id="portfolioDescription" 
+                      value={newPortfolio.description || ""}
+                      onChange={(e) => setNewPortfolio({...newPortfolio, description: e.target.value})}
+                      placeholder="Describe your project" 
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="portfolioURL" className="block text-sm font-medium">URL</label>
+                    <Input 
+                      id="portfolioURL" 
+                      value={newPortfolio.url || ""}
+                      onChange={(e) => setNewPortfolio({...newPortfolio, url: e.target.value})}
+                      placeholder="https://..." 
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="portfolioType" className="block text-sm font-medium">Type</label>
+                    <Input 
+                      id="portfolioType" 
+                      value={newPortfolio.type || ""}
+                      onChange={(e) => setNewPortfolio({...newPortfolio, type: e.target.value})}
+                      placeholder="e.g., GitHub, Website, Document" 
+                    />
+                  </div>
+                  <Button onClick={addPortfolioItem} className="w-full">Add Portfolio Item</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
@@ -681,76 +554,68 @@ export default function Profile() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {profile.websites.length > 0 ? (
-              <ul className="space-y-2">
-                {profile.websites.map((website) => (
-                  <li key={website.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center">
-                      <Link className="h-4 w-4 mr-2" />
-                      <div>
-                        <h3 className="font-medium">{website.title}</h3>
-                        <a 
-                          href={website.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          {website.url}
-                        </a>
-                      </div>
-                    </div>
-                    {isOwnProfile && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => removeWebsite(website.id)}
+            <ul className="space-y-2">
+              {profile.websites.map((website) => (
+                <li key={website.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center">
+                    <Link className="h-4 w-4 mr-2" />
+                    <div>
+                      <h3 className="font-medium">{website.title}</h3>
+                      <a 
+                        href={website.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-sm text-blue-600 hover:underline"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No website links added yet.</p>
-            )}
-            
-            {/* Add Website Dialog - Only show for own profile */}
-            {isOwnProfile && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" /> Add Website Link
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add Website Link</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-2">
-                    <div>
-                      <label htmlFor="websiteTitle" className="block text-sm font-medium">Title</label>
-                      <Input 
-                        id="websiteTitle" 
-                        value={newWebsite.title || ""}
-                        onChange={(e) => setNewWebsite({...newWebsite, title: e.target.value})}
-                        placeholder="e.g., GitHub, LinkedIn, Personal Blog" 
-                      />
+                        {website.url}
+                      </a>
                     </div>
-                    <div>
-                      <label htmlFor="websiteURL" className="block text-sm font-medium">URL</label>
-                      <Input 
-                        id="websiteURL" 
-                        value={newWebsite.url || ""}
-                        onChange={(e) => setNewWebsite({...newWebsite, url: e.target.value})}
-                        placeholder="https://..." 
-                      />
-                    </div>
-                    <Button onClick={addWebsite} className="w-full">Add Website Link</Button>
                   </div>
-                </DialogContent>
-              </Dialog>
-            )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => removeWebsite(website.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+            
+            {/* Add Website Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Plus className="h-4 w-4 mr-2" /> Add Website Link
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Website Link</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <label htmlFor="websiteTitle" className="block text-sm font-medium">Title</label>
+                    <Input 
+                      id="websiteTitle" 
+                      value={newWebsite.title || ""}
+                      onChange={(e) => setNewWebsite({...newWebsite, title: e.target.value})}
+                      placeholder="e.g., GitHub, LinkedIn, Personal Blog" 
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="websiteURL" className="block text-sm font-medium">URL</label>
+                    <Input 
+                      id="websiteURL" 
+                      value={newWebsite.url || ""}
+                      onChange={(e) => setNewWebsite({...newWebsite, url: e.target.value})}
+                      placeholder="https://..." 
+                    />
+                  </div>
+                  <Button onClick={addWebsite} className="w-full">Add Website Link</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>

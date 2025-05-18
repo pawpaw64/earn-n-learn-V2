@@ -1,48 +1,43 @@
 
-import React, { useState } from 'react';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from 'react';
+import ListMaterialForm from '../../forms/ListMaterialForm';
+import { useToast } from '@/hooks/use-toast';
+import { createMaterial, updateMaterial } from '@/services/materials';
 import { useNavigate } from 'react-router-dom';
-import ListMaterialForm from '@/components/forms/ListMaterialForm';
-import { listMaterial } from '@/services/materials';
 
 interface ListMaterialFormWrapperProps {
-  onSuccess?: () => void;
+  // The component accepts any props that may be passed to it
 }
 
-const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = ({ onSuccess }) => {
-  const [isLoading, setIsLoading] = useState(false);
+const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = () => {
+  const { toast } = useToast();
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false);
+  
   const handleSubmit = async (formData: any) => {
+    setLoading(true);
     try {
-      setIsLoading(true);
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        toast.error('You must be logged in to list a material');
-        navigate('/');
-        return;
-      }
-
-      await listMaterial(formData);
-      toast.success('Material listed successfully!');
-      
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error('Error listing material:', error);
-      toast.error('Failed to list material. Please try again.');
+      const response = await createMaterial(formData);
+      toast({
+        title: "Success!",
+        description: "Material has been listed successfully",
+      });
+      navigate('/dashboard/browse');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to list material",
+        variant: "destructive"
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
+  
   return (
-    <ListMaterialForm 
-      onSubmit={handleSubmit} 
-      isLoading={isLoading} 
-    />
+    <div className="container max-w-4xl mx-auto py-4">
+      <ListMaterialForm onSubmit={handleSubmit} isLoading={loading} />
+    </div>
   );
 };
 

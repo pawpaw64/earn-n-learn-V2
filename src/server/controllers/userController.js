@@ -125,49 +125,14 @@ export async function getMe(req, res) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    const [skills, portfolio, websites] = await Promise.all([
+    const [skills, portfolio] = await Promise.all([
       UserModel.getUserSkills(req.user.id),
-      UserModel.getUserPortfolio(req.user.id),
-      UserModel.getUserWebsites(req.user.id)
+      UserModel.getUserPortfolio(req.user.id)
     ]);
     
-    res.json({ 
-      user, 
-      skills: skills || [], 
-      portfolio: portfolio || [],
-      websites: websites || [] 
-    });
+    res.json({ user, skills, portfolio });
   } catch (error) {
     console.error('Get user error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
-
-// Get user by ID (for viewing other profiles)
-export async function getUserById(req, res) {
-  console.log('Getting user by ID... [userController.js.getUserById]');
-  try {
-    const userId = req.params.id;
-    const user = await UserModel.findById(userId);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    const [skills, portfolio, websites] = await Promise.all([
-      UserModel.getUserSkills(userId),
-      UserModel.getUserPortfolio(userId),
-      UserModel.getUserWebsites(userId)
-    ]);
-    
-    res.json({ 
-      user, 
-      skills: skills || [], 
-      portfolio: portfolio || [],
-      websites: websites || [] 
-    });
-  } catch (error) {
-    console.error('Get user by ID error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
@@ -183,6 +148,76 @@ export async function updateProfile(req, res) {
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get user applications
+export async function getUserApplications(req, res) {
+  console.log('Getting user applications... [userController.js.getUserApplications]');
+  try {
+    // This is a mock response until the applications table is implemented
+    // In a real app, you'd query the applications table
+    const mockApplications = [
+      {
+        id: 1,
+        title: "Frontend Developer",
+        company: "Tech Solutions Inc",
+        status: "Applied",
+        dateApplied: "2024-04-15",
+        description: "Applied for the frontend developer position focused on React and TypeScript development.",
+        type: "Part-time",
+      },
+      {
+        id: 2,
+        title: "UI/UX Designer",
+        company: "Creative Studios",
+        status: "In Review",
+        dateApplied: "2024-04-10",
+        description: "Applied for the UI/UX designer position for the campus mobile app project.",
+        type: "Project-based",
+      }
+    ];
+    
+    res.json(mockApplications);
+  } catch (error) {
+    console.error('Get user applications error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get user works
+export async function getUserWorks(req, res) {
+  console.log('Getting user works... [userController.js.getUserWorks]');
+  try {
+    // This is a mock response until the works table is implemented
+    // In a real app, you'd query the works table
+    const mockWorks = [
+      {
+        id: 1,
+        title: "Website Development",
+        company: "Student Union",
+        status: "In Progress",
+        startDate: "2024-03-01",
+        deadline: "2024-05-01",
+        description: "Developing the new student union website using React and Tailwind CSS.",
+        type: "Project",
+      },
+      {
+        id: 2,
+        title: "Database Tutor",
+        company: "Computer Science Department",
+        status: "Completed",
+        startDate: "2024-02-01",
+        endDate: "2024-03-15",
+        description: "Provided SQL and database design tutoring to junior students.",
+        type: "Part-time",
+      }
+    ];
+    
+    res.json(mockWorks);
+  } catch (error) {
+    console.error('Get user works error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
