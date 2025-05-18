@@ -1,43 +1,48 @@
 
 import React, { useState } from 'react';
-import ShareSkillForm from '../../forms/ShareSkillForm';
-import { useToast } from '@/hooks/use-toast';
-import { createSkill, updateSkill } from '@/services/skills';
+import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import ShareSkillForm from '@/components/forms/ShareSkillForm';
+import { shareSkill } from '@/services/skills';
 
 interface ShareSkillFormWrapperProps {
-  // The component accepts any props that may be passed to it
+  onSuccess?: () => void;
 }
 
-const ShareSkillFormWrapper: React.FC<ShareSkillFormWrapperProps> = () => {
-  const { toast } = useToast();
+const ShareSkillFormWrapper: React.FC<ShareSkillFormWrapperProps> = ({ onSuccess }) => {
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  
+
   const handleSubmit = async (formData: any) => {
-    setLoading(true);
     try {
-      const response = await createSkill(formData);
-      toast({
-        title: "Success!",
-        description: "Skill has been shared successfully",
-      });
-      navigate('/dashboard/browse');
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to share skill",
-        variant: "destructive"
-      });
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        toast.error('You must be logged in to share a skill');
+        navigate('/');
+        return;
+      }
+
+      await shareSkill(formData);
+      toast.success('Skill shared successfully!');
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error sharing skill:', error);
+      toast.error('Failed to share skill. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
+
   return (
-    <div className="container max-w-4xl mx-auto py-4">
-      <ShareSkillForm onSubmit={handleSubmit} isLoading={loading} />
-    </div>
+    <ShareSkillForm 
+      onSubmit={handleSubmit} 
+      isLoading={isLoading} 
+    />
   );
 };
 

@@ -35,6 +35,7 @@ const App = () => (
             <Route path="wallet" element={<Wallet />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="profile/:userId" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="calendar" element={<Calendar />} />

@@ -125,14 +125,49 @@ export async function getMe(req, res) {
       return res.status(404).json({ message: 'User not found' });
     }
     
-    const [skills, portfolio] = await Promise.all([
+    const [skills, portfolio, websites] = await Promise.all([
       UserModel.getUserSkills(req.user.id),
-      UserModel.getUserPortfolio(req.user.id)
+      UserModel.getUserPortfolio(req.user.id),
+      UserModel.getUserWebsites(req.user.id)
     ]);
     
-    res.json({ user, skills, portfolio });
+    res.json({ 
+      user, 
+      skills: skills || [], 
+      portfolio: portfolio || [],
+      websites: websites || [] 
+    });
   } catch (error) {
     console.error('Get user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get user by ID (for viewing other profiles)
+export async function getUserById(req, res) {
+  console.log('Getting user by ID... [userController.js.getUserById]');
+  try {
+    const userId = req.params.id;
+    const user = await UserModel.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    const [skills, portfolio, websites] = await Promise.all([
+      UserModel.getUserSkills(userId),
+      UserModel.getUserPortfolio(userId),
+      UserModel.getUserWebsites(userId)
+    ]);
+    
+    res.json({ 
+      user, 
+      skills: skills || [], 
+      portfolio: portfolio || [],
+      websites: websites || [] 
+    });
+  } catch (error) {
+    console.error('Get user by ID error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
