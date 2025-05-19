@@ -2,24 +2,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { NavigateFunction } from "react-router-dom";
-import { getApplicationDetails, updateApplicationStatus } from "@/services/applications";
-import { 
-  createWorkFromApplication, 
-  createWorkFromMaterialContact, 
-  createWorkFromSkillContact, 
-  getWorkDetails, 
-  updateWorkStatus 
-} from "@/services/works";
-import { deleteJob } from "@/services/jobs";
+import { getApplicationDetails,updateApplicationStatus} from "@/services/applications";
+import { createWorkFromApplication, createWorkFromMaterialContact, createWorkFromSkillContact, getWorkDetails, updateWorkStatus } from "@/services/works";
+import { deleteJob} from "@/services/jobs";
 import { deleteSkill } from "@/services/skills";
 import { deleteMaterial } from "@/services/materials";
-import { 
-  updateSkillContactStatus, 
-  updateMaterialContactStatus,
-  getSkillContactDetails,
-  getMaterialContactDetails 
-} from "@/services/contacts";
-
+import { updateSkillContactStatus } from "@/services/contacts";
+import { updateMaterialContactStatus } from "@/services/contacts";  
 interface UseWorkDetailsProps {
   setDetailsItem: React.Dispatch<React.SetStateAction<any>>;
   setDetailsType: React.Dispatch<React.SetStateAction<string>>;
@@ -37,15 +26,12 @@ export const useWorkDetails = ({
   isDetailsOpen,
   detailsItem,
 }: UseWorkDetailsProps) => {
-  const [isProcessing, setIsProcessing] = useState(false);
   
   const handleViewDetails = async (item: any, type: string) => {
     // For certain types, we need to fetch more details
     let detailItem = item;
     
     try {
-      setIsProcessing(true);
-      
       if (type === 'application' && item.id) {
         const details = await getApplicationDetails(item.id);
         if (details) {
@@ -58,19 +44,6 @@ export const useWorkDetails = ({
           detailItem = { ...item, ...details };
         }
       }
-      else if (type === 'contact') {
-        if (item.skill_id || item.skill_name) {
-          const details = await getSkillContactDetails(item.id);
-          if (details) {
-            detailItem = { ...item, ...details };
-          }
-        } else if (item.material_id || item.title) {
-          const details = await getMaterialContactDetails(item.id);
-          if (details) {
-            detailItem = { ...item, ...details };
-          }
-        }
-      }
       
       setDetailsItem(detailItem);
       setDetailsType(type);
@@ -78,8 +51,6 @@ export const useWorkDetails = ({
     } catch (error) {
       console.error(`Error fetching ${type} details:`, error);
       toast.error(`Failed to load details. Please try again.`);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -91,8 +62,6 @@ export const useWorkDetails = ({
 
   const handleDelete = async (id: number, type: string) => {
     try {
-      setIsProcessing(true);
-      
       if (type === 'job') {
         await deleteJob(id);
       } else if (type === 'skill') {
@@ -106,15 +75,11 @@ export const useWorkDetails = ({
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
       toast.error(`Failed to delete ${type}`);
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleStatusChange = async (id: number, type: string, newStatus: string) => {
     try {
-      setIsProcessing(true);
-      
       if (type === 'job_application') {
         await updateApplicationStatus(id, newStatus);
       } 
@@ -134,21 +99,14 @@ export const useWorkDetails = ({
       if (isDetailsOpen && detailsItem?.id === id) {
         setIsDetailsOpen(false);
       }
-      
-      return true;
     } catch (error) {
       console.error(`Error updating ${type} status:`, error);
       toast.error('Failed to update status');
-      return false;
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const handleCreateWork = async (id: number, type: string) => {
     try {
-      setIsProcessing(true);
-      
       if (type === 'job_application') {
         await createWorkFromApplication(id);
       } 
@@ -165,14 +123,9 @@ export const useWorkDetails = ({
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }
-      
-      return true;
     } catch (error) {
       console.error(`Error creating work from ${type}:`, error);
       toast.error('Failed to create work assignment');
-      return false;
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -182,6 +135,5 @@ export const useWorkDetails = ({
     handleDelete,
     handleStatusChange,
     handleCreateWork,
-    isProcessing
   };
 };

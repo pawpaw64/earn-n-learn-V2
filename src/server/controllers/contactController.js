@@ -14,8 +14,7 @@ export const submitSkillContact = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Submitting skill contact:', { skill_id, user_id: req.user.id });
-    
+   
     // Check if skill exists
     const skill = await SkillModel.getById(skill_id);
     if (!skill) {
@@ -24,9 +23,10 @@ export const submitSkillContact = async (req, res) => {
     
     // Check if user is contacting their own skill
     if (skill.user_id === req.user.id) {
+      
       return res.status(400).json({ message: 'Cannot contact your own skill posting' });
     }
-    
+    console.log('Contacting skill:', skill_id, 'by user:', req.user.id);
     // Create contact
     const contactId = await ContactModel.createSkillContact({
       skill_id,
@@ -64,7 +64,7 @@ export const submitSkillContact = async (req, res) => {
     });
   } catch (error) {
     console.error('Submit skill contact error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -77,7 +77,6 @@ export const submitMaterialContact = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Submitting material contact:', { material_id, user_id: req.user.id });
     // Check if material exists
     const material = await MaterialModel.getById(material_id);
     if (!material) {
@@ -126,7 +125,7 @@ export const submitMaterialContact = async (req, res) => {
     });
   } catch (error) {
     console.error('Submit material contact error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -145,30 +144,12 @@ export const updateSkillContactStatus = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Updating skill contact status:', { id, status });
-    // Get the skill contact to verify ownership or recipient status
-    const contact = await ContactModel.getSkillContactById(id);
+    // Get the skill contact
+    const skillContacts = await ContactModel.getToUserSkills(req.user.id);
+    const contact = skillContacts.find(c => c.id === parseInt(id));
     
     if (!contact) {
-      return res.status(404).json({ message: 'Skill contact not found' });
-    }
-    
-    // Check if user is authorized (either the provider or the contact initiator)
-    const isProvider = contact.provider_id === req.user.id;
-    const isInitiator = contact.user_id === req.user.id;
-    
-    if (!isProvider && !isInitiator) {
-      return res.status(403).json({ message: 'Not authorized to update this contact' });
-    }
-    
-    // Only allow withdrawal by initiator
-    if (status === 'Withdrawn' && !isInitiator) {
-      return res.status(403).json({ message: 'Only the contact initiator can withdraw a contact' });
-    }
-    
-    // Only allow status changes like responded, agreement, declined by provider
-    if ((status === 'Responded' || status === 'Agreement Reached' || status === 'Declined') && !isProvider) {
-      return res.status(403).json({ message: 'Only the skill provider can update to this status' });
+      return res.status(404).json({ message: 'Skill contact not found or you are not authorized' });
     }
     
     // Update status
@@ -178,26 +159,14 @@ export const updateSkillContactStatus = async (req, res) => {
     }
     
     // Create notification for contact initiator
-    if (isProvider) {
-      await NotificationModel.create({
-        user_id: contact.user_id,
-        title: 'Skill Inquiry Update',
-        message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'skill_contact'
-      });
-    } else {
-      // Notification for provider if initiator updates
-      await NotificationModel.create({
-        user_id: contact.provider_id,
-        title: 'Skill Inquiry Update',
-        message: `A contact regarding your skill "${contact.skill_name}" has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'skill_contact'
-      });
-    }
+    await NotificationModel.create({
+      user_id: contact.user_id,
+      title: 'Skill Inquiry Update',
+      message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
+      type: 'contact_status',
+      reference_id: parseInt(id),
+      reference_type: 'skill_contact'
+    });
     
     res.json({ 
       message: 'Contact status updated successfully',
@@ -205,7 +174,7 @@ export const updateSkillContactStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update skill contact status error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -224,30 +193,12 @@ export const updateMaterialContactStatus = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Updating material contact status:', { id, status });
-    // Get the material contact to verify ownership or recipient status
-    const contact = await ContactModel.getMaterialContactById(id);
+    // Get the material contact
+    const materialContacts = await ContactModel.getToUserMaterials(req.user.id);
+    const contact = materialContacts.find(c => c.id === parseInt(id));
     
     if (!contact) {
-      return res.status(404).json({ message: 'Material contact not found' });
-    }
-    
-    // Check if user is authorized (either the seller or the contact initiator)
-    const isSeller = contact.seller_id === req.user.id;
-    const isInitiator = contact.user_id === req.user.id;
-    
-    if (!isSeller && !isInitiator) {
-      return res.status(403).json({ message: 'Not authorized to update this contact' });
-    }
-    
-    // Only allow withdrawal by initiator
-    if (status === 'Withdrawn' && !isInitiator) {
-      return res.status(403).json({ message: 'Only the contact initiator can withdraw a contact' });
-    }
-    
-    // Only allow status changes like responded, agreement, declined by seller
-    if ((status === 'Responded' || status === 'Agreement Reached' || status === 'Declined') && !isSeller) {
-      return res.status(403).json({ message: 'Only the material seller can update to this status' });
+      return res.status(404).json({ message: 'Material contact not found or you are not authorized' });
     }
     
     // Update status
@@ -257,26 +208,14 @@ export const updateMaterialContactStatus = async (req, res) => {
     }
     
     // Create notification for contact initiator
-    if (isSeller) {
-      await NotificationModel.create({
-        user_id: contact.user_id,
-        title: 'Material Inquiry Update',
-        message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'material_contact'
-      });
-    } else {
-      // Notification for seller if initiator updates
-      await NotificationModel.create({
-        user_id: contact.seller_id,
-        title: 'Material Inquiry Update',
-        message: `A contact regarding your material "${contact.title}" has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'material_contact'
-      });
-    }
+    await NotificationModel.create({
+      user_id: contact.user_id,
+      title: 'Material Inquiry Update',
+      message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
+      type: 'contact_status',
+      reference_id: parseInt(id),
+      reference_type: 'material_contact'
+    });
     
     res.json({ 
       message: 'Contact status updated successfully',
@@ -284,100 +223,50 @@ export const updateMaterialContactStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update material contact status error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 // Get user's initiated skill contacts
 export const getUserSkillContacts = async (req, res) => {
   try {
-    console.log('[controller] Getting user skill contacts for user:', req.user.id);
     const contacts = await ContactModel.getSkillContactsByUserId(req.user.id);
     res.json(contacts);
   } catch (error) {
     console.error('Get user skill contacts error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 // Get user's initiated material contacts
 export const getUserMaterialContacts = async (req, res) => {
   try {
-    console.log('[controller] Getting user material contacts for user:', req.user.id);
     const contacts = await ContactModel.getMaterialContactsByUserId(req.user.id);
     res.json(contacts);
   } catch (error) {
     console.error('Get user material contacts error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 // Get contacts to user's skills
 export const getSkillContacts = async (req, res) => {
   try {
-    console.log('[controller] Getting contacts to user skills for user:', req.user.id);
     const contacts = await ContactModel.getToUserSkills(req.user.id);
     res.json(contacts);
   } catch (error) {
     console.error('Get skill contacts error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 // Get contacts to user's materials
 export const getMaterialContacts = async (req, res) => {
   try {
-    console.log('[controller] Getting contacts to user materials for user:', req.user.id);
     const contacts = await ContactModel.getToUserMaterials(req.user.id);
     res.json(contacts);
   } catch (error) {
     console.error('Get material contacts error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Get skill contact by ID
-export const getSkillContactById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log('[controller] Getting skill contact by ID:', id);
-    const contact = await ContactModel.getSkillContactById(id);
-    
-    if (!contact) {
-      return res.status(404).json({ message: 'Skill contact not found' });
-    }
-    
-    // Check if user is authorized (either the provider or the contact initiator)
-    if (contact.provider_id !== req.user.id && contact.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to view this contact' });
-    }
-    
-    res.json(contact);
-  } catch (error) {
-    console.error('Get skill contact by ID error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Get material contact by ID
-export const getMaterialContactById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log('[controller] Getting material contact by ID:', id);
-    const contact = await ContactModel.getMaterialContactById(id);
-    
-    if (!contact) {
-      return res.status(404).json({ message: 'Material contact not found' });
-    }
-    
-    // Check if user is authorized (either the seller or the contact initiator)
-    if (contact.seller_id !== req.user.id && contact.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Not authorized to view this contact' });
-    }
-    
-    res.json(contact);
-  } catch (error) {
-    console.error('Get material contact by ID error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

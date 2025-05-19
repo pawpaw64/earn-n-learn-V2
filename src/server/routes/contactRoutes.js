@@ -9,9 +9,7 @@ import {
   getUserSkillContacts,
   getUserMaterialContacts,
   getSkillContacts,
-  getMaterialContacts,
-  getSkillContactById,
-  getMaterialContactById
+  getMaterialContacts
 } from '../controllers/contactController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -33,9 +31,5 @@ router.get('/user/material', getUserMaterialContacts);
 // Get contacts to user posts
 router.get('/received/skill', getSkillContacts);
 router.get('/received/material', getMaterialContacts);
-
-// Get contact details by ID
-router.get('/skill/:id', getSkillContactById);
-router.get('/material/:id', getMaterialContactById);
 
 export default router;

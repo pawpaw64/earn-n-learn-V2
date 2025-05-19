@@ -32,25 +32,15 @@ export function DetailsDialog({
   onCreateWork
 }: DetailsDialogProps) {
   // Get appropriate title for the dialog
-  const getDialogTitle = () => {
-    if (!detailsItem) return "Details";
-    
-    if (detailsType === 'contact') {
-      return detailsItem.skill_name 
-        ? `Skill Inquiry: ${detailsItem.skill_name}`
-        : `Material Inquiry: ${detailsItem.title}`;
-    }
-    
-    return detailsItem?.title || 
-           detailsItem?.skill_name || 
-           detailsItem?.invoiceNumber || 
-           "Details";
-  };
+  const dialogTitle = detailsItem?.title || 
+                      detailsItem?.skill_name || 
+                      detailsItem?.invoiceNumber || 
+                      "Details";
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DetailsHeader title={getDialogTitle()} />
+        <DetailsHeader title={dialogTitle} />
         
         <div className="py-4 flex-grow overflow-y-auto">
           <DetailContent detailsItem={detailsItem} detailsType={detailsType} />

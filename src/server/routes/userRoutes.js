@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { 
   register, 
@@ -6,6 +5,7 @@ import {
   getMe, 
   getUserById,
   updateProfile,
+
 } from '../controllers/userController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -17,7 +17,8 @@ router.post('/login', login);
 
 // Protected routes
 router.get('/me', auth, getMe);
-router.get('/:id', auth, getUserById);
+router.get('/user/:id', auth, getUserById);
 router.put('/profile', auth, updateProfile);
+
 
 export default router;
