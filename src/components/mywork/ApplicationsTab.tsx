@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Filter } from "lucide-react";
@@ -11,76 +11,106 @@ import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTa
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
 
 import { fetchMyApplications, fetchJobApplications } from "@/services/applications";
-import { fetchUserSkillContacts, fetchUserMaterialContacts } from "@/services/contacts";
-import { fetchSkillContacts, fetchMaterialContacts } from "@/services/contacts";
+import { 
+  fetchUserSkillContacts, 
+  fetchUserMaterialContacts,
+  fetchSkillContacts, 
+  fetchMaterialContacts 
+} from "@/services/contacts";
 
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => void;
   onStatusChange: (id: number, type: string, status: string) => void;
+  onCreateWork?: (id: number, type: string) => void;
 }
 
 /**
  * Main component for managing all applications and contacts 
  * Both sent and received
  */
-export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsTabProps) {
+export function ApplicationsTab({ onViewDetails, onStatusChange, onCreateWork }: ApplicationsTabProps) {
   const [applicationsTab, setApplicationsTab] = useState("job");
   const [activeContactsTab, setActiveContactsTab] = useState("received");
+  const queryClient = useQueryClient();
+  
+  // Function to refetch all data
+  const refetchAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+    queryClient.invalidateQueries({ queryKey: ['jobApplications'] });
+    queryClient.invalidateQueries({ queryKey: ['skillContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['materialContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['receivedSkillContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['receivedMaterialContacts'] });
+  };
 
   // Fetch all data
   const { 
     data: applications = [], 
-    isLoading: isLoadingApps,
-    refetch: refetchApplications
+    isLoading: isLoadingApps
   } = useQuery({
     queryKey: ['myApplications'],
-    queryFn: fetchMyApplications
+    queryFn: fetchMyApplications,
+    staleTime: 30000 // 30 seconds
   });
 
   const { 
     data: jobApplications = [], 
-    isLoading: isLoadingJobApps,
-    refetch: refetchJobApplications
+    isLoading: isLoadingJobApps
   } = useQuery({
     queryKey: ['jobApplications'],
-    queryFn: fetchJobApplications
+    queryFn: fetchJobApplications,
+    staleTime: 30000
   });
 
   const {
     data: skillContacts = [],
-    isLoading: isLoadingSkillContacts,
-    refetch: refetchSkillContacts
+    isLoading: isLoadingSkillContacts
   } = useQuery({
     queryKey: ['skillContacts'],
-    queryFn: fetchUserSkillContacts
+    queryFn: fetchUserSkillContacts,
+    staleTime: 30000
   });
 
   const {
     data: materialContacts = [],
-    isLoading: isLoadingMaterialContacts,
-    refetch: refetchMaterialContacts
+    isLoading: isLoadingMaterialContacts
   } = useQuery({
     queryKey: ['materialContacts'],
-    queryFn: fetchUserMaterialContacts
+    queryFn: fetchUserMaterialContacts,
+    staleTime: 30000
   });
 
   const {
     data: receivedSkillContacts = [],
-    isLoading: isLoadingReceivedSkillContacts,
-    refetch: refetchReceivedSkillContacts
+    isLoading: isLoadingReceivedSkillContacts
   } = useQuery({
     queryKey: ['receivedSkillContacts'],
-    queryFn: fetchSkillContacts
+    queryFn: fetchSkillContacts,
+    staleTime: 30000
   });
 
   const {
     data: receivedMaterialContacts = [],
-    isLoading: isLoadingReceivedMaterialContacts,
-    refetch: refetchReceivedMaterialContacts
+    isLoading: isLoadingReceivedMaterialContacts
   } = useQuery({
     queryKey: ['receivedMaterialContacts'],
-    queryFn: fetchMaterialContacts
+    queryFn: fetchMaterialContacts,
+    staleTime: 30000
   });
+
+  // Handle status changes with automatic refetch
+  const handleStatusChange = async (id: number, type: string, status: string) => {
+    await onStatusChange(id, type, status);
+    refetchAll();
+  };
+
+  // Handle work creation with automatic refetch
+  const handleCreateWork = async (id: number, type: string) => {
+    if (onCreateWork) {
+      await onCreateWork(id, type);
+      refetchAll();
+    }
+  };
 
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];
@@ -96,14 +126,14 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
         <TabsTrigger value="job">Job Applications</TabsTrigger>
         <TabsTrigger value="skill">Skill Inquiries</TabsTrigger>
         <TabsTrigger value="material">Material Inquiries</TabsTrigger>
-        <TabsTrigger value="received">Received Applications</TabsTrigger>
+        <TabsTrigger value="received">Received Inquiries</TabsTrigger>
       </TabsList>
       
       {/* Job Applications Subtab */}
       <TabsContent value="job">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Job Applications</h2>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
             <Filter className="w-4 h-4" /> Filter
           </Button>
         </div>
@@ -116,7 +146,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
                   key={app.id}
                   app={app}
                   onViewDetails={onViewDetails}
-                  onStatusChange={onStatusChange}
+                  onStatusChange={handleStatusChange}
                 />
               )) 
               : (
@@ -133,7 +163,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
       <TabsContent value="skill">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Skill Inquiries</h2>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
             <Filter className="w-4 h-4" /> Filter
           </Button>
         </div>
@@ -163,7 +193,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
       <TabsContent value="material">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Material Inquiries</h2>
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
             <Filter className="w-4 h-4" /> Filter
           </Button>
         </div>
@@ -192,7 +222,10 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
       {/* Received Applications Subtab */}
       <TabsContent value="received">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Received Applications</h2>
+          <h2 className="text-lg font-semibold">Received Inquiries</h2>
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
+            <Filter className="w-4 h-4" /> Refresh
+          </Button>
         </div>
         
         <Tabs value={activeContactsTab} onValueChange={setActiveContactsTab} className="mt-4">
@@ -207,7 +240,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
               applications={jobApplicationsArray}
               isLoading={isLoadingJobApps}
               onViewDetails={onViewDetails}
-              onStatusChange={onStatusChange}
+              onStatusChange={handleStatusChange}
             />
           </TabsContent>
           
@@ -217,7 +250,8 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
               type="skill"
               isLoading={isLoadingReceivedSkillContacts}
               onViewDetails={onViewDetails}
-              onStatusChange={onStatusChange}
+              onStatusChange={handleStatusChange}
+              onCreateWork={handleCreateWork}
             />
           </TabsContent>
           
@@ -227,7 +261,8 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
               type="material"
               isLoading={isLoadingReceivedMaterialContacts}
               onViewDetails={onViewDetails}
-              onStatusChange={onStatusChange}
+              onStatusChange={handleStatusChange}
+              onCreateWork={handleCreateWork}
             />
           </TabsContent>
         </Tabs>
