@@ -17,7 +17,7 @@ router.post('/login', login);
 
 // Protected routes
 router.get('/me', auth, getMe);
-router.get('/user/:id', auth, getUserById);
+router.get('/:id', auth, getUserById);
 router.put('/profile', auth, updateProfile);
 
 

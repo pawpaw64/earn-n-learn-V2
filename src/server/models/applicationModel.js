@@ -65,9 +65,7 @@ class ApplicationModel {
     }
   }
   // Get applications by user ID (applicant)
-// In getByUserId()
 static async getByUserId(userId) {
-  console.debug('ApplicationModel.getByUserId() - Start', { userId });
   try {
     const result = await execute(`
       SELECT a.*, j.title, j.type, j.payment, j.deadline, j.location,
@@ -84,11 +82,7 @@ static async getByUserId(userId) {
       (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
       [];
     
-    console.debug('ApplicationModel.getByUserId() - Result', {
-      userId,
-      count: rows.length,
-      sample: rows.length > 0 ? rows[0] : null
-    });
+    // console.debug('ApplicationModel.getByUserId() - Result', { rows });
     return rows;
   } catch (error) {
     console.error('ApplicationModel.getByUserId() - Error', {
@@ -102,7 +96,6 @@ static async getByUserId(userId) {
 
 // In getToUserJobs()
 static async getToUserJobs(userId) {
-  console.debug('ApplicationModel.getToUserJobs() - Start', { userId });
   try {
     const result = await execute(`
       SELECT a.*, j.title, j.type, j.payment,
@@ -119,11 +112,7 @@ static async getToUserJobs(userId) {
       (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
       [];
     
-    console.debug('ApplicationModel.getToUserJobs() - Result', {
-      userId,
-      count: rows.length,
-      sample: rows.length > 0 ? rows[0] : null
-    });
+    // console.debug('ApplicationModel.getToUserJobs() - Result',);
     return rows;
   } catch (error) {
     console.error('ApplicationModel.getToUserJobs() - Error', {

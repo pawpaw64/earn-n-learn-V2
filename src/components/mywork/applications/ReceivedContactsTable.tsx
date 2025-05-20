@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, UserCheck } from "lucide-react";
+import { Check, X, Eye, UserCheck, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 
@@ -20,6 +20,7 @@ interface ReceivedContactsTableProps {
   isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
   onStatusChange: (id: number, type: string, status: string) => void;
+  onCreateWork?: (id: number, type: string) => void;
 }
 
 /**
@@ -30,7 +31,8 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   type,
   isLoading,
   onViewDetails,
-  onStatusChange
+  onStatusChange,
+  onCreateWork
 }) => {
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -39,10 +41,34 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   if (!contacts || contacts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        No {type} contacts received
+        No {type === 'skill' ? 'skill' : 'material'} contacts received
       </div>
     );
   }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'Agreement Reached':
+        return 'bg-green-100 text-green-800';
+      case 'Declined':
+        return 'bg-red-100 text-red-800';
+      case 'Responded':
+        return 'bg-blue-100 text-blue-800';
+      case 'In Discussion':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleCreateWorkClick = (contact: any) => {
+    if (onCreateWork) {
+      onCreateWork(
+        contact.id,
+        type === 'skill' ? 'skill_contact' : 'material_contact'
+      );
+    }
+  };
 
   return (
     <div className="overflow-x-auto">
@@ -51,9 +77,9 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
           <TableRow>
             <TableHead>Contact</TableHead>
             <TableHead>{type === 'skill' ? 'Skill' : 'Material'}</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead className="hidden md:table-cell">Date</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -77,27 +103,32 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                 </p>
                 <p className="text-xs text-muted-foreground">{type === 'skill' ? contact.pricing : contact.price}</p>
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden md:table-cell">
                 {new Date(contact.created_at).toLocaleDateString()}
               </TableCell>
               <TableCell>
-                <Badge variant={
-                  contact.status === 'Agreement Reached' ? 'secondary' : 
-                  contact.status === 'Declined' ? 'destructive' : 
-                  'outline'
-                }>
+                <Badge variant="outline" className={getStatusBadgeVariant(contact.status)}>
                   {contact.status}
                 </Badge>
               </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="text-right">
+                <div className="flex gap-2 justify-end">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => onViewDetails(contact, 'contact')}
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" />View Details
                   </Button>
+                  <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="text-600"
+                       // onClick={}
+                      >
+                        <MessageSquare className="w-4 h-4" /> Contact
+                      </Button>
+                  {/* Show accept/decline only for new contacts */}
                   {contact.status === 'Contact Initiated' && (
                     <>
                       <Button 
@@ -110,7 +141,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                           'Responded'
                         )}
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="w-4 h-4" /> Accept
                       </Button>
                       <Button 
                         variant="outline" 
@@ -122,20 +153,22 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                           'Declined'
                         )}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4" /> Decline
                       </Button>
                     </>
                   )}
-                  {contact.status === 'Responded' || contact.status === 'In Discussion' ? (
+                  
+                  {/* Show create work button for responded or in discussion status */}
+                  {(contact.status === 'Responded' || contact.status === 'In Discussion') && (
                     <Button 
                       variant="outline" 
                       size="sm"
                       className="text-blue-600"
-                      onClick={() => onViewDetails(contact, 'contact')}
+                      onClick={() => handleCreateWorkClick(contact)}
                     >
                       <UserCheck className="w-4 h-4" />
                     </Button>
-                  ) : null}
+                  )}
                 </div>
               </TableCell>
             </TableRow>

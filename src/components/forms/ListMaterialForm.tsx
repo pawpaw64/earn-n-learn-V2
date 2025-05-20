@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -10,14 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
-import { createMaterial, updateMaterial } from "@/services/materials";
-import { useEditableItem } from "@/components/browse/EditableItemContext";
-import { MaterialType } from "@/types/marketplace";
+import { createMaterial } from "@/services/materials";
 
 const formSchema = z.object({
-  title: z.string().min(3, "Material name must be at least 3 characters"),
-  condition: z.string().min(1, "Please select condition"),
-  price: z.string().min(1, "Please specify price"),
+  materialName: z.string().min(3, "Material name must be at least 3 characters"),
+  condition: z.string(),
+  price: z.string(),
   type: z.enum(["sale", "rent", "borrow"]),
   availability: z.string().min(1, "Please specify availability"),
   description: z.string().min(10, "Please provide a more detailed description"),
@@ -26,21 +25,13 @@ const formSchema = z.object({
 
 type ListMaterialFormValues = z.infer<typeof formSchema>;
 
-interface ListMaterialFormProps {
-  initialData?: MaterialType;
-}
-
-export default function ListMaterialForm({ initialData }: ListMaterialFormProps) {
-  const { editItem, editType, clearEditItem } = useEditableItem();
+export default function ListMaterialForm() {
   const [imagePreview, setImagePreview] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const isEditing = Boolean(initialData || (editType === 'material' && editItem));
-  const itemToEdit = initialData || (editType === 'material' ? editItem : null);
 
   const form = useForm<ListMaterialFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      materialName: "",
       condition: "Like New",
       price: "",
       type: "sale",
@@ -50,30 +41,34 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
     }
   });
 
-  // Pre-fill form in edit mode
-  React.useEffect(() => {
-    if (itemToEdit) {
-      form.reset({
-        title: itemToEdit.title || "",
-        condition: itemToEdit.condition || "Like New",
-        price: itemToEdit.price || "",
-        type: itemToEdit.type || "sale",
-        availability: itemToEdit.availability || "",
-        description: itemToEdit.description || "",
-        contactInfo: itemToEdit.contactInfo || ""
-      });
-      if (itemToEdit.imageUrl) {
-        setImagePreview(itemToEdit.imageUrl);
-      }
-    }
-  }, [itemToEdit, form]);
-
   const watchType = form.watch("type");
+
+  async function onSubmit(values: ListMaterialFormValues) {
+    try {
+      // Prepare data for API
+      const materialData = {
+        title: values.materialName,
+        description: values.description,
+        condition: values.condition,
+        price: values.price,
+        availability: values.availability,
+      };
+
+      // Call API to create material
+      await createMaterial(materialData);
+
+      toast.success("Material listed successfully!");
+      form.reset();
+      setImagePreview("");
+    } catch (error) {
+      console.error("Error listing material:", error);
+      toast.error("Failed to list material. Please try again.");
+    }
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -82,47 +77,12 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
     }
   };
 
-  async function onSubmit(values: ListMaterialFormValues) {
-    try {
-      const formData = new FormData();
-      formData.append("title", values.title);
-      formData.append("description", values.description);
-      formData.append("condition", values.condition);
-      formData.append("price", values.price);
-      formData.append("type", values.type);
-      formData.append("availability", values.availability);
-      formData.append("contactInfo", values.contactInfo);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
-
-      if (isEditing && itemToEdit?.id) {
-        await updateMaterial(itemToEdit.id, formData);
-        toast.success("Material updated successfully!");
-      } else {
-        await createMaterial(formData);
-        toast.success("Material listed successfully!");
-      }
-
-      form.reset();
-      setImagePreview("");
-      setImageFile(null);
-      if (clearEditItem) clearEditItem();
-    } catch (error) {
-      console.error("Error with material:", error);
-      toast.error(isEditing 
-        ? "Failed to update material. Please try again." 
-        : "Failed to list material. Please try again.");
-    }
-  }
-
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="title"
+          name="materialName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Material Name</FormLabel>
@@ -133,7 +93,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             </FormItem>
           )}
         />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -159,7 +118,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="type"
@@ -191,7 +149,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             )}
           />
         </div>
-
         <FormField
           control={form.control}
           name="price"
@@ -214,7 +171,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             </FormItem>
           )}
         />
-
         <div>
           <label className="block text-sm font-medium mb-2">Upload Image (Optional)</label>
           <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50">
@@ -260,7 +216,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             )}
           </div>
         </div>
-
         <FormField
           control={form.control}
           name="description"
@@ -278,7 +233,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="availability"
@@ -296,7 +250,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="contactInfo"
@@ -310,7 +263,6 @@ export default function ListMaterialForm({ initialData }: ListMaterialFormProps)
             </FormItem>
           )}
         />
-
         <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700">
           {watchType === "sale" ? "List for Sale" : 
            watchType === "rent" ? "List for Rent" : 

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMyWorks } from "@/services/works";
+import { fetchMyWorks,fetchProviderWorks } from "@/services/works";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { WorksHeader } from "./works/WorksHeader";
 import { WorksGrid } from "./works/WorksGrid";
@@ -22,7 +22,7 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
     isLoading: isLoadingWorks
   } = useQuery({
     queryKey: ['myWorks'],
-    queryFn: fetchMyWorks
+    queryFn: fetchProviderWorks
   });
 
   // Ensure works is always an array

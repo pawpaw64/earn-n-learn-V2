@@ -74,24 +74,24 @@ export const submitApplication = async (req, res) => {
     const applicant = await UserModel.getById(req.user.id);
     
     // Create notification for job poster
-    await NotificationModel.create({
-      user_id: job.user_id,
-      title: 'New Job Application',
-      message: `${applicant.name} has applied to your job posting: ${job.title}`,
-      type: 'application',
-      reference_id: applicationId,
-      reference_type: 'job_application'
-    });
+    // await NotificationModel.create({
+    //   user_id: job.user_id,
+    //   title: 'New Job Application',
+    //   message: `${applicant.name} has applied to your job posting: ${job.title}`,
+    //   type: 'application',
+    //   reference_id: applicationId,
+    //   reference_type: 'job_application'
+    // });
     
-    // Create notification for applicant
-    await NotificationModel.create({
-      user_id: req.user.id,
-      title: 'Application Submitted',
-      message: `Your application to ${job.title} has been submitted to ${jobPoster.name}`,
-      type: 'application',
-      reference_id: applicationId,
-      reference_type: 'job_application'
-    });
+    // // Create notification for applicant
+    // await NotificationModel.create({
+    //   user_id: req.user.id,
+    //   title: 'Application Submitted',
+    //   message: `Your application to ${job.title} has been submitted to ${jobPoster.name}`,
+    //   type: 'application',
+    //   reference_id: applicationId,
+    //   reference_type: 'job_application'
+    // });
     
     res.status(201).json({ 
       message: 'Application submitted successfully',

@@ -7,6 +7,25 @@ function formatDate(dateString) {
 }
 
 class MaterialModel {
+   static async #handleQueryResult(result) {
+    // Handle cases where result is already the rows array
+    if (Array.isArray(result)) {
+      return result;
+    }
+    
+    // Handle cases where result is an object with rows/first result set at index 0
+    if (result && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    // Handle cases where result is [rows, fields] array
+    if (Array.isArray(result) && result.length === 2 && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    console.error('Unexpected query result format:', result);
+    return [];
+  }
   static async getAllExcludingUser(userId) {
     try {
       const [rows] = await execute(`
@@ -80,17 +99,13 @@ class MaterialModel {
   // Get material by ID
   static async getById(id) {
     try {
-      const [rows] = await execute(`
+      const result= await execute(`
         SELECT m.*, u.name as user_name, u.avatar as user_avatar, u.email as user_email
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
         WHERE m.id = ?
       `, [id]);
-
-      if (!rows || rows.length === 0) {
-        throw new Error('Material not found');
-      }
-      
+      const rows = await this.#handleQueryResult(result);
       return rows[0];
     } catch (error) {
       console.error('Error in getById:', error);

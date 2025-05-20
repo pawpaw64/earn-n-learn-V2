@@ -1,20 +1,34 @@
+
 // src/api/contacts.ts
 import axios from 'axios';
 import { ContactType } from '@/types/marketplace';
 import { setAuthToken } from './auth';
+import { toast } from 'sonner';
 
 const API_URL = 'http://localhost:8080/api';
 
 export const submitSkillContact = async (contactData: { skill_id: number, message: string }): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
+  try{
   const response = await axios.post(`${API_URL}/contacts/skill`, contactData);
-  return response.data;
+  toast.success("Contact request sent successfully");
+  return response.data;}
+  catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to send contact request");
+    throw error;
+  }
 };
 
 export const submitMaterialContact = async (contactData: { material_id: number, message: string }): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
+  try{
   const response = await axios.post(`${API_URL}/contacts/material`, contactData);
-  return response.data;
+  toast.success("Contact request sent successfully");
+  return response.data;}
+  catch (error: any) {
+    toast.error(error.response?.data?.message || "Failed to send contact request");
+    throw error;
+  }
 };
 
 export const updateSkillContactStatus = async (id: number, status: string): Promise<any> => {
@@ -33,6 +47,7 @@ export const fetchUserSkillContacts = async (): Promise<ContactType[]> => {
   setAuthToken(localStorage.getItem('token'));
   try {
     const response = await axios.get(`${API_URL}/contacts/user/skill`);
+    console.log("User Skill Contacts:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching user skill contacts:", error);
@@ -70,5 +85,27 @@ export const fetchMaterialContacts = async (): Promise<ContactType[]> => {
   } catch (error) {
     console.error("Error fetching material contacts:", error);
     return [];
+  }
+};
+
+export const getSkillContactDetails = async (id: number): Promise<ContactType> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/contacts/skill/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching skill contact details:", error);
+    throw error;
+  }
+};
+
+export const getMaterialContactDetails = async (id: number): Promise<ContactType> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/contacts/material/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching material contact details:", error);
+    throw error;
   }
 };

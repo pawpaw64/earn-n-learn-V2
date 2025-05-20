@@ -69,6 +69,7 @@ export const fetchMyApplications = async () => {
   setAuthToken(localStorage.getItem('token'));
   try {
     const response = await axios.get(`${API_URL}/applications/user/submitted`);
+    console.log("My Applications:", response.data);
     return response.data;
   } catch (error: any) {
     console.error("Error fetching applications:", error);
