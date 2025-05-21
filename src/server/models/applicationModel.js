@@ -2,6 +2,26 @@
 import { execute } from '../config/db.js';
 
 class ApplicationModel {
+   // Unified method to handle query results
+  static async #handleQueryResult(result) {
+    // Handle cases where result is already the rows array
+    if (Array.isArray(result)) {
+      return result;
+    }
+    
+    // Handle cases where result is an object with rows/first result set at index 0
+    if (result && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    // Handle cases where result is [rows, fields] array
+    if (Array.isArray(result) && result.length === 2 && Array.isArray(result[0])) {
+      return result[0];
+    }
+    
+    console.error('Unexpected query result format:', result);
+    return [];
+  }
   // Get all applications (admin only)
   static async getAll() {
     const [rows] = await execute(`
@@ -19,7 +39,7 @@ class ApplicationModel {
 
   // Get application by ID
   static async getById(id) {
-    const [rows] = await execute(`
+    const result= await execute(`
       SELECT a.*, j.title as job_title, j.type as job_type, j.description as job_description,
       j.payment, j.deadline, j.requirements, j.location,
       u.name as applicant_name, u.email as applicant_email, u.avatar as applicant_avatar,
@@ -30,7 +50,11 @@ class ApplicationModel {
       JOIN users p ON j.user_id = p.id
       WHERE a.id = ?
     `, [id]);
-    return rows[0];
+    
+   const rows = Array.isArray(result) ? 
+      (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
+      [];
+    return rows;
   }
 
   // Create new application

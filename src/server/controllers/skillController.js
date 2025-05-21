@@ -22,7 +22,7 @@ export async function getAllSkills(req, res) {
 // Get skill by ID
 export async function getSkillById(req, res) {
   try {
-    const skill = await SkillModel.getSkillById(req.params.id);
+    const skill = await SkillModel.getById(req.params.id);
     if (!skill) {
       return res.status(404).json({ error: 'Skill not found' });
     }

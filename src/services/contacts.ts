@@ -91,7 +91,7 @@ export const fetchMaterialContacts = async (): Promise<ContactType[]> => {
 export const getSkillContactDetails = async (id: number): Promise<ContactType> => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/contacts/skill/${id}`);
+    const response = await axios.get(`${API_URL}/skills/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching skill contact details:", error);
@@ -102,7 +102,7 @@ export const getSkillContactDetails = async (id: number): Promise<ContactType> =
 export const getMaterialContactDetails = async (id: number): Promise<ContactType> => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/contacts/material/${id}`);
+    const response = await axios.get(`${API_URL}/materials/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching material contact details:", error);

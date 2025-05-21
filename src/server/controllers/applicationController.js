@@ -18,6 +18,7 @@ export const getAllApplications = async (req, res) => {
 // Get application by ID
 export const getApplicationById = async (req, res) => {
   try {
+    console.log('Fetching application with ID:', req.params.id);
     const application = await ApplicationModel.getById(req.params.id);
     
     if (!application) {

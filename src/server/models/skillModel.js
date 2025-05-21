@@ -63,6 +63,7 @@ class SkillModel {
   // Add this method to your SkillModel class
 static async getById(id) {
   try {
+    console.log('Fetching skill with ID:', id);
     const result= await execute(
       `SELECT s.*, u.name, u.avatar as avatarUrl 
        FROM skill_marketplace s
