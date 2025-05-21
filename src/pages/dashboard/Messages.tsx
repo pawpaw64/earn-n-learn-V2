@@ -5,6 +5,7 @@ import { getRecentChats, getUserGroups } from '@/services/messages';
 import { ChatType, GroupType } from '@/types/messages';
 import { ChatSidebar } from '@/components/messages/ChatSidebar';
 import { ChatWindow } from '@/components/messages/ChatWindow';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Messages() {
   const [activeChat, setActiveChat] = useState<{ 
@@ -70,21 +71,28 @@ export default function Messages() {
   }, [queryClient, activeChat]);
   
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Messages</h1>
-      
-      <div className="border rounded-lg shadow-sm bg-card h-[calc(100vh-12rem)] flex">
-        <ChatSidebar 
-          onSelectChat={handleSelectChat}
-          activeChat={activeChat || undefined}
-        />
-        
-        <ChatWindow 
-          chatId={activeChat?.id || 0}
-          chatType={activeChat?.type || 'direct'}
-          chatName={activeChat?.name}
-          chatAvatar={activeChat?.avatar}
-        />
+    <div className="h-[calc(100vh-5rem)]">
+      <div className="border rounded-lg shadow-sm h-full overflow-hidden flex flex-col">
+        <Tabs defaultValue="direct" className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="direct" className="py-3">Direct Messages</TabsTrigger>
+            <TabsTrigger value="group" className="py-3">Group Chats</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex h-[calc(100vh-10.5rem)]">
+            <ChatSidebar 
+              onSelectChat={handleSelectChat}
+              activeChat={activeChat || undefined}
+            />
+            
+            <ChatWindow 
+              chatId={activeChat?.id || 0}
+              chatType={activeChat?.type || 'direct'}
+              chatName={activeChat?.name}
+              chatAvatar={activeChat?.avatar}
+            />
+          </div>
+        </Tabs>
       </div>
     </div>
   );
