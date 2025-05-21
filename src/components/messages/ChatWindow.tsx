@@ -174,7 +174,7 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
   
   if (!chatId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-muted/20">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
           <h3 className="font-medium text-lg">Select a conversation</h3>
           <p className="text-muted-foreground mt-1">Choose a chat or start a new conversation</p>
@@ -184,7 +184,7 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
   }
   
   return (
-    <div className="flex-1 flex flex-col overflow-hidden border-l">
+    <div className="flex-1 flex flex-col overflow-hidden">
       <MessageHeader 
         name={chatName || ''}
         avatar={chatAvatar}
@@ -193,10 +193,10 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
         members={chatType === 'group' ? groupMembers : undefined}
       />
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background">
+      <ScrollArea className="flex-1 p-4 space-y-4">
         {isLoadingMessages ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground">Loading messages...</p>
+            Loading messages...
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-center">
@@ -215,16 +215,16 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
               />
             ))}
             {isTyping && (
-              <div className="text-sm text-muted-foreground italic ml-12">
+              <div className="text-sm text-muted-foreground italic">
                 {typingUser || 'Someone'} is typing...
               </div>
             )}
             <div ref={scrollRef} />
           </>
         )}
-      </div>
+      </ScrollArea>
       
-      <div className="border-t p-3">
+      <div className="border-t p-4">
         <div className="flex items-center gap-2">
           <Button 
             size="icon" 
@@ -236,7 +236,7 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
           </Button>
           
           <Input
-            placeholder="Type a message..."
+            placeholder="Type a message"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
