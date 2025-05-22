@@ -27,7 +27,7 @@ async function initDatabase() {
     // Read schema files
     const schemaPath = join(__dirname, 'schema.sql');
     const walletSchemaPath = join(__dirname, 'wallet_schema.sql');
-    const messageSchemaPath = join(__dirname, 'message_schema.sql');
+    const messageSchemaPath = join(__dirname, 'messages_schema.sql');
     
     const schema = readFileSync(schemaPath, 'utf8');
     const walletSchema = readFileSync(walletSchemaPath, 'utf8');

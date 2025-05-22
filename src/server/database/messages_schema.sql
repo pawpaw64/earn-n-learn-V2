@@ -38,10 +38,3 @@ CREATE TABLE IF NOT EXISTS messages (
   FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE SET NULL
 );
-
--- Creating indexes for faster queries
-CREATE INDEX idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX idx_messages_sender ON messages(sender_id);
-CREATE INDEX idx_messages_sent_at ON messages(sent_at);
-CREATE INDEX idx_conversation_updated ON conversations(updated_at);
-CREATE INDEX idx_conversation_participant_user ON conversation_participants(user_id);
