@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { JobType } from "@/types/marketplace";
+import { useNavigate } from "react-router-dom";
+import { getUserIdFromToken } from "@/services/auth";
 
 interface JobDetailsModalProps {
   job: JobType | null;
@@ -22,7 +24,13 @@ interface JobDetailsModalProps {
 }
 
 const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModalProps) => {
+  const navigate = useNavigate();
+  const currentUserId = getUserIdFromToken(localStorage.getItem('token'));
+  
   if (!job) return null;
+  
+  // Determine if the current user is the owner of this job
+  const isOwnJob = job.user_id === currentUserId;
 
   // Store user info in localStorage when they view a job so it's available in the application modal
   React.useEffect(() => {
@@ -38,6 +46,14 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
       }
     }
   }, [isOpen]);
+
+  // Function to view the job poster's profile
+  const viewPosterProfile = () => {
+    if (job.user_id) {
+      onOpenChange(false); // Close modal first
+      navigate(`/dashboard/profile/${job.user_id}`);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -55,6 +71,16 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
             <div>
               <h3 className="font-medium">Posted by: {job.poster}</h3>
               <p className="text-sm text-muted-foreground">{job.posterEmail || "No email provided"}</p>
+              {job.user_id && (
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-blue-600" 
+                  onClick={viewPosterProfile}
+                >
+                  <User className="h-3 w-3 mr-1" />
+                  View Profile
+                </Button>
+              )}
             </div>
             <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-800 font-medium">
               {job.type}
@@ -96,12 +122,14 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
           </DialogClose>
-          <Button 
-            onClick={() => onApply(job.id)} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            Apply Now
-          </Button>
+          {!isOwnJob && (
+            <Button 
+              onClick={() => onApply(job.id)} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Apply Now
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

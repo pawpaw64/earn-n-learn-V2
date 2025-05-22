@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import { 
   register, 
@@ -5,7 +6,8 @@ import {
   getMe, 
   getUserById,
   updateProfile,
-
+  getUserWorkHistory,
+  getUserDetails
 } from '../controllers/userController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -17,8 +19,9 @@ router.post('/login', login);
 
 // Protected routes
 router.get('/me', auth, getMe);
-router.get('/:id', auth, getUserById);
+router.get('/user/:id', auth, getUserById);
 router.put('/profile', auth, updateProfile);
-
+router.get('/user/:id/work-history', auth, getUserWorkHistory);
+router.get('/user/:id/details', auth, getUserDetails);
 
 export default router;
