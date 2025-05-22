@@ -12,7 +12,6 @@ router.use(authMiddleware);
 router.get('/direct/:contactId', messageController.getDirectMessages);
 router.get('/chats', messageController.getRecentChats);
 router.post('/send', messageController.sendMessage);
-router.post('/initiate', messageController.initiateDirectMessage);
 
 // Group messaging routes
 router.post('/groups', messageController.createGroup);

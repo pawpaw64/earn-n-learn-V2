@@ -1,4 +1,3 @@
-
 import UserModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
@@ -149,6 +148,7 @@ export async function getUserById(req, res) {
   try {
     const userId = req.params.id;
     const user = await UserModel.findById(userId);
+   
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -168,78 +168,6 @@ export async function getUserById(req, res) {
     });
   } catch (error) {
     console.error('Get user by ID error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
-
-// Get user work history (jobs, skills, materials posted)
-export async function getUserWorkHistory(req, res) {
-  console.log('Getting user work history... [userController.js.getUserWorkHistory]');
-  try {
-    const userId = req.params.id;
-    
-    // Verify user exists
-    const userExists = await UserModel.userExists(userId);
-    if (!userExists) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Get user's posted jobs, skills and materials
-    const [jobs, skills, materials] = await Promise.all([
-      UserModel.getUserPostedJobs(userId),
-      UserModel.getUserPostedSkills(userId),
-      UserModel.getUserPostedMaterials(userId)
-    ]);
-    
-    res.json({ 
-      jobs: jobs || [], 
-      skills: skills || [], 
-      materials: materials || [] 
-    });
-  } catch (error) {
-    console.error('Get user work history error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-}
-
-// Get detailed user information including ratings and reviews
-export async function getUserDetails(req, res) {
-  console.log('Getting user details... [userController.js.getUserDetails]');
-  try {
-    const userId = req.params.id;
-    
-    // Get user profile
-    const user = await UserModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    
-    // Get user ratings and reviews
-    const [ratings, completedJobs, verifications] = await Promise.all([
-      UserModel.getUserRatings(userId),
-      UserModel.getUserCompletedJobs(userId),
-      UserModel.getUserVerifications(userId)
-    ]);
-    
-    // Calculate average rating
-    let averageRating = 0;
-    if (ratings && ratings.length > 0) {
-      const sum = ratings.reduce((total, rating) => total + rating.rating, 0);
-      averageRating = sum / ratings.length;
-    }
-    
-    res.json({ 
-      user,
-      ratings: {
-        average: averageRating.toFixed(1),
-        count: ratings.length,
-        detail: ratings || []
-      },
-      completedJobs: completedJobs || [],
-      verifications: verifications || []
-    });
-  } catch (error) {
-    console.error('Get user details error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }

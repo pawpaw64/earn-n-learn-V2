@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +12,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Check, User } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
 import { submitJobApplication } from "@/services/applications";
-import { useNavigate } from "react-router-dom";
-import { getUserIdFromToken } from "@/services/auth";
 
 interface JobApplicationModalProps {
   job: JobType | null;
@@ -26,20 +24,15 @@ interface JobApplicationModalProps {
 }
 
 const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalProps) => {
-  const navigate = useNavigate();
   const [name, setName] = useState(""); 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState(""); 
   const [coverLetter, setCoverLetter] = useState("");
   const [resume, setResume] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const currentUserId = getUserIdFromToken(localStorage.getItem('token'));
-  
-  // Determine if the current user is the owner of this job
-  const isOwnJob = job?.user_id === currentUserId;
 
   // Fetch user profile on modal open
-  useEffect(() => {
+  React.useEffect(() => {
     if (isOpen) {
       // Get user info from local storage or state management
       const userName = localStorage.getItem('userName') || "";
@@ -68,9 +61,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
       
       const applicationData = {
         job_id: job.id,
-        cover_letter: coverLetter,
-        resume_link: resume || undefined,
-        phone: phone || undefined
+        cover_letter: coverLetter
       };
       
       // Send the application to the backend
@@ -83,14 +74,6 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
       toast.error(error.response?.data?.message || "Failed to submit application. Please try again.");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Function to view the job poster's profile
-  const viewPosterProfile = () => {
-    if (job.user_id) {
-      onOpenChange(false); // Close modal first
-      navigate(`/dashboard/profile/${job.user_id}`);
     }
   };
 
@@ -156,28 +139,6 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
               required
             />
           </div>
-          
-          {/* Job poster information and profile link */}
-          {!isOwnJob && (
-            <div className="p-3 bg-gray-50 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="text-sm">
-                  <span className="block text-muted-foreground">Posted by:</span>
-                  <span className="font-medium">{job.poster}</span>
-                </div>
-              </div>
-              <Button 
-                type="button" 
-                variant="ghost" 
-                size="sm" 
-                onClick={viewPosterProfile}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                <User className="h-4 w-4 mr-2" />
-                View Profile
-              </Button>
-            </div>
-          )}
           
           <DialogFooter className="flex items-center justify-between sm:justify-between pt-4">
             <DialogClose asChild>
