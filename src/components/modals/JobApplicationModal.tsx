@@ -12,10 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
 import { submitJobApplication } from "@/services/applications";
+import { createDirectConversation } from "@/services/messages";
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 interface JobApplicationModalProps {
   job: JobType | null;
@@ -30,6 +33,8 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
   const [coverLetter, setCoverLetter] = useState("");
   const [resume, setResume] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch user profile on modal open
   React.useEffect(() => {
@@ -72,6 +77,37 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
     } catch (error: any) {
       console.error("Error submitting job application:", error);
       toast.error(error.response?.data?.message || "Failed to submit application. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleContactEmployer = async () => {
+    if (!job.poster_id) {
+      toast.error("Unable to contact employer - missing poster information");
+      return;
+    }
+    
+    try {
+      setIsSubmitting(true);
+      const conversationResponse = await createDirectConversation(job.poster_id);
+      
+      // Close this modal
+      onOpenChange(false);
+      
+      // Navigate to messages page
+      navigate('/dashboard/messages');
+      
+      // Refresh conversations list
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      
+      // Store conversation ID to open in localStorage
+      if (conversationResponse && conversationResponse.conversationId) {
+        localStorage.setItem('openConversationId', String(conversationResponse.conversationId));
+      }
+    } catch (error) {
+      console.error("Error creating conversation with employer:", error);
+      toast.error("Failed to start conversation with employer. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -146,13 +182,28 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
                 <ArrowLeft className="h-4 w-4" /> Cancel
               </Button>
             </DialogClose>
-            <Button 
-              type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-              disabled={isSubmitting}
-            >
-              <Check className="h-4 w-4" /> Submit Application
-            </Button>
+            
+            <div className="flex gap-2">
+              {job.poster_id && (
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="gap-1"
+                  onClick={handleContactEmployer}
+                  disabled={isSubmitting}
+                >
+                  <MessageCircle className="h-4 w-4" /> Message Employer
+                </Button>
+              )}
+              
+              <Button 
+                type="submit"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                disabled={isSubmitting}
+              >
+                <Check className="h-4 w-4" /> Submit Application
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
