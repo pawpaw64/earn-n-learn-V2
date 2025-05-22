@@ -72,6 +72,24 @@ export const createDirectConversation = async (recipientId: number | string) => 
 };
 
 /**
+ * Create a new group conversation
+ */
+export const createGroupConversation = async (title: string, participants: number[]) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/messages/conversations`, {
+      title,
+      participants
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error creating group conversation:', error);
+    toast.error('Failed to create group');
+    throw error;
+  }
+};
+
+/**
  * Search conversations
  */
 export const searchConversations = async (term: string) => {
@@ -81,6 +99,22 @@ export const searchConversations = async (term: string) => {
     return response.data;
   } catch (error) {
     console.error('Error searching conversations:', error);
+    toast.error('Failed to search conversations');
     return [];
+  }
+};
+
+/**
+ * Get conversation details
+ */
+export const getConversationDetails = async (conversationId: number | string) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/messages/conversations/${conversationId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching conversation details:', error);
+    toast.error('Failed to load conversation details');
+    return null;
   }
 };

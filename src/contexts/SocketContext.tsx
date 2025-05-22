@@ -30,16 +30,25 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   // Initialize socket connection
   useEffect(() => {
-    // Create socket connection
-    const socketInstance = io('http://localhost:8080');
+    // Create socket connection with auth token
+    const token = localStorage.getItem('token');
+    
+    const socketInstance = io('http://localhost:8080', {
+      auth: { token },
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 10000
+    });
 
     // Set up event listeners
     socketInstance.on('connect', () => {
       console.log('Socket connected:', socketInstance.id);
       setIsConnected(true);
+      setReconnectAttempts(0);
     });
 
     socketInstance.on('disconnect', () => {
@@ -50,6 +59,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     socketInstance.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
       setIsConnected(false);
+      setReconnectAttempts(prev => prev + 1);
     });
 
     // Save socket instance
@@ -60,13 +70,15 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('Disconnecting socket');
       socketInstance.disconnect();
     };
-  }, []);
+  }, [reconnectAttempts]);
 
   // Join a room
   const joinRoom = useCallback((roomId: string | number) => {
     if (socket && isConnected) {
       console.log('Joining room:', roomId);
       socket.emit('join_room', roomId);
+    } else {
+      console.warn('Cannot join room - socket not connected');
     }
   }, [socket, isConnected]);
 
@@ -83,6 +95,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && isConnected) {
       console.log('Sending message:', data);
       socket.emit('send_message', data);
+    } else {
+      console.warn('Cannot send message - socket not connected');
     }
   }, [socket, isConnected]);
 

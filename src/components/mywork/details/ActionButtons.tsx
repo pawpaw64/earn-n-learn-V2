@@ -7,8 +7,8 @@ import { toast } from "sonner";
 interface ActionButtonsProps {
   type: string;
   item: any;
-  onStatusChange?: (id: number, type: string, status: string) => void;
-  onCreateWork?: (id: number, type: string) => void;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<void> | void;
+  onCreateWork?: (id: number, type: string) => Promise<void> | void;
 }
 
 /**
@@ -28,8 +28,15 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   const handleWithdraw = () => {
     if (window.confirm("Are you sure you want to withdraw this application? This action cannot be undone.")) {
       setIsLoading(true);
-      onStatusChange && onStatusChange(item.id, 'job_application', 'Withdrawn')
-        .finally(() => setIsLoading(false));
+      const result = onStatusChange && onStatusChange(item.id, 'job_application', 'Withdrawn');
+      
+      // Handle both Promise and non-Promise returns
+      if (result && typeof result.then === 'function') {
+        result.then(() => setIsLoading(false))
+          .catch(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -37,9 +44,16 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   const handleCreateAgreement = () => {
     if (window.confirm("Are you sure you want to create an agreement? This will initiate a work assignment.")) {
       setIsLoading(true);
-      onCreateWork && onCreateWork(item.id, type === 'contact' ? 
-        (item.skill_id ? 'skill_contact' : 'material_contact') : type)
-        .finally(() => setIsLoading(false));
+      const result = onCreateWork && onCreateWork(item.id, type === 'contact' ? 
+        (item.skill_id ? 'skill_contact' : 'material_contact') : type);
+        
+      // Handle both Promise and non-Promise returns
+      if (result && typeof result.then === 'function') {
+        result.then(() => setIsLoading(false))
+          .catch(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -59,8 +73,15 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
     
     if (window.confirm(message)) {
       setIsLoading(true);
-      onStatusChange && onStatusChange(itemId, itemType, status)
-        .finally(() => setIsLoading(false));
+      const result = onStatusChange && onStatusChange(itemId, itemType, status);
+      
+      // Handle both Promise and non-Promise returns
+      if (result && typeof result.then === 'function') {
+        result.then(() => setIsLoading(false))
+          .catch(() => setIsLoading(false));
+      } else {
+        setIsLoading(false);
+      }
     }
   };
   

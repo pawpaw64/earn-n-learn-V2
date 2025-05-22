@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Check, MessageCircle } from "lucide-react";
+import { ArrowLeft, Check, MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
 import { submitJobApplication } from "@/services/applications";
@@ -53,6 +52,34 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
 
   if (!job) return null;
 
+  // Function to handle direct messaging with job poster
+  const handleContactEmployer = async () => {
+    if (!job || !job.poster) {
+      toast.error('Cannot contact employer - missing information');
+      return;
+    }
+    
+    try {
+      // Create or get direct conversation with poster
+      const result = await createDirectConversation(job.poster.id);
+      
+      if (result && result.conversationId) {
+        // Store conversation info in localStorage to open it on the messages page
+        localStorage.setItem('openChatWith', job.poster.id.toString());
+        localStorage.setItem('openChatType', 'direct');
+        
+        // Navigate to messages page
+        navigate('/dashboard/messages');
+        
+        onOpenChange(false); // Close the modal
+        toast.success(`Chat with ${job.poster.name} opened`);
+      }
+    } catch (error) {
+      console.error('Error contacting employer:', error);
+      toast.error('Failed to start conversation with employer');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -77,37 +104,6 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
     } catch (error: any) {
       console.error("Error submitting job application:", error);
       toast.error(error.response?.data?.message || "Failed to submit application. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleContactEmployer = async () => {
-    if (!job.poster_id) {
-      toast.error("Unable to contact employer - missing poster information");
-      return;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      const conversationResponse = await createDirectConversation(job.poster_id);
-      
-      // Close this modal
-      onOpenChange(false);
-      
-      // Navigate to messages page
-      navigate('/dashboard/messages');
-      
-      // Refresh conversations list
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      
-      // Store conversation ID to open in localStorage
-      if (conversationResponse && conversationResponse.conversationId) {
-        localStorage.setItem('openConversationId', String(conversationResponse.conversationId));
-      }
-    } catch (error) {
-      console.error("Error creating conversation with employer:", error);
-      toast.error("Failed to start conversation with employer. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,7 +172,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
             />
           </div>
           
-          <DialogFooter className="flex items-center justify-between sm:justify-between pt-4">
+          <DialogFooter className="flex sm:justify-between items-center">
             <DialogClose asChild>
               <Button type="button" variant="outline" className="gap-1">
                 <ArrowLeft className="h-4 w-4" /> Cancel
@@ -184,24 +180,24 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
             </DialogClose>
             
             <div className="flex gap-2">
-              {job.poster_id && (
+              {!job.isOwnJob && job.poster && (
                 <Button 
-                  type="button"
-                  variant="outline" 
+                  type="button" 
+                  variant="outline"
                   className="gap-1"
                   onClick={handleContactEmployer}
                   disabled={isSubmitting}
                 >
-                  <MessageCircle className="h-4 w-4" /> Message Employer
+                  <MessageSquare className="h-4 w-4" /> Contact Employer
                 </Button>
               )}
               
               <Button 
                 type="submit"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                disabled={isSubmitting}
+                className="gap-1 bg-emerald-600 hover:bg-emerald-700"
+                disabled={isSubmitting || job.isOwnJob}
               >
-                <Check className="h-4 w-4" /> Submit Application
+                <Send className="h-4 w-4" /> {isSubmitting ? 'Submitting...' : 'Apply Now'}
               </Button>
             </div>
           </DialogFooter>

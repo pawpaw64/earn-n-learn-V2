@@ -1,4 +1,3 @@
-
 import { execute } from '../config/db.js';
 
 class MessageModel {
@@ -86,7 +85,7 @@ class MessageModel {
         [conversation_id, sender_id, content, attachment_url || null, is_system_message || 0]
       );
       
-      // Update conversation's updated_at timestamp
+      // Update conversation's updated_at timestamp and last_message
       await execute(
         'UPDATE conversations SET updated_at = NOW(), last_message = ? WHERE id = ?',
         [content, conversation_id]
@@ -113,8 +112,7 @@ class MessageModel {
           (
             SELECT COUNT(*) 
             FROM messages m 
-            JOIN conversation_participants cp ON cp.conversation_id = c.id
-            WHERE m.conversation_id = c.id AND m.is_read = 0 AND m.sender_id != ? AND cp.user_id = ?
+            WHERE m.conversation_id = c.id AND m.is_read = 0 AND m.sender_id != ?
           ) as unread_count,
           (
             SELECT JSON_ARRAYAGG(
@@ -133,7 +131,7 @@ class MessageModel {
         JOIN conversation_participants cp ON c.id = cp.conversation_id
         WHERE cp.user_id = ?
         ORDER BY c.updated_at DESC
-      `, [userId, userId, userId, userId]);
+      `, [userId, userId, userId]);
       
       return Array.isArray(result[0]) ? result[0] : [];
     } catch (error) {
@@ -168,7 +166,7 @@ class MessageModel {
           m.sent_at,
           m.is_read
         FROM messages m
-        JOIN users u ON m.sender_id = u.id
+        LEFT JOIN users u ON m.sender_id = u.id
         WHERE m.conversation_id = ?
         ORDER BY m.sent_at ASC
       `, [conversationId]);

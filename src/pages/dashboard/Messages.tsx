@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,40 @@ const Messages = () => {
       })
     : conversations;
 
+  // Check if there's a conversation to open from localStorage (from contact buttons)
+  useEffect(() => {
+    const openChatWith = localStorage.getItem('openChatWith');
+    const openChatType = localStorage.getItem('openChatType');
+    
+    if (openChatWith) {
+      // Find the conversation with this user or create a new one
+      const recipientId = parseInt(openChatWith);
+      
+      if (!isNaN(recipientId)) {
+        import('@/services/messages').then(({ createDirectConversation }) => {
+          createDirectConversation(recipientId)
+            .then(result => {
+              if (result && result.conversationId) {
+                // Select this conversation
+                setSelectedConversation(result.conversationId);
+                // Refresh conversation list
+                queryClient.invalidateQueries({ queryKey: ['conversations'] });
+              }
+            })
+            .catch(error => {
+              console.error('Error creating direct conversation:', error);
+              toast.error('Failed to open conversation');
+            })
+            .finally(() => {
+              // Clear localStorage
+              localStorage.removeItem('openChatWith');
+              localStorage.removeItem('openChatType');
+            });
+        });
+      }
+    }
+  }, [queryClient]);
+
   // Socket connection for real-time messaging
   useEffect(() => {
     if (selectedConversation) {
@@ -87,19 +122,6 @@ const Messages = () => {
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Check if there's a conversation to open from localStorage
-  useEffect(() => {
-    const openChatWith = localStorage.getItem('openChatWith');
-    const openChatType = localStorage.getItem('openChatType');
-    
-    if (openChatWith && openChatType) {
-      // TODO: Implement logic to open the correct chat
-      // For now, just clear the localStorage
-      localStorage.removeItem('openChatWith');
-      localStorage.removeItem('openChatType');
-    }
-  }, []);
 
   // Format timestamp to a readable format
   const formatTimestamp = (timestamp: string) => {

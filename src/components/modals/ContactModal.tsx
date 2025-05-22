@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -48,7 +47,7 @@ const ContactModal = ({
   
   useEffect(() => {
     if (isOpen) {
-      const defaultSubject = `Interested in your ${itemName}`;
+      const defaultSubject = `Interested in your ${itemType}: ${itemName}`;
       const defaultMessage = `Hi ${recipientName},\n\nI'm interested in your ${itemName}. Is this still available? Could we arrange...`;
       
       setSubject(defaultSubject);
@@ -61,7 +60,7 @@ const ContactModal = ({
       setSenderName(userName);
       setSenderEmail(userEmail);
     }
-  }, [isOpen, recipientName, itemName]);
+  }, [isOpen, recipientName, itemName, itemType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,16 +131,17 @@ const ContactModal = ({
         // Close this modal
         onOpenChange(false);
         
+        // Store conversation ID to open in localStorage
+        if (result && result.conversationId) {
+          localStorage.setItem('openChatWith', String(recipientId));
+          localStorage.setItem('openChatType', 'direct');
+        }
+        
         // Navigate to messages page
         navigate('/dashboard/messages');
         
         // Refresh conversations list
         queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        
-        // Store conversation ID to open in localStorage
-        if (result && result.conversationId) {
-          localStorage.setItem('openConversationId', String(result.conversationId));
-        }
       })
       .catch(error => {
         console.error('Error creating conversation:', error);
