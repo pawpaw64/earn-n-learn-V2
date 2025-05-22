@@ -27,42 +27,54 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*",
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
+    methods: ["GET", "POST"]
   }
 });
 
-// Socket.IO connection handler
+// Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log('[socket] User connected:', socket.id);
   
-  // Join a room (conversation)
-  socket.on('join_room', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room: ${roomId}`);
+  // Join a room (for direct messages or group chats)
+  socket.on('join', (room) => {
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room ${room}`);
   });
   
   // Leave a room
-  socket.on('leave_room', (roomId) => {
-    socket.leave(roomId);
-    console.log(`User ${socket.id} left room: ${roomId}`);
+  socket.on('leave', (room) => {
+    socket.leave(room);
+    console.log(`Socket ${socket.id} left room ${room}`);
   });
   
-  // Handle new message
+  // Listen for new messages
   socket.on('send_message', (data) => {
-    console.log(`New message in room ${data.conversationId}:`, data);
-    io.to(data.conversationId).emit('receive_message', data);
+    // For direct messages, room is "dm_smaller-id_larger-id"
+    if (data.receiverId) {
+      const room = `dm_${Math.min(data.senderId, data.receiverId)}_${Math.max(data.senderId, data.receiverId)}`;
+      io.to(room).emit('receive_message', data);
+    }
+    // For group messages, room is "group_groupId"
+    else if (data.groupId) {
+      const room = `group_${data.groupId}`;
+      io.to(room).emit('receive_message', data);
+    }
   });
   
-  // Handle typing indicator
+  // Listen for typing indicator
   socket.on('typing', (data) => {
-    socket.to(data.conversationId).emit('user_typing', data);
+    if (data.receiverId) {
+      const room = `dm_${Math.min(data.senderId, data.receiverId)}_${Math.max(data.senderId, data.receiverId)}`;
+      socket.to(room).emit('user_typing', data);
+    } else if (data.groupId) {
+      const room = `group_${data.groupId}`;
+      socket.to(room).emit('user_typing', data);
+    }
   });
   
-  // Disconnect handler
+  // Handle disconnect
   socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log('User disconnected:', socket.id);
   });
 });
 
@@ -92,7 +104,6 @@ app.get('/', (req, res) => {
 // Start the server
 const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
   console.log(`Database URL: ${process.env.DB_URL}`);
 });

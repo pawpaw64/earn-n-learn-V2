@@ -1,120 +1,154 @@
 
 import axios from 'axios';
 import { setAuthToken } from './auth';
-import { toast } from 'sonner';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://localhost:8080/api/messages';
 
-/**
- * Get all conversations for the current user
- */
-export const getConversations = async () => {
+// Get direct messages between current user and another user
+export const getDirectMessages = async (contactId: number) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/conversations`);
+    const response = await axios.get(`${API_URL}/direct/${contactId}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching conversations:', error);
-    toast.error('Failed to load conversations');
+    console.error('Error fetching direct messages:', error);
     return [];
   }
 };
 
-/**
- * Get messages for a specific conversation
- */
-export const getMessages = async (conversationId: number | string) => {
+// Get recent chats
+export const getRecentChats = async () => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/conversations/${conversationId}/messages`);
+    const response = await axios.get(`${API_URL}/chats`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching messages:', error);
-    toast.error('Failed to load messages');
+    console.error('Error fetching recent chats:', error);
     return [];
   }
 };
 
-/**
- * Send a message in a conversation
- */
-export const sendMessage = async (conversationId: number | string, content: string, attachmentUrl?: string) => {
+// Send a message
+export const sendMessage = async (receiverId: number, content: string, hasAttachment = false, attachmentUrl = null) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.post(`${API_URL}/messages`, {
-      conversation_id: conversationId,
+    const response = await axios.post(`${API_URL}/send`, {
+      receiverId,
       content,
-      attachment_url: attachmentUrl
+      hasAttachment,
+      attachmentUrl
     });
     return response.data;
   } catch (error) {
     console.error('Error sending message:', error);
-    toast.error('Failed to send message');
     throw error;
   }
 };
 
-/**
- * Create or get a direct conversation with another user
- */
-export const createDirectConversation = async (recipientId: number | string) => {
+// Create a group
+export const createGroup = async (name: string, description: string) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.post(`${API_URL}/messages/direct`, {
-      recipient_id: recipientId
+    const response = await axios.post(`${API_URL}/groups`, {
+      name,
+      description
     });
     return response.data;
   } catch (error) {
-    console.error('Error creating conversation:', error);
-    toast.error('Failed to start conversation');
+    console.error('Error creating group:', error);
     throw error;
   }
 };
 
-/**
- * Create a new group conversation
- */
-export const createGroupConversation = async (title: string, participants: number[]) => {
+// Get user groups
+export const getUserGroups = async () => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.post(`${API_URL}/messages/conversations`, {
-      title,
-      participants
-    });
+    const response = await axios.get(`${API_URL}/groups`);
     return response.data;
   } catch (error) {
-    console.error('Error creating group conversation:', error);
-    toast.error('Failed to create group');
-    throw error;
-  }
-};
-
-/**
- * Search conversations
- */
-export const searchConversations = async (term: string) => {
-  setAuthToken(localStorage.getItem('token'));
-  try {
-    const response = await axios.get(`${API_URL}/messages/search?term=${encodeURIComponent(term)}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error searching conversations:', error);
-    toast.error('Failed to search conversations');
+    console.error('Error fetching user groups:', error);
     return [];
   }
 };
 
-/**
- * Get conversation details
- */
-export const getConversationDetails = async (conversationId: number | string) => {
+// Get group messages
+export const getGroupMessages = async (groupId: number) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/conversations/${conversationId}`);
+    const response = await axios.get(`${API_URL}/groups/${groupId}/messages`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching conversation details:', error);
-    toast.error('Failed to load conversation details');
-    return null;
+    console.error('Error fetching group messages:', error);
+    return [];
+  }
+};
+
+// Send group message
+export const sendGroupMessage = async (groupId: number, content: string, hasAttachment = false, attachmentUrl = null) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/groups/message`, {
+      groupId,
+      content,
+      hasAttachment,
+      attachmentUrl
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending group message:', error);
+    throw error;
+  }
+};
+
+// Add user to group
+export const addToGroup = async (groupId: number, userId: number, isAdmin = false) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/groups/members`, {
+      groupId,
+      userId,
+      isAdmin
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error adding user to group:', error);
+    throw error;
+  }
+};
+
+// Remove user from group
+export const removeFromGroup = async (groupId: number, userId: number) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.delete(`${API_URL}/groups/${groupId}/members/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error removing user from group:', error);
+    throw error;
+  }
+};
+
+// Get group members
+export const getGroupMembers = async (groupId: number) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/groups/${groupId}/members`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching group members:', error);
+    return [];
+  }
+};
+
+// Search for users
+export const searchUsers = async (query: string) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/users/search/${query}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return [];
   }
 };

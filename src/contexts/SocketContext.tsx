@@ -1,134 +1,80 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useToast } from '@/hooks/use-toast';
 
-// Define the socket context interface
-interface SocketContextType {
+interface SocketContextProps {
   socket: Socket | null;
   isConnected: boolean;
-  joinRoom: (roomId: string | number) => void;
-  leaveRoom: (roomId: string | number) => void;
-  sendMessage: (data: any) => void;
-  listenForMessages: (callback: (data: any) => void) => void;
-  stopListeningForMessages: () => void;
+  joinRoom: (room: string) => void;
+  leaveRoom: (room: string) => void;
 }
 
-// Create the context with default values
-const SocketContext = createContext<SocketContextType>({
+const SocketContext = createContext<SocketContextProps>({
   socket: null,
   isConnected: false,
   joinRoom: () => {},
   leaveRoom: () => {},
-  sendMessage: () => {},
-  listenForMessages: () => {},
-  stopListeningForMessages: () => {}
 });
 
-// Custom hook to use the socket context
 export const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-
-  // Initialize socket connection
+  const { toast } = useToast();
+  
   useEffect(() => {
-    // Create socket connection with auth token
     const token = localStorage.getItem('token');
+    if (!token) return;
     
+    // Connect to socket server
     const socketInstance = io('http://localhost:8080', {
       auth: { token },
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      timeout: 10000
+      transports: ['websocket'],
     });
-
-    // Set up event listeners
+    
     socketInstance.on('connect', () => {
-      console.log('Socket connected:', socketInstance.id);
+      console.log('Socket connected');
       setIsConnected(true);
-      setReconnectAttempts(0);
     });
-
+    
+    socketInstance.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+      toast({
+        title: 'Connection Error',
+        description: 'Failed to connect to messaging service',
+        variant: 'destructive',
+      });
+      setIsConnected(false);
+    });
+    
     socketInstance.on('disconnect', () => {
       console.log('Socket disconnected');
       setIsConnected(false);
     });
-
-    socketInstance.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-      setIsConnected(false);
-      setReconnectAttempts(prev => prev + 1);
-    });
-
-    // Save socket instance
+    
     setSocket(socketInstance);
-
-    // Clean up on unmount
+    
     return () => {
-      console.log('Disconnecting socket');
       socketInstance.disconnect();
     };
-  }, [reconnectAttempts]);
-
-  // Join a room
-  const joinRoom = useCallback((roomId: string | number) => {
-    if (socket && isConnected) {
-      console.log('Joining room:', roomId);
-      socket.emit('join_room', roomId);
-    } else {
-      console.warn('Cannot join room - socket not connected');
-    }
-  }, [socket, isConnected]);
-
-  // Leave a room
-  const leaveRoom = useCallback((roomId: string | number) => {
-    if (socket && isConnected) {
-      console.log('Leaving room:', roomId);
-      socket.emit('leave_room', roomId);
-    }
-  }, [socket, isConnected]);
-
-  // Send a message
-  const sendMessage = useCallback((data: any) => {
-    if (socket && isConnected) {
-      console.log('Sending message:', data);
-      socket.emit('send_message', data);
-    } else {
-      console.warn('Cannot send message - socket not connected');
-    }
-  }, [socket, isConnected]);
-
-  // Listen for messages
-  const listenForMessages = useCallback((callback: (data: any) => void) => {
+  }, [toast]);
+  
+  const joinRoom = (room: string) => {
     if (socket) {
-      console.log('Setting up message listener');
-      socket.on('receive_message', callback);
+      socket.emit('join', room);
     }
-  }, [socket]);
-
-  // Stop listening for messages
-  const stopListeningForMessages = useCallback(() => {
-    if (socket) {
-      console.log('Removing message listener');
-      socket.off('receive_message');
-    }
-  }, [socket]);
-
-  // Context value
-  const value = {
-    socket,
-    isConnected,
-    joinRoom,
-    leaveRoom,
-    sendMessage,
-    listenForMessages,
-    stopListeningForMessages
   };
-
+  
+  const leaveRoom = (room: string) => {
+    if (socket) {
+      socket.emit('leave', room);
+    }
+  };
+  
   return (
-    <SocketContext.Provider value={value}>
+    <SocketContext.Provider value={{ socket, isConnected, joinRoom, leaveRoom }}>
       {children}
     </SocketContext.Provider>
   );

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -14,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { submitSkillContact, submitMaterialContact } from "@/services/contacts";
-import { createDirectConversation, sendMessage } from "@/services/messages";
+import { sendMessage } from "@/services/messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -47,7 +48,7 @@ const ContactModal = ({
   
   useEffect(() => {
     if (isOpen) {
-      const defaultSubject = `Interested in your ${itemType}: ${itemName}`;
+      const defaultSubject = `Interested in your ${itemName}`;
       const defaultMessage = `Hi ${recipientName},\n\nI'm interested in your ${itemName}. Is this still available? Could we arrange...`;
       
       setSubject(defaultSubject);
@@ -60,7 +61,7 @@ const ContactModal = ({
       setSenderName(userName);
       setSenderEmail(userEmail);
     }
-  }, [isOpen, recipientName, itemName, itemType]);
+  }, [isOpen, recipientName, itemName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,14 +95,8 @@ const ContactModal = ({
       // If recipient ID is available, also send a direct message
       if (recipientId) {
         try {
-          const conversationResponse = await createDirectConversation(recipientId);
-          if (conversationResponse && conversationResponse.conversationId) {
-            await sendMessage(
-              conversationResponse.conversationId, 
-              `[Regarding ${itemType}: ${itemName}]\n${contactData.message}`
-            );
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          }
+          await sendMessage(recipientId, contactData.message);
+          queryClient.invalidateQueries({ queryKey: ['recentChats'] });
         } catch (error) {
           console.error('Failed to send direct message:', error);
           // We don't want to show an error here, as the contact was still submitted
@@ -124,32 +119,13 @@ const ContactModal = ({
       return;
     }
     
-    // First create conversation, then navigate
-    setIsSubmitting(true);
-    createDirectConversation(recipientId)
-      .then(result => {
-        // Close this modal
-        onOpenChange(false);
-        
-        // Store conversation ID to open in localStorage
-        if (result && result.conversationId) {
-          localStorage.setItem('openChatWith', String(recipientId));
-          localStorage.setItem('openChatType', 'direct');
-        }
-        
-        // Navigate to messages page
-        navigate('/dashboard/messages');
-        
-        // Refresh conversations list
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      })
-      .catch(error => {
-        console.error('Error creating conversation:', error);
-        toast.error('Failed to open messages. Please try again.');
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+    navigate('/dashboard/messages');
+    onOpenChange(false);
+    
+    // This sets a temporary localStorage value that the Messages page can use
+    // to open this conversation when loaded (optional)
+    localStorage.setItem('openChatWith', String(recipientId));
+    localStorage.setItem('openChatType', 'direct');
   };
 
   return (
@@ -208,7 +184,6 @@ const ContactModal = ({
                   variant="outline"
                   className="gap-1"
                   onClick={handleOpenMessages}
-                  disabled={isSubmitting}
                 >
                   <MessageCircle className="h-4 w-4" /> 
                   Open Messages

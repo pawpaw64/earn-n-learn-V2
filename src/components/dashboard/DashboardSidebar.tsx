@@ -1,5 +1,5 @@
 
-import { LayoutGrid, School2, Wallet, User, Settings, Trophy, Calendar, Briefcase, MessageSquare } from "lucide-react";
+import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "react-router-dom";
@@ -21,14 +21,14 @@ const mainMenuItems = [
     href: "/dashboard/mywork"
   },
   {
-    title: "Messages",
-    icon: MessageSquare,
-    href: "/dashboard/messages"
-  },
-  {
     title: "Wallet",
     icon: Wallet,
     href: "/dashboard/wallet"
+  }, 
+  {
+    title: "Messages",
+    icon: MessageSquare,
+    href: "/dashboard/messages"
   }
 ];
 

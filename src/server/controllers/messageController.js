@@ -1,162 +1,167 @@
 
 import MessageModel from '../models/messageModel.js';
 
-// Create a new conversation
-export const createConversation = async (req, res) => {
+// Get direct messages between two users
+export const getDirectMessages = async (req, res) => {
   try {
-    const { title, participants } = req.body;
-    const creator_id = req.user.id;
+    const { contactId } = req.params;
+    const messages = await MessageModel.getDirectMessages(req.user.id, contactId);
     
-    const result = await MessageModel.createConversation({
-      title,
-      creator_id,
-      participants
-    });
+    // Mark messages as read
+    await MessageModel.markAsRead(contactId, req.user.id);
     
-    res.status(201).json({
-      success: true,
-      conversationId: result.conversationId,
-      message: 'Conversation created successfully'
-    });
+    res.json(messages);
   } catch (error) {
-    console.error('createConversation() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create conversation'
-    });
+    console.error('Error in getDirectMessages controller:', error);
+    res.status(500).json({ message: 'Failed to fetch messages' });
   }
 };
 
-// Create or get direct conversation between two users
-export const createOrGetDirectConversation = async (req, res) => {
+// Get recent chats
+export const getRecentChats = async (req, res) => {
   try {
-    const { recipient_id } = req.body;
-    const user_id = req.user.id;
-    
-    if (user_id === parseInt(recipient_id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot create conversation with yourself'
-      });
-    }
-    
-    const result = await MessageModel.createOrGetDirectConversation(user_id, recipient_id);
-    
-    res.status(200).json({
-      success: true,
-      conversationId: result.conversationId,
-      isNew: result.isNew,
-      message: result.isNew ? 'Direct conversation created' : 'Existing conversation found'
-    });
+    const chats = await MessageModel.getRecentChats(req.user.id);
+    res.json(chats);
   } catch (error) {
-    console.error('createOrGetDirectConversation() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to create or get conversation'
-    });
+    console.error('Error in getRecentChats controller:', error);
+    res.status(500).json({ message: 'Failed to fetch recent chats' });
   }
 };
 
 // Send a message
 export const sendMessage = async (req, res) => {
   try {
-    const { conversation_id, content, attachment_url } = req.body;
-    const sender_id = req.user.id;
+    const { receiverId, content, hasAttachment, attachmentUrl } = req.body;
     
-    const result = await MessageModel.sendMessage({
-      conversation_id,
-      sender_id,
+    const message = await MessageModel.sendMessage(
+      req.user.id,
+      receiverId,
       content,
-      attachment_url
-    });
+      hasAttachment || false,
+      attachmentUrl || null
+    );
     
-    res.status(201).json({
-      success: true,
-      messageId: result.messageId,
-      message: 'Message sent successfully'
-    });
+    res.status(201).json(message);
   } catch (error) {
-    console.error('sendMessage() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to send message'
-    });
+    console.error('Error in sendMessage controller:', error);
+    res.status(500).json({ message: 'Failed to send message' });
   }
 };
 
-// Get all conversations for current user
-export const getConversations = async (req, res) => {
+// Create a group
+export const createGroup = async (req, res) => {
   try {
-    const user_id = req.user.id;
-    const conversations = await MessageModel.getConversationsByUserId(user_id);
+    const { name, description } = req.body;
     
-    res.status(200).json(conversations);
-  } catch (error) {
-    console.error('getConversations() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get conversations'
+    const groupId = await MessageModel.createGroup(name, description, req.user.id);
+    
+    res.status(201).json({ 
+      id: groupId,
+      name,
+      description,
+      created_by: req.user.id
     });
+  } catch (error) {
+    console.error('Error in createGroup controller:', error);
+    res.status(500).json({ message: 'Failed to create group' });
   }
 };
 
-// Get messages from a conversation
-export const getMessages = async (req, res) => {
+// Get user groups
+export const getUserGroups = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user_id = req.user.id;
-    
-    const messages = await MessageModel.getMessagesByConversationId(id, user_id);
-    
-    res.status(200).json(messages);
+    const groups = await MessageModel.getUserGroups(req.user.id);
+    res.json(groups);
   } catch (error) {
-    console.error('getMessages() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get messages'
-    });
+    console.error('Error in getUserGroups controller:', error);
+    res.status(500).json({ message: 'Failed to fetch groups' });
   }
 };
 
-// Get conversation details
-export const getConversation = async (req, res) => {
+// Get group messages
+export const getGroupMessages = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user_id = req.user.id;
-    
-    const conversation = await MessageModel.getConversationDetails(id, user_id);
-    
-    res.status(200).json(conversation);
+    const { groupId } = req.params;
+    const messages = await MessageModel.getGroupMessages(groupId);
+    res.json(messages);
   } catch (error) {
-    console.error('getConversation() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to get conversation details'
-    });
+    console.error('Error in getGroupMessages controller:', error);
+    res.status(500).json({ message: 'Failed to fetch group messages' });
   }
 };
 
-// Search conversations
-export const searchConversations = async (req, res) => {
+// Send group message
+export const sendGroupMessage = async (req, res) => {
   try {
-    const { term } = req.query;
-    const user_id = req.user.id;
+    const { groupId, content, hasAttachment, attachmentUrl } = req.body;
     
-    if (!term) {
-      return res.status(400).json({
-        success: false,
-        message: 'Search term is required'
-      });
-    }
+    const message = await MessageModel.sendGroupMessage(
+      req.user.id,
+      groupId,
+      content,
+      hasAttachment || false,
+      attachmentUrl || null
+    );
     
-    const conversations = await MessageModel.searchConversations(user_id, term);
-    
-    res.status(200).json(conversations);
+    res.status(201).json(message);
   } catch (error) {
-    console.error('searchConversations() - Error:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to search conversations'
-    });
+    console.error('Error in sendGroupMessage controller:', error);
+    res.status(500).json({ message: 'Failed to send group message' });
+  }
+};
+
+// Add user to group
+export const addToGroup = async (req, res) => {
+  try {
+    const { groupId, userId, isAdmin } = req.body;
+    
+    await MessageModel.addToGroup(groupId, userId, isAdmin || false);
+    
+    res.status(200).json({ message: 'User added to group successfully' });
+  } catch (error) {
+    console.error('Error in addToGroup controller:', error);
+    res.status(500).json({ message: 'Failed to add user to group' });
+  }
+};
+
+// Remove user from group
+export const removeFromGroup = async (req, res) => {
+  try {
+    const { groupId, userId } = req.params;
+    
+    await MessageModel.removeFromGroup(groupId, userId);
+    
+    res.status(200).json({ message: 'User removed from group successfully' });
+  } catch (error) {
+    console.error('Error in removeFromGroup controller:', error);
+    res.status(500).json({ message: 'Failed to remove user from group' });
+  }
+};
+
+// Get group members
+export const getGroupMembers = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    
+    const members = await MessageModel.getGroupMembers(groupId);
+    
+    res.json(members);
+  } catch (error) {
+    console.error('Error in getGroupMembers controller:', error);
+    res.status(500).json({ message: 'Failed to fetch group members' });
+  }
+};
+
+// Search for users
+export const searchUsers = async (req, res) => {
+  try {
+    const { query } = req.params;
+    
+    const users = await MessageModel.searchUsers(query, req.user.id);
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Error in searchUsers controller:', error);
+    res.status(500).json({ message: 'Failed to search users' });
   }
 };

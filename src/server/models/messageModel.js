@@ -1,286 +1,248 @@
-import { execute } from '../config/db.js';
+
+import db from '../config/db.js';
 
 class MessageModel {
-  // Create a new conversation
-  static async createConversation(userData) {
-    const { title, creator_id, participants } = userData;
+  // Get direct messages between two users
+  static async getDirectMessages(userId, contactId) {
     try {
-      // First create the conversation
-      const result = await execute(
-        'INSERT INTO conversations (title, creator_id, created_at, updated_at) VALUES (?, ?, NOW(), NOW())',
-        [title, creator_id]
+      const [rows] = await db.query(
+        `SELECT m.*, 
+          u1.name as sender_name, 
+          u1.avatar as sender_avatar
+        FROM messages m
+        JOIN users u1 ON m.sender_id = u1.id
+        WHERE (m.sender_id = ? AND m.receiver_id = ?) 
+          OR (m.sender_id = ? AND m.receiver_id = ?)
+        ORDER BY m.created_at ASC`,
+        [userId, contactId, contactId, userId]
       );
-      
-      const conversationId = result[0].insertId;
-      
-      // Then add participants
-      for (const participantId of participants) {
-        await execute(
-          'INSERT INTO conversation_participants (conversation_id, user_id, joined_at) VALUES (?, ?, NOW())',
-          [conversationId, participantId]
-        );
-      }
-      
-      // Make sure to add creator as participant if not already in the list
-      if (!participants.includes(creator_id)) {
-        await execute(
-          'INSERT INTO conversation_participants (conversation_id, user_id, joined_at) VALUES (?, ?, NOW())',
-          [conversationId, creator_id]
-        );
-      }
-      
-      return { conversationId };
+      return rows;
     } catch (error) {
-      console.error('MessageModel.createConversation() - Error:', error);
-      throw new Error('Failed to create conversation');
+      console.error('Error in getDirectMessages:', error);
+      throw error;
     }
   }
 
-  // Create a direct message conversation between two users
-  static async createOrGetDirectConversation(userId1, userId2) {
+  // Get recent contacts/chats for a user
+  static async getRecentChats(userId) {
     try {
-      // Check if direct conversation already exists
-      const existingConvo = await execute(`
-        SELECT c.id 
-        FROM conversations c
-        JOIN conversation_participants p1 ON c.id = p1.conversation_id AND p1.user_id = ?
-        JOIN conversation_participants p2 ON c.id = p2.conversation_id AND p2.user_id = ?
-        WHERE c.is_group = 0 AND (
-          SELECT COUNT(*) FROM conversation_participants WHERE conversation_id = c.id
-        ) = 2
-      `, [userId1, userId2]);
-      
-      if (existingConvo[0] && existingConvo[0].length > 0) {
-        return { conversationId: existingConvo[0][0].id, isNew: false };
-      }
-      
-      // Create new direct conversation
-      const result = await execute(
-        'INSERT INTO conversations (title, creator_id, is_group, created_at, updated_at) VALUES (?, ?, 0, NOW(), NOW())',
-        ['Direct Message', userId1]
+      const [rows] = await db.query(
+        `SELECT 
+          u.id, 
+          u.name, 
+          u.avatar,
+          (SELECT m.content FROM messages m 
+           WHERE (m.sender_id = u.id AND m.receiver_id = ?)
+           OR (m.sender_id = ? AND m.receiver_id = u.id)
+           ORDER BY m.created_at DESC LIMIT 1) as last_message,
+          (SELECT m.created_at FROM messages m 
+           WHERE (m.sender_id = u.id AND m.receiver_id = ?)
+           OR (m.sender_id = ? AND m.receiver_id = u.id)
+           ORDER BY m.created_at DESC LIMIT 1) as last_message_time,
+          (SELECT COUNT(*) FROM messages m 
+           WHERE m.sender_id = u.id AND m.receiver_id = ? AND m.is_read = false) as unread_count
+        FROM users u
+        WHERE u.id IN (
+          SELECT DISTINCT 
+            CASE WHEN m.sender_id = ? THEN m.receiver_id ELSE m.sender_id END
+          FROM messages m
+          WHERE m.sender_id = ? OR m.receiver_id = ?
+        )
+        ORDER BY last_message_time DESC`,
+        [userId, userId, userId, userId, userId, userId, userId, userId]
       );
-      
-      const conversationId = result[0].insertId;
-      
-      // Add both users as participants
-      await execute(
-        'INSERT INTO conversation_participants (conversation_id, user_id, joined_at) VALUES (?, ?, NOW()), (?, ?, NOW())',
-        [conversationId, userId1, conversationId, userId2]
-      );
-      
-      return { conversationId, isNew: true };
+      return rows;
     } catch (error) {
-      console.error('MessageModel.createOrGetDirectConversation() - Error:', error);
-      throw new Error('Failed to create or get direct conversation');
+      console.error('Error in getRecentChats:', error);
+      throw error;
     }
   }
 
   // Send a message
-  static async sendMessage(messageData) {
-    const { conversation_id, sender_id, content, attachment_url, is_system_message } = messageData;
+  static async sendMessage(senderId, receiverId, content, hasAttachment = false, attachmentUrl = null) {
     try {
-      // First insert the message
-      const result = await execute(
-        'INSERT INTO messages (conversation_id, sender_id, content, attachment_url, is_system_message, sent_at, is_read) VALUES (?, ?, ?, ?, ?, NOW(), 0)',
-        [conversation_id, sender_id, content, attachment_url || null, is_system_message || 0]
+      const [result] = await db.query(
+        'INSERT INTO messages (sender_id, receiver_id, content, has_attachment, attachment_url) VALUES (?, ?, ?, ?, ?)',
+        [senderId, receiverId, content, hasAttachment, attachmentUrl]
       );
       
-      // Update conversation's updated_at timestamp and last_message
-      await execute(
-        'UPDATE conversations SET updated_at = NOW(), last_message = ? WHERE id = ?',
-        [content, conversation_id]
+      const [newMessage] = await db.query(
+        `SELECT m.*, u.name as sender_name, u.avatar as sender_avatar
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.id = ?`,
+        [result.insertId]
       );
       
-      return { messageId: result[0].insertId };
+      return newMessage[0];
     } catch (error) {
-      console.error('MessageModel.sendMessage() - Error:', error);
-      throw new Error('Failed to send message');
-    }
-  }
-
-  // Get all conversations for a user
-  static async getConversationsByUserId(userId) {
-    try {
-      const result = await execute(`
-        SELECT 
-          c.id, 
-          c.title,
-          c.is_group,
-          c.created_at,
-          c.updated_at,
-          c.last_message,
-          (
-            SELECT COUNT(*) 
-            FROM messages m 
-            WHERE m.conversation_id = c.id AND m.is_read = 0 AND m.sender_id != ?
-          ) as unread_count,
-          (
-            SELECT JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'id', u.id,
-                'name', u.name,
-                'avatar', u.avatar
-              )
-            )
-            FROM conversation_participants cp
-            JOIN users u ON cp.user_id = u.id
-            WHERE cp.conversation_id = c.id AND u.id != ?
-            LIMIT 3
-          ) as participants
-        FROM conversations c
-        JOIN conversation_participants cp ON c.id = cp.conversation_id
-        WHERE cp.user_id = ?
-        ORDER BY c.updated_at DESC
-      `, [userId, userId, userId]);
-      
-      return Array.isArray(result[0]) ? result[0] : [];
-    } catch (error) {
-      console.error('MessageModel.getConversationsByUserId() - Error:', error);
-      return [];
-    }
-  }
-
-  // Get messages from a conversation
-  static async getMessagesByConversationId(conversationId, userId) {
-    try {
-      // First verify user is a participant
-      const isParticipant = await execute(
-        'SELECT 1 FROM conversation_participants WHERE conversation_id = ? AND user_id = ?',
-        [conversationId, userId]
-      );
-      
-      if (isParticipant[0].length === 0) {
-        throw new Error('User is not a participant in this conversation');
-      }
-      
-      // Get messages
-      const result = await execute(`
-        SELECT 
-          m.id,
-          m.sender_id,
-          u.name as sender_name,
-          u.avatar as sender_avatar,
-          m.content,
-          m.attachment_url,
-          m.is_system_message,
-          m.sent_at,
-          m.is_read
-        FROM messages m
-        LEFT JOIN users u ON m.sender_id = u.id
-        WHERE m.conversation_id = ?
-        ORDER BY m.sent_at ASC
-      `, [conversationId]);
-      
-      // Mark messages as read
-      await execute(`
-        UPDATE messages 
-        SET is_read = 1 
-        WHERE conversation_id = ? AND sender_id != ? AND is_read = 0
-      `, [conversationId, userId]);
-      
-      return Array.isArray(result[0]) ? result[0] : [];
-    } catch (error) {
-      console.error('MessageModel.getMessagesByConversationId() - Error:', error);
-      return [];
-    }
-  }
-
-  // Get conversation details
-  static async getConversationDetails(conversationId, userId) {
-    try {
-      // First verify user is a participant
-      const isParticipant = await execute(
-        'SELECT 1 FROM conversation_participants WHERE conversation_id = ? AND user_id = ?',
-        [conversationId, userId]
-      );
-      
-      if (isParticipant[0].length === 0) {
-        throw new Error('User is not a participant in this conversation');
-      }
-      
-      // Get conversation details
-      const convoResult = await execute(`
-        SELECT 
-          c.id,
-          c.title,
-          c.is_group,
-          c.creator_id,
-          c.created_at
-        FROM conversations c
-        WHERE c.id = ?
-      `, [conversationId]);
-      
-      if (convoResult[0].length === 0) {
-        throw new Error('Conversation not found');
-      }
-      
-      // Get participants
-      const participantsResult = await execute(`
-        SELECT 
-          u.id,
-          u.name,
-          u.avatar,
-          cp.joined_at
-        FROM conversation_participants cp
-        JOIN users u ON cp.user_id = u.id
-        WHERE cp.conversation_id = ?
-      `, [conversationId]);
-      
-      return {
-        ...convoResult[0][0],
-        participants: Array.isArray(participantsResult[0]) ? participantsResult[0] : []
-      };
-    } catch (error) {
-      console.error('MessageModel.getConversationDetails() - Error:', error);
+      console.error('Error in sendMessage:', error);
       throw error;
     }
   }
-  
-  // Create a system message (e.g., for notifications about a job application)
-  static async createSystemMessage(conversationId, content) {
+
+  // Mark messages as read
+  static async markAsRead(senderId, receiverId) {
     try {
-      const result = await execute(
-        'INSERT INTO messages (conversation_id, sender_id, content, is_system_message, sent_at, is_read) VALUES (?, NULL, ?, 1, NOW(), 0)',
-        [conversationId, content]
+      const [result] = await db.query(
+        'UPDATE messages SET is_read = true WHERE sender_id = ? AND receiver_id = ? AND is_read = false',
+        [senderId, receiverId]
       );
-      
-      await execute(
-        'UPDATE conversations SET updated_at = NOW(), last_message = ? WHERE id = ?',
-        [content, conversationId]
-      );
-      
-      return { messageId: result[0].insertId };
+      return result.affectedRows > 0;
     } catch (error) {
-      console.error('MessageModel.createSystemMessage() - Error:', error);
-      throw new Error('Failed to create system message');
+      console.error('Error in markAsRead:', error);
+      throw error;
     }
   }
-  
-  // Search conversations
-  static async searchConversations(userId, searchTerm) {
+
+  // Create a group
+  static async createGroup(name, description, createdBy) {
     try {
-      const result = await execute(`
-        SELECT DISTINCT
-          c.id, 
-          c.title,
-          c.is_group,
-          c.last_message,
-          c.updated_at
-        FROM conversations c
-        JOIN conversation_participants cp ON c.id = cp.conversation_id
-        LEFT JOIN users u ON cp.user_id = u.id
-        WHERE cp.user_id = ? AND (
-          c.title LIKE ? OR 
-          u.name LIKE ? OR
-          c.last_message LIKE ?
-        )
-        ORDER BY c.updated_at DESC
-      `, [userId, `%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`]);
+      const [result] = await db.query(
+        'INSERT INTO message_groups (name, description, created_by) VALUES (?, ?, ?)',
+        [name, description, createdBy]
+      );
       
-      return Array.isArray(result[0]) ? result[0] : [];
+      // Add creator as admin
+      await db.query(
+        'INSERT INTO group_members (group_id, user_id, is_admin) VALUES (?, ?, true)',
+        [result.insertId, createdBy]
+      );
+      
+      return result.insertId;
     } catch (error) {
-      console.error('MessageModel.searchConversations() - Error:', error);
-      return [];
+      console.error('Error in createGroup:', error);
+      throw error;
+    }
+  }
+
+  // Get user groups
+  static async getUserGroups(userId) {
+    try {
+      const [rows] = await db.query(
+        `SELECT g.*, 
+          (SELECT COUNT(*) FROM group_members gm WHERE gm.group_id = g.id) as member_count,
+          (SELECT m.content FROM messages m 
+           WHERE m.group_id = g.id
+           ORDER BY m.created_at DESC LIMIT 1) as last_message,
+          (SELECT m.created_at FROM messages m 
+           WHERE m.group_id = g.id
+           ORDER BY m.created_at DESC LIMIT 1) as last_message_time,
+          gm.is_admin
+        FROM message_groups g
+        JOIN group_members gm ON g.id = gm.group_id
+        WHERE gm.user_id = ?
+        ORDER BY last_message_time DESC`,
+        [userId]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error in getUserGroups:', error);
+      throw error;
+    }
+  }
+
+  // Get group messages
+  static async getGroupMessages(groupId) {
+    try {
+      const [rows] = await db.query(
+        `SELECT m.*, u.name as sender_name, u.avatar as sender_avatar
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.group_id = ?
+         ORDER BY m.created_at ASC`,
+        [groupId]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error in getGroupMessages:', error);
+      throw error;
+    }
+  }
+
+  // Send group message
+  static async sendGroupMessage(senderId, groupId, content, hasAttachment = false, attachmentUrl = null) {
+    try {
+      const [result] = await db.query(
+        'INSERT INTO messages (sender_id, group_id, content, has_attachment, attachment_url) VALUES (?, ?, ?, ?, ?)',
+        [senderId, groupId, content, hasAttachment, attachmentUrl]
+      );
+      
+      const [newMessage] = await db.query(
+        `SELECT m.*, u.name as sender_name, u.avatar as sender_avatar
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.id = ?`,
+        [result.insertId]
+      );
+      
+      return newMessage[0];
+    } catch (error) {
+      console.error('Error in sendGroupMessage:', error);
+      throw error;
+    }
+  }
+
+  // Add user to group
+  static async addToGroup(groupId, userId, isAdmin = false) {
+    try {
+      const [result] = await db.query(
+        'INSERT INTO group_members (group_id, user_id, is_admin) VALUES (?, ?, ?)',
+        [groupId, userId, isAdmin]
+      );
+      return result.insertId;
+    } catch (error) {
+      console.error('Error in addToGroup:', error);
+      throw error;
+    }
+  }
+
+  // Remove user from group
+  static async removeFromGroup(groupId, userId) {
+    try {
+      const [result] = await db.query(
+        'DELETE FROM group_members WHERE group_id = ? AND user_id = ?',
+        [groupId, userId]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error in removeFromGroup:', error);
+      throw error;
+    }
+  }
+
+  // Get group members
+  static async getGroupMembers(groupId) {
+    try {
+      const [rows] = await db.query(
+        `SELECT u.id, u.name, u.avatar, u.email, gm.is_admin, gm.joined_at
+         FROM users u
+         JOIN group_members gm ON u.id = gm.user_id
+         WHERE gm.group_id = ?`,
+        [groupId]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error in getGroupMembers:', error);
+      throw error;
+    }
+  }
+
+  // Search for users to message
+  static async searchUsers(query, currentUserId) {
+    try {
+      const searchTerm = `%${query}%`;
+      const [rows] = await db.query(
+        `SELECT id, name, email, avatar 
+         FROM users 
+         WHERE (name LIKE ? OR email LIKE ?) AND id != ?
+         LIMIT 10`,
+        [searchTerm, searchTerm, currentUserId]
+      );
+      return rows;
+    } catch (error) {
+      console.error('Error in searchUsers:', error);
+      throw error;
     }
   }
 }
