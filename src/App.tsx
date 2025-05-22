@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,31 +19,34 @@ import { SocketProvider } from "./contexts/SocketContext";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <SocketProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route path="browse" element={<Browse />} />
-            <Route path="campus" element={<Campus />} />
-            <Route path="mywork" element={<MyWork />} />
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="profile/:userId" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="calendar" element={<Calendar />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </SocketProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <SocketProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Browse />} />
+              <Route path="browse" element={<Browse />} />
+              <Route path="my-work" element={<MyWork />} />
+              <Route path="messages" element={<Messages />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="profile/:userId" element={<Profile />} />
+              <Route path="calendar" element={<Calendar />} />
+              <Route path="campus" element={<Campus />} />
+              <Route path="wallet" element={<Wallet />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
+              <Route path="settings" element={<Settings />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SocketProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

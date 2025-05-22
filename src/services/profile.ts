@@ -1,3 +1,4 @@
+
 // src/services/profile.ts
 import axios from 'axios';
 import { setAuthToken } from './auth';
@@ -44,6 +45,75 @@ export interface ProfileData {
   }>;
 }
 
+// Interface for the work history data structure
+export interface WorkHistoryData {
+  jobs: Array<{
+    id: number;
+    title: string;
+    type: string;
+    description: string;
+    payment: string;
+    status: string;
+    application_count: number;
+    created_at: string;
+  }>;
+  skills: Array<{
+    id: number;
+    skill_name: string;
+    description: string;
+    pricing: string;
+    created_at: string;
+  }>;
+  materials: Array<{
+    id: number;
+    title: string;
+    description: string;
+    price: string;
+    created_at: string;
+  }>;
+}
+
+// Interface for the user details data structure
+export interface UserDetailsData {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    bio?: string;
+    avatar?: string;
+    university?: string;
+    program?: string;
+  };
+  ratings: {
+    average: string;
+    count: number;
+    detail: Array<{
+      id: number;
+      rating: number;
+      comment: string;
+      rater_name: string;
+      rater_avatar?: string;
+      created_at: string;
+    }>;
+  };
+  completedJobs: Array<{
+    id: number;
+    job_title: string;
+    job_description: string;
+    job_type: string;
+    job_payment: string;
+    completed_date: string;
+    client_name: string;
+    client_avatar?: string;
+  }>;
+  verifications: Array<{
+    id: number;
+    type: string;
+    verified_at: string;
+    status: string;
+  }>;
+}
+
 export const fetchUserProfile = async (): Promise<ProfileData | null> => {
   setAuthToken(localStorage.getItem('token'));
   try {
@@ -64,6 +134,30 @@ export const fetchUserById = async (userId: string): Promise<ProfileData | null>
     return response.data;
   } catch (error) {
     console.error(`Error fetching user ${userId} profile:`, error);
+    return null;
+  }
+};
+
+export const fetchUserWorkHistory = async (userId: string): Promise<WorkHistoryData | null> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/users/user/${userId}/work-history`);
+    console.log(`Work history for user ${userId} fetched:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user ${userId} work history:`, error);
+    return null;
+  }
+};
+
+export const fetchUserDetails = async (userId: string): Promise<UserDetailsData | null> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/users/user/${userId}/details`);
+    console.log(`User details for ${userId} fetched:`, response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching user ${userId} details:`, error);
     return null;
   }
 };
