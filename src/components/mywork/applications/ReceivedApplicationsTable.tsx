@@ -139,8 +139,15 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        
+                      
+                        <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onViewDetails(app, 'application')}
+                  >
+                    <Eye className="w-4 h-4" />View Details
+                  </Button>
                         <Button 
                           variant="outline" 
                           size="sm"

@@ -158,6 +158,13 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                     <TableCell>
                       <div className="flex gap-2">
                         <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onViewDetails(contact, 'contact')}
+                  >
+                    <Eye className="w-4 h-4" />View Details
+                  </Button>
+                        <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleContactUser(contact.user_id)}

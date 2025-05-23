@@ -67,8 +67,8 @@ export function DetailsDialog({
           <ActionButtons 
             type={detailsType} 
             item={detailsItem} 
-            onStatusChange={onStatusChange}
-            onCreateWork={onCreateWork}
+            // onStatusChange={onStatusChange}
+            // onCreateWork={onCreateWork}
           />
         </DialogFooter>
       </DialogContent>
