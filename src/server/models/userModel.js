@@ -1,4 +1,3 @@
-
 import { execute } from '../config/db.js';
 import bcrypt from 'bcryptjs';
 
@@ -20,18 +19,6 @@ class UserModel {
       return user;
     } catch (error) {
       console.error('Database error in findByEmail:', error);
-      throw error;
-    }
-  }
-
-  // Check if user exists
-  static async userExists(id) {
-    try {
-      const result = await execute('SELECT COUNT(*) as count FROM users WHERE id = ?', [id]);
-      const rows = Array.isArray(result) ? result : result.rows || result[0] || [];
-      return rows[0]?.count > 0;
-    } catch (error) {
-      console.error('Database error in userExists:', error);
       throw error;
     }
   }
@@ -151,115 +138,6 @@ class UserModel {
       return Array.isArray(result) ? result : result.rows || [];
     } catch (error) {
       console.error('Database error in getUserWebsites:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get jobs posted by the user
-  static async getUserPostedJobs(userId) {
-    try {
-      const result = await execute(`
-        SELECT j.*, 
-          (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) as application_count
-        FROM jobs j 
-        WHERE j.user_id = ?
-        ORDER BY j.created_at DESC
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserPostedJobs:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get skills posted by the user
-  static async getUserPostedSkills(userId) {
-    try {
-      const result = await execute(`
-        SELECT * FROM skill_marketplace
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserPostedSkills:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get materials posted by the user
-  static async getUserPostedMaterials(userId) {
-    try {
-      const result = await execute(`
-        SELECT * FROM material_marketplace
-        WHERE user_id = ?
-        ORDER BY created_at DESC
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserPostedMaterials:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get user ratings
-  static async getUserRatings(userId) {
-    try {
-      const result = await execute(`
-        SELECT r.*, u.name as rater_name, u.avatar as rater_avatar
-        FROM ratings r
-        JOIN users u ON r.rater_id = u.id
-        WHERE r.rated_user_id = ?
-        ORDER BY r.created_at DESC
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserRatings:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get user completed jobs
-  static async getUserCompletedJobs(userId) {
-    try {
-      const result = await execute(`
-        SELECT 
-          wa.*,
-          j.title as job_title,
-          j.description as job_description,
-          j.type as job_type,
-          j.payment as job_payment,
-          u.name as client_name,
-          u.avatar as client_avatar
-        FROM work_assignments wa
-        LEFT JOIN jobs j ON wa.job_id = j.id
-        JOIN users u ON wa.client_id = u.id
-        WHERE wa.provider_id = ? AND wa.status = 'Completed'
-        ORDER BY wa.completed_date DESC
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserCompletedJobs:', error);
-      throw new Error(error.message);
-    }
-  }
-
-  // Get user verifications
-  static async getUserVerifications(userId) {
-    try {
-      const result = await execute(`
-        SELECT * FROM user_verifications
-        WHERE user_id = ?
-      `, [userId]);
-      
-      return Array.isArray(result) ? result : result.rows || [];
-    } catch (error) {
-      console.error('Database error in getUserVerifications:', error);
       throw new Error(error.message);
     }
   }

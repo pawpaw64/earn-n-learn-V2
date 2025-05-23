@@ -1,301 +1,167 @@
 
-import { execute } from '../config/db.js';
 import MessageModel from '../models/messageModel.js';
 
-// Get direct messages between current user and contact
-export async function getDirectMessages(req, res) {
+// Get direct messages between two users
+export const getDirectMessages = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const contactId = req.params.contactId;
-    
-    const messages = await MessageModel.getDirectMessages(userId, contactId);
+    const { contactId } = req.params;
+    const messages = await MessageModel.getDirectMessages(req.user.id, contactId);
     
     // Mark messages as read
-    await MessageModel.markMessagesAsRead(userId, contactId);
+    await MessageModel.markAsRead(contactId, req.user.id);
     
     res.json(messages);
   } catch (error) {
-    console.error('Error fetching direct messages:', error);
+    console.error('Error in getDirectMessages controller:', error);
     res.status(500).json({ message: 'Failed to fetch messages' });
   }
-}
+};
 
-// Get recent chats for the current user
-export async function getRecentChats(req, res) {
+// Get recent chats
+export const getRecentChats = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const chats = await MessageModel.getRecentChats(userId);
+    const chats = await MessageModel.getRecentChats(req.user.id);
     res.json(chats);
   } catch (error) {
-    console.error('Error fetching recent chats:', error);
+    console.error('Error in getRecentChats controller:', error);
     res.status(500).json({ message: 'Failed to fetch recent chats' });
   }
-}
+};
 
-// Send a direct message
-export async function sendMessage(req, res) {
+// Send a message
+export const sendMessage = async (req, res) => {
   try {
-    const { receiver_id, content, has_attachment, attachment_url } = req.body;
+    const { receiverId, content, hasAttachment, attachmentUrl } = req.body;
     
-    if (!receiver_id || !content) {
-      return res.status(400).json({ message: 'Receiver ID and content are required' });
-    }
-    
-    const messageId = await MessageModel.createMessage({
-      sender_id: req.user.id,
-      receiver_id,
+    const message = await MessageModel.sendMessage(
+      req.user.id,
+      receiverId,
       content,
-      has_attachment: has_attachment || false,
-      attachment_url
-    });
-    
-    const message = await MessageModel.getMessageById(messageId);
-    
-    // Send real-time notification via socket if needed
-    if (req.io) {
-      req.io.to(`user_${receiver_id}`).emit('new_message', message);
-    }
+      hasAttachment || false,
+      attachmentUrl || null
+    );
     
     res.status(201).json(message);
   } catch (error) {
-    console.error('Error sending message:', error);
+    console.error('Error in sendMessage controller:', error);
     res.status(500).json({ message: 'Failed to send message' });
   }
-}
+};
 
-// Create a new message group
-export async function createGroup(req, res) {
+// Create a group
+export const createGroup = async (req, res) => {
   try {
-    const { name, description, members } = req.body;
+    const { name, description } = req.body;
     
-    if (!name || !members || !Array.isArray(members) || members.length === 0) {
-      return res.status(400).json({ message: 'Group name and at least one member are required' });
-    }
+    const groupId = await MessageModel.createGroup(name, description, req.user.id);
     
-    // Create the group
-    const groupId = await MessageModel.createGroup({
+    res.status(201).json({ 
+      id: groupId,
       name,
       description,
       created_by: req.user.id
     });
-    
-    // Add the creator as admin
-    await MessageModel.addMemberToGroup({
-      group_id: groupId,
-      user_id: req.user.id,
-      is_admin: true
-    });
-    
-    // Add other members
-    for (const memberId of members) {
-      if (memberId !== req.user.id) {
-        await MessageModel.addMemberToGroup({
-          group_id: groupId,
-          user_id: memberId,
-          is_admin: false
-        });
-      }
-    }
-    
-    const group = await MessageModel.getGroupById(groupId);
-    
-    res.status(201).json(group);
   } catch (error) {
-    console.error('Error creating message group:', error);
+    console.error('Error in createGroup controller:', error);
     res.status(500).json({ message: 'Failed to create group' });
   }
-}
+};
 
-// Get groups for the current user
-export async function getUserGroups(req, res) {
+// Get user groups
+export const getUserGroups = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const groups = await MessageModel.getUserGroups(userId);
+    const groups = await MessageModel.getUserGroups(req.user.id);
     res.json(groups);
   } catch (error) {
-    console.error('Error fetching user groups:', error);
+    console.error('Error in getUserGroups controller:', error);
     res.status(500).json({ message: 'Failed to fetch groups' });
   }
-}
+};
 
-// Get messages for a specific group
-export async function getGroupMessages(req, res) {
+// Get group messages
+export const getGroupMessages = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const groupId = req.params.groupId;
-    
-    // Check if user is a member of the group
-    const isMember = await MessageModel.isGroupMember(groupId, userId);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not a member of this group' });
-    }
-    
+    const { groupId } = req.params;
     const messages = await MessageModel.getGroupMessages(groupId);
-    
     res.json(messages);
   } catch (error) {
-    console.error('Error fetching group messages:', error);
-    res.status(500).json({ message: 'Failed to fetch messages' });
+    console.error('Error in getGroupMessages controller:', error);
+    res.status(500).json({ message: 'Failed to fetch group messages' });
   }
-}
+};
 
-// Send a message to a group
-export async function sendGroupMessage(req, res) {
+// Send group message
+export const sendGroupMessage = async (req, res) => {
   try {
-    const { group_id, content, has_attachment, attachment_url } = req.body;
+    const { groupId, content, hasAttachment, attachmentUrl } = req.body;
     
-    if (!group_id || !content) {
-      return res.status(400).json({ message: 'Group ID and content are required' });
-    }
-    
-    // Check if user is a member of the group
-    const isMember = await MessageModel.isGroupMember(group_id, req.user.id);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not a member of this group' });
-    }
-    
-    const messageId = await MessageModel.createGroupMessage({
-      sender_id: req.user.id,
-      group_id,
+    const message = await MessageModel.sendGroupMessage(
+      req.user.id,
+      groupId,
       content,
-      has_attachment: has_attachment || false,
-      attachment_url
-    });
-    
-    const message = await MessageModel.getMessageById(messageId);
-    
-    // Send real-time notification via socket if needed
-    if (req.io) {
-      req.io.to(`group_${group_id}`).emit('new_group_message', message);
-    }
+      hasAttachment || false,
+      attachmentUrl || null
+    );
     
     res.status(201).json(message);
   } catch (error) {
-    console.error('Error sending group message:', error);
-    res.status(500).json({ message: 'Failed to send message' });
+    console.error('Error in sendGroupMessage controller:', error);
+    res.status(500).json({ message: 'Failed to send group message' });
   }
-}
+};
 
-// Add a user to a group
-export async function addToGroup(req, res) {
+// Add user to group
+export const addToGroup = async (req, res) => {
   try {
-    const { group_id, user_id, is_admin } = req.body;
+    const { groupId, userId, isAdmin } = req.body;
     
-    if (!group_id || !user_id) {
-      return res.status(400).json({ message: 'Group ID and user ID are required' });
-    }
+    await MessageModel.addToGroup(groupId, userId, isAdmin || false);
     
-    // Check if requester is an admin of the group
-    const isAdmin = await MessageModel.isGroupAdmin(group_id, req.user.id);
-    if (!isAdmin) {
-      return res.status(403).json({ message: 'Only group admins can add new members' });
-    }
-    
-    await MessageModel.addMemberToGroup({
-      group_id,
-      user_id,
-      is_admin: is_admin || false
-    });
-    
-    res.json({ message: 'User added to the group successfully' });
+    res.status(200).json({ message: 'User added to group successfully' });
   } catch (error) {
-    console.error('Error adding user to group:', error);
-    res.status(500).json({ message: 'Failed to add user to the group' });
+    console.error('Error in addToGroup controller:', error);
+    res.status(500).json({ message: 'Failed to add user to group' });
   }
-}
+};
 
-// Remove a user from a group
-export async function removeFromGroup(req, res) {
+// Remove user from group
+export const removeFromGroup = async (req, res) => {
   try {
-    const groupId = req.params.groupId;
-    const userId = req.params.userId;
+    const { groupId, userId } = req.params;
     
-    // Check if requester is an admin or the user being removed is themselves
-    const isAdmin = await MessageModel.isGroupAdmin(groupId, req.user.id);
-    if (!isAdmin && req.user.id !== parseInt(userId)) {
-      return res.status(403).json({ message: 'Only group admins can remove other members' });
-    }
+    await MessageModel.removeFromGroup(groupId, userId);
     
-    await MessageModel.removeMemberFromGroup(groupId, userId);
-    
-    res.json({ message: 'User removed from the group' });
+    res.status(200).json({ message: 'User removed from group successfully' });
   } catch (error) {
-    console.error('Error removing user from group:', error);
-    res.status(500).json({ message: 'Failed to remove user from the group' });
+    console.error('Error in removeFromGroup controller:', error);
+    res.status(500).json({ message: 'Failed to remove user from group' });
   }
-}
+};
 
 // Get group members
-export async function getGroupMembers(req, res) {
+export const getGroupMembers = async (req, res) => {
   try {
-    const groupId = req.params.groupId;
-    const userId = req.user.id;
-    
-    // Check if user is a member of the group
-    const isMember = await MessageModel.isGroupMember(groupId, userId);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not a member of this group' });
-    }
+    const { groupId } = req.params;
     
     const members = await MessageModel.getGroupMembers(groupId);
     
     res.json(members);
   } catch (error) {
-    console.error('Error fetching group members:', error);
+    console.error('Error in getGroupMembers controller:', error);
     res.status(500).json({ message: 'Failed to fetch group members' });
   }
-}
+};
 
-// Search for users to message
-export async function searchUsers(req, res) {
+// Search for users
+export const searchUsers = async (req, res) => {
   try {
-    const query = req.params.query;
-    const currentUserId = req.user.id;
+    const { query } = req.params;
     
-    if (!query || query.length < 2) {
-      return res.status(400).json({ message: 'Search query must be at least 2 characters' });
-    }
-    
-    const users = await MessageModel.searchUsers(query, currentUserId);
+    const users = await MessageModel.searchUsers(query, req.user.id);
     
     res.json(users);
   } catch (error) {
-    console.error('Error searching users:', error);
+    console.error('Error in searchUsers controller:', error);
     res.status(500).json({ message: 'Failed to search users' });
   }
-}
-
-// Initiate direct message from job application or contact
-export async function initiateDirectMessage(req, res) {
-  try {
-    const { recipient_id, initial_message } = req.body;
-    
-    if (!recipient_id) {
-      return res.status(400).json({ message: 'Recipient ID is required' });
-    }
-    
-    // Create the message if initial message is provided
-    if (initial_message) {
-      await MessageModel.createMessage({
-        sender_id: req.user.id,
-        receiver_id: recipient_id,
-        content: initial_message
-      });
-    }
-    
-    // Return the recipient info to open chat
-    const recipient = await execute(
-      'SELECT id, name, email, avatar FROM users WHERE id = ?',
-      [recipient_id]
-    );
-    
-    res.json({
-      success: true,
-      recipient: recipient[0] || recipient.rows?.[0],
-      message: 'Chat initiated successfully'
-    });
-  } catch (error) {
-    console.error('Error initiating direct message:', error);
-    res.status(500).json({ message: 'Failed to initiate chat' });
-  }
-}
+};

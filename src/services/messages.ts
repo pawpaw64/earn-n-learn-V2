@@ -1,213 +1,154 @@
 
 import axios from 'axios';
 import { setAuthToken } from './auth';
-import { MessageType, ChatType, GroupType, GroupMemberType } from '@/types/messages';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'http://localhost:8080/api/messages';
 
-// Get direct messages with a specific contact
-export const getDirectMessages = async (contactId: number): Promise<MessageType[]> => {
+// Get direct messages between current user and another user
+export const getDirectMessages = async (contactId: number) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/direct/${contactId}`);
+    const response = await axios.get(`${API_URL}/direct/${contactId}`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching direct messages:", error);
+    console.error('Error fetching direct messages:', error);
     return [];
   }
 };
 
 // Get recent chats
-export const getRecentChats = async (): Promise<ChatType[]> => {
+export const getRecentChats = async () => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/chats`);
+    const response = await axios.get(`${API_URL}/chats`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching recent chats:", error);
+    console.error('Error fetching recent chats:', error);
     return [];
   }
 };
 
-// Send a direct message
-export const sendMessage = async (receiverId: number, content: string, attachment?: File): Promise<MessageType | null> => {
+// Send a message
+export const sendMessage = async (receiverId: number, content: string, hasAttachment = false, attachmentUrl = null) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    let attachmentUrl = undefined;
-    let hasAttachment = false;
-    
-    if (attachment) {
-      const formData = new FormData();
-      formData.append('attachment', attachment);
-      const uploadResponse = await axios.post(`${API_URL}/uploads/message-attachment`, formData);
-      attachmentUrl = uploadResponse.data.url;
-      hasAttachment = true;
-    }
-    
-    const response = await axios.post(`${API_URL}/messages/send`, {
-      receiver_id: receiverId,
+    const response = await axios.post(`${API_URL}/send`, {
+      receiverId,
       content,
-      has_attachment: hasAttachment,
-      attachment_url: attachmentUrl
+      hasAttachment,
+      attachmentUrl
     });
-    
     return response.data;
   } catch (error) {
-    console.error("Error sending message:", error);
-    return null;
+    console.error('Error sending message:', error);
+    throw error;
   }
 };
 
-// Initiate a conversation from a job/skill/material contact
-export const initiateDirectMessage = async (
-  recipientId: number, 
-  initialMessage?: string
-): Promise<{ success: boolean; recipient: any; message: string } | null> => {
+// Create a group
+export const createGroup = async (name: string, description: string) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.post(`${API_URL}/messages/initiate`, {
-      recipient_id: recipientId,
-      initial_message: initialMessage
+    const response = await axios.post(`${API_URL}/groups`, {
+      name,
+      description
     });
-    
     return response.data;
   } catch (error) {
-    console.error("Error initiating conversation:", error);
-    return null;
+    console.error('Error creating group:', error);
+    throw error;
   }
 };
 
 // Get user groups
-export const getUserGroups = async (): Promise<GroupType[]> => {
+export const getUserGroups = async () => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/groups`);
+    const response = await axios.get(`${API_URL}/groups`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching user groups:", error);
+    console.error('Error fetching user groups:', error);
     return [];
   }
 };
 
 // Get group messages
-export const getGroupMessages = async (groupId: number): Promise<MessageType[]> => {
+export const getGroupMessages = async (groupId: number) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/groups/${groupId}/messages`);
+    const response = await axios.get(`${API_URL}/groups/${groupId}/messages`);
     return response.data;
   } catch (error) {
-    console.error("Error fetching group messages:", error);
+    console.error('Error fetching group messages:', error);
     return [];
   }
 };
 
-// Create a new group
-export const createGroup = async (
-  name: string, 
-  description: string, 
-  members: number[]
-): Promise<GroupType | null> => {
+// Send group message
+export const sendGroupMessage = async (groupId: number, content: string, hasAttachment = false, attachmentUrl = null) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.post(`${API_URL}/messages/groups`, {
-      name,
-      description,
-      members
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error("Error creating group:", error);
-    return null;
-  }
-};
-
-// Send a group message
-export const sendGroupMessage = async (
-  groupId: number, 
-  content: string, 
-  attachment?: File
-): Promise<MessageType | null> => {
-  setAuthToken(localStorage.getItem('token'));
-  try {
-    let attachmentUrl = undefined;
-    let hasAttachment = false;
-    
-    if (attachment) {
-      const formData = new FormData();
-      formData.append('attachment', attachment);
-      const uploadResponse = await axios.post(`${API_URL}/uploads/message-attachment`, formData);
-      attachmentUrl = uploadResponse.data.url;
-      hasAttachment = true;
-    }
-    
-    const response = await axios.post(`${API_URL}/messages/groups/message`, {
-      group_id: groupId,
+    const response = await axios.post(`${API_URL}/groups/message`, {
+      groupId,
       content,
-      has_attachment: hasAttachment,
-      attachment_url: attachmentUrl
+      hasAttachment,
+      attachmentUrl
     });
-    
     return response.data;
   } catch (error) {
-    console.error("Error sending group message:", error);
-    return null;
-  }
-};
-
-// Get group members
-export const getGroupMembers = async (groupId: number): Promise<GroupMemberType[]> => {
-  setAuthToken(localStorage.getItem('token'));
-  try {
-    const response = await axios.get(`${API_URL}/messages/groups/${groupId}/members`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching group members:", error);
-    return [];
+    console.error('Error sending group message:', error);
+    throw error;
   }
 };
 
 // Add user to group
-export const addUserToGroup = async (
-  groupId: number, 
-  userId: number, 
-  isAdmin: boolean = false
-): Promise<boolean> => {
+export const addToGroup = async (groupId: number, userId: number, isAdmin = false) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    await axios.post(`${API_URL}/messages/groups/members`, {
-      group_id: groupId,
-      user_id: userId,
-      is_admin: isAdmin
+    const response = await axios.post(`${API_URL}/groups/members`, {
+      groupId,
+      userId,
+      isAdmin
     });
-    
-    return true;
+    return response.data;
   } catch (error) {
-    console.error("Error adding user to group:", error);
-    return false;
+    console.error('Error adding user to group:', error);
+    throw error;
   }
 };
 
 // Remove user from group
-export const removeUserFromGroup = async (groupId: number, userId: number): Promise<boolean> => {
+export const removeFromGroup = async (groupId: number, userId: number) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    await axios.delete(`${API_URL}/messages/groups/${groupId}/members/${userId}`);
-    return true;
+    const response = await axios.delete(`${API_URL}/groups/${groupId}/members/${userId}`);
+    return response.data;
   } catch (error) {
-    console.error("Error removing user from group:", error);
-    return false;
+    console.error('Error removing user from group:', error);
+    throw error;
+  }
+};
+
+// Get group members
+export const getGroupMembers = async (groupId: number) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/groups/${groupId}/members`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching group members:', error);
+    return [];
   }
 };
 
 // Search for users
-export const searchUsers = async (query: string): Promise<any[]> => {
+export const searchUsers = async (query: string) => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/messages/users/search/${query}`);
+    const response = await axios.get(`${API_URL}/users/search/${query}`);
     return response.data;
   } catch (error) {
-    console.error("Error searching users:", error);
+    console.error('Error searching users:', error);
     return [];
   }
 };

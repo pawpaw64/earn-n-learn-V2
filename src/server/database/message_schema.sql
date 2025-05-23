@@ -34,28 +34,3 @@ CREATE TABLE IF NOT EXISTS group_members (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   UNIQUE KEY unique_member (group_id, user_id)
 ) ENGINE=InnoDB;
-
--- User Ratings table
-CREATE TABLE IF NOT EXISTS ratings (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  rated_user_id INT NOT NULL,
-  rater_id INT NOT NULL,
-  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  comment TEXT,
-  job_id INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (rated_user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (rater_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_rating (rated_user_id, rater_id, job_id)
-) ENGINE=InnoDB;
-
--- User Verifications table
-CREATE TABLE IF NOT EXISTS user_verifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  type VARCHAR(50) NOT NULL,
-  verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  status VARCHAR(20) DEFAULT 'pending',
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  UNIQUE KEY unique_verification (user_id, type)
-) ENGINE=InnoDB;

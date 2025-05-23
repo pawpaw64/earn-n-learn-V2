@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProviderWorks } from "@/services/works";
+import { fetchMyWorks,fetchProviderWorks } from "@/services/works";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { WorksHeader } from "./works/WorksHeader";
 import { WorksGrid } from "./works/WorksGrid";
@@ -25,25 +25,8 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
     queryFn: fetchProviderWorks
   });
 
-  // Transform the data from the backend format to the format expected by the WorksGrid component
-  const transformedWorks = React.useMemo(() => {
-    return works.map((work: any) => ({
-      id: work.id,
-      title: work.title || work.skill_name || "Untitled Work",
-      type: work.type || "job",
-      status: work.status || "Active",
-      payment: work.payment || work.pricing || work.price || "Not specified",
-      description: work.description || "",
-      startDate: work.created_at,
-      endDate: work.end_date,
-      client: {
-        name: work.client_name || work.provider_name || "Unknown",
-        avatar: work.client_avatar || work.provider_avatar
-      },
-      // Include all original fields for reference
-      ...work
-    }));
-  }, [works]);
+  // Ensure works is always an array
+  const worksArray = Array.isArray(works) ? works : [];
 
   // Show loading state while fetching data
   if (isLoadingWorks) {
@@ -54,7 +37,7 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
     <>
       <WorksHeader />
       <WorksGrid 
-        works={transformedWorks}
+        works={worksArray}
         onViewDetails={onViewDetails}
         onStatusChange={onStatusChange}
       />
