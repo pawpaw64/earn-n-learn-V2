@@ -1,4 +1,3 @@
-
 import { execute } from '../config/db.js';
 
 class ApplicationModel {
@@ -147,6 +146,34 @@ static async getToUserJobs(userId) {
     throw error;
   }
 }
+
+  // Get applications by job ID
+  static async getByJobId(jobId) {
+    try {
+      const result = await execute(`
+        SELECT a.*, 
+        u.name as applicant_name, u.email as applicant_email, u.avatar as applicant_avatar
+        FROM applications a
+        JOIN users u ON a.user_id = u.id
+        WHERE a.job_id = ?
+        ORDER BY a.created_at DESC
+      `, [jobId]);
+      
+      // Handle different result formats
+      const rows = Array.isArray(result) ? 
+        (result[0] && Array.isArray(result[0]) ? result[0] : result) : 
+        [];
+      
+      return rows;
+    } catch (error) {
+      console.error('ApplicationModel.getByJobId() - Error', {
+        jobId,
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
+    }
+  }
 
   // Check if user has already applied for a job
   static async checkDuplicate(jobId, userId) {

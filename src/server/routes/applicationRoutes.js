@@ -6,7 +6,8 @@ import {
   submitApplication,
   updateApplicationStatus,
   getUserApplications,
-  getJobApplications
+  getJobApplications,
+  getApplicationsByJobId
 } from '../controllers/applicationController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -27,5 +28,8 @@ router.get('/user/submitted', getUserApplications);
 
 // Get applications to user's jobs
 router.get('/user/received', getJobApplications);
+
+// Get applications for a specific job
+router.get('/job/:jobId', getApplicationsByJobId);
 
 export default router;

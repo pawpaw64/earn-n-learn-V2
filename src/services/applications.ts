@@ -54,11 +54,27 @@ export const updateApplicationStatus = async (id: number, status: string): Promi
 export const getApplicationDetails = async (id: number): Promise<ApplicationType> => {
   setAuthToken(localStorage.getItem('token'));
   try {
-    const response = await axios.get(`${API_URL}/jobs/${id}`);
+    const response = await axios.get(`${API_URL}/applications/${id}`);
     return response.data;
   } catch (error: any) {
     toast.error(error.response?.data?.message || "Failed to fetch application details");
     throw error;
+  }
+};
+
+/**
+ * Get all applicants for a specific job
+ * @param jobId Job ID
+ */
+export const getJobApplicants = async (jobId: number): Promise<any[]> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/applications/job/${jobId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching job applicants:", error);
+    toast.error("Failed to load applicants");
+    return [];
   }
 };
 

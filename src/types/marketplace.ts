@@ -2,6 +2,7 @@
 // Job types
 export interface JobType {
   id: number;
+  user_id?: number;
   title: string;
   type: string;
   description: string;
