@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Table, 
@@ -13,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Eye, UserCheck, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
+import { useNavigate } from "react-router-dom";
 
 interface ReceivedContactsTableProps {
   contacts: any[];
@@ -34,9 +34,27 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   onStatusChange,
   onCreateWork
 }) => {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
+
+  // Group contacts by skill/material
+  const itemGroups = contacts.reduce((groups: any, contact: any) => {
+    const itemId = type === 'skill' ? contact.skill_id : contact.material_id;
+    const itemName = type === 'skill' ? contact.skill_name : contact.title;
+    
+    if (!groups[itemId]) {
+      groups[itemId] = {
+        itemId,
+        name: itemName,
+        contacts: []
+      };
+    }
+    groups[itemId].contacts.push(contact);
+    return groups;
+  }, {});
 
   if (!contacts || contacts.length === 0) {
     return (
@@ -49,16 +67,24 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'Agreement Reached':
-        return 'bg-green-100 text-green-800';
+        return 'secondary';
       case 'Declined':
-        return 'bg-red-100 text-red-800';
+        return 'destructive';
       case 'Responded':
-        return 'bg-blue-100 text-blue-800';
+        return 'default';
       case 'In Discussion':
-        return 'bg-purple-100 text-purple-800';
+        return 'outline';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'outline';
     }
+  };
+
+  const handleContactUser = (userId: number) => {
+    navigate(`/dashboard/messages?userId=${userId}`);
+  };
+
+  const handleViewProfile = (userId: number) => {
+    navigate(`/dashboard/profile/${userId}`);
   };
 
   const handleCreateWorkClick = (contact: any) => {
@@ -71,110 +97,128 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Contact</TableHead>
-            <TableHead>{type === 'skill' ? 'Skill' : 'Material'}</TableHead>
-            <TableHead className="hidden md:table-cell">Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {contacts.map((contact: any) => (
-            <TableRow key={contact.id}>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={contact.contact_avatar} />
-                    <AvatarFallback>{contact.contact_name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium">{contact.contact_name}</p>
-                    <p className="text-xs text-muted-foreground">{contact.contact_email}</p>
-                  </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                <p className="font-medium">
-                  {type === 'skill' ? contact.skill_name : contact.title}
-                </p>
-                <p className="text-xs text-muted-foreground">{type === 'skill' ? contact.pricing : contact.price}</p>
-              </TableCell>
-              <TableCell className="hidden md:table-cell">
-                {new Date(contact.created_at).toLocaleDateString()}
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className={getStatusBadgeVariant(contact.status)}>
-                  {contact.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex gap-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onViewDetails(contact, 'contact')}
-                  >
-                    <Eye className="w-4 h-4" />View Details
-                  </Button>
-                  <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-600"
-                       // onClick={}
-                      >
-                        <MessageSquare className="w-4 h-4" /> Contact
-                      </Button>
-                  {/* Show accept/decline only for new contacts */}
-                  {contact.status === 'Contact Initiated' && (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-green-600"
-                        onClick={() => onStatusChange(
-                          contact.id, 
-                          type === 'skill' ? 'skill_contact' : 'material_contact', 
-                          'Responded'
+    <div className="space-y-6">
+      {Object.values(itemGroups).map((group: any) => (
+        <div key={group.itemId} className="border rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">{group.name}</h3>
+            {group.contacts.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => onViewDetails(group.contacts[0], type)}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                {type === 'skill' ? 'Skill Details' : 'Material Details'}
+              </Button>
+            )}
+          </div>
+          
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {group.contacts.map((contact: any) => (
+                  <TableRow key={contact.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar 
+                          className="h-8 w-8 cursor-pointer" 
+                          onClick={() => handleViewProfile(contact.user_id)}
+                        >
+                          <AvatarImage src={contact.contact_avatar} />
+                          <AvatarFallback>{contact.contact_name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p 
+                            className="font-medium cursor-pointer hover:underline" 
+                            onClick={() => handleViewProfile(contact.user_id)}
+                          >
+                            {contact.contact_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">{contact.contact_email}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {new Date(contact.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(contact.status)}>
+                        {contact.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleContactUser(contact.user_id)}
+                        >
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Contact
+                        </Button>
+                        
+                        {/* Show accept/decline only for new contacts */}
+                        {contact.status === 'Contact Initiated' && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-green-600"
+                              onClick={() => onStatusChange(
+                                contact.id, 
+                                type === 'skill' ? 'skill_contact' : 'material_contact', 
+                                'Responded'
+                              )}
+                            >
+                              <Check className="w-4 h-4 mr-2" />
+                              Accept
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-red-600"
+                              onClick={() => onStatusChange(
+                                contact.id, 
+                                type === 'skill' ? 'skill_contact' : 'material_contact', 
+                                'Declined'
+                              )}
+                            >
+                              <X className="w-4 h-4 mr-2" />
+                              Decline
+                            </Button>
+                          </>
                         )}
-                      >
-                        <Check className="w-4 h-4" /> Accept
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        className="text-red-600"
-                        onClick={() => onStatusChange(
-                          contact.id, 
-                          type === 'skill' ? 'skill_contact' : 'material_contact', 
-                          'Declined'
+                        
+                        {/* Show create work button for responded or in discussion status */}
+                        {(contact.status === 'Responded' || contact.status === 'In Discussion') && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="text-blue-600"
+                            onClick={() => handleCreateWorkClick(contact)}
+                          >
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Create Work
+                          </Button>
                         )}
-                      >
-                        <X className="w-4 h-4" /> Decline
-                      </Button>
-                    </>
-                  )}
-                  
-                  {/* Show create work button for responded or in discussion status */}
-                  {(contact.status === 'Responded' || contact.status === 'In Discussion') && (
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className="text-blue-600"
-                      onClick={() => handleCreateWorkClick(contact)}
-                    >
-                      <UserCheck className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

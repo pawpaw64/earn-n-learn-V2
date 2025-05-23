@@ -8,6 +8,7 @@ import { ApplicationsTab } from "@/components/mywork/ApplicationsTab";
 import { MyWorksTab } from "@/components/mywork/MyWorksTab";
 import { InvoicesTab } from "@/components/mywork/InvoicesTab";
 import { DetailsDialog } from "@/components/mywork/DetailsDialog";
+
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 
 export default function MyWork() {
@@ -15,6 +16,11 @@ export default function MyWork() {
   const [detailsItem, setDetailsItem] = useState<any>(null);
   const [detailsType, setDetailsType] = useState<string>("");
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  
+  // New state for the applicants dialog
+  const [isApplicantsDialogOpen, setIsApplicantsDialogOpen] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [selectedJobTitle, setSelectedJobTitle] = useState<string>("");
 
   const { 
     handleViewDetails,
@@ -28,6 +34,12 @@ export default function MyWork() {
     isDetailsOpen,
     detailsItem,
   });
+
+  const handleViewApplicants = (jobId: number, jobTitle: string) => {
+    setSelectedJobId(jobId);
+    setSelectedJobTitle(jobTitle);
+    setIsApplicantsDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -54,6 +66,7 @@ export default function MyWork() {
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
             onStatusChange={handleStatusChange}
+           
           />
         </TabsContent>
 
@@ -80,6 +93,8 @@ export default function MyWork() {
         onStatusChange={handleStatusChange}
         onCreateWork={handleCreateWork}
       />
+
+      
     </div>
   );
 }

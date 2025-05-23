@@ -104,6 +104,32 @@ export const submitApplication = async (req, res) => {
   }
 };
 
+// Get applications by job ID
+export const getApplicationsByJobId = async (req, res) => {
+  try {
+    const jobId = req.params.jobId;
+    
+    // First verify the job exists and the requesting user is the job poster
+    const job = await JobModel.getById(jobId);
+    
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    
+    // Check if the requesting user is the job poster
+    if (job.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'You can only view applications for your own jobs' });
+    }
+    
+    // Get applications for the job
+    const applications = await ApplicationModel.getByJobId(jobId);
+    res.json(applications);
+  } catch (error) {
+    console.error('Get applications by job ID error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // Update application status
 export const updateApplicationStatus = async (req, res) => {
   const { id } = req.params;

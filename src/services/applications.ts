@@ -63,6 +63,24 @@ export const getApplicationDetails = async (id: number): Promise<ApplicationType
 };
 
 /**
+ * Get all applicants for a specific job
+ * @param jobId Job ID
+ */
+export const getJobApplicants = async (jobId: number): Promise<any[]> => {
+  setAuthToken(localStorage.getItem('token'));
+  
+  try {
+   
+    const response = await axios.get(`${API_URL}/applications/job/${jobId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching job applicants:", error);
+    toast.error("Failed to load applicants");
+    return [];
+  }
+};
+
+/**
  * Fetch all applications submitted by the current user
  */
 export const fetchMyApplications = async () => {

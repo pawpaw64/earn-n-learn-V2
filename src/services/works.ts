@@ -1,4 +1,3 @@
-// src/api/works.ts
 import axios from 'axios';
 import { WorkType } from '@/types/marketplace';
 import { setAuthToken } from './auth';

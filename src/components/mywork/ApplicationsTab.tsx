@@ -22,13 +22,19 @@ interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => void;
   onStatusChange: (id: number, type: string, status: string) => void;
   onCreateWork?: (id: number, type: string) => void;
+  
 }
 
 /**
  * Main component for managing all applications and contacts 
  * Both sent and received
  */
-export function ApplicationsTab({ onViewDetails, onStatusChange, onCreateWork }: ApplicationsTabProps) {
+export function ApplicationsTab({ 
+  onViewDetails, 
+  onStatusChange, 
+  onCreateWork,
+
+}: ApplicationsTabProps)  {
   const [applicationsTab, setApplicationsTab] = useState("job");
   const [activeContactsTab, setActiveContactsTab] = useState("received");
   const queryClient = useQueryClient();
@@ -242,6 +248,7 @@ export function ApplicationsTab({ onViewDetails, onStatusChange, onCreateWork }:
               isLoading={isLoadingJobApps}
               onViewDetails={onViewDetails}
               onStatusChange={handleStatusChange}
+              
             />
           </TabsContent>
           
