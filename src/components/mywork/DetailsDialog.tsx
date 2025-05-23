@@ -15,8 +15,8 @@ interface DetailsDialogProps {
   onOpenChange: (open: boolean) => void;
   detailsItem: any;
   detailsType: string;
-  onStatusChange?: (id: number, type: string, status: string) => void;
-  onCreateWork?: (id: number, type: string) => void;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
+  onCreateWork?: (id: number, type: string) => Promise<boolean>;
 }
 
 /**
@@ -67,8 +67,8 @@ export function DetailsDialog({
           <ActionButtons 
             type={detailsType} 
             item={detailsItem} 
-            // onStatusChange={onStatusChange}
-            // onCreateWork={onCreateWork}
+            onStatusChange={onStatusChange}
+            onCreateWork={onCreateWork}
           />
         </DialogFooter>
       </DialogContent>

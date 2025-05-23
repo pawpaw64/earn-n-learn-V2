@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, MessageSquare, Users } from "lucide-react";
+import { Check, X, Eye, MessageSquare, User } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
@@ -19,7 +19,7 @@ interface ReceivedApplicationsTableProps {
   applications: any[];
   isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => void;
+  onStatusChange: (id: number, type: string, status: string) => Promise<boolean>;
 }
 
 /**
@@ -30,7 +30,6 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
   isLoading,
   onViewDetails,
   onStatusChange,
-  
 }) => {
   const navigate = useNavigate();
 
@@ -95,7 +94,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                 size="sm" 
                 onClick={() => onViewDetails(group.applications[0], 'job')}
               >
-                <Eye className="w-4 h-4" />Job details
+                <Eye className="w-4 h-4 mr-2" />Job details
               </Button>)}
           </div>
           
@@ -139,21 +138,27 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      
-                        <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => onViewDetails(app, 'application')}
-                  >
-                    <Eye className="w-4 h-4" />View Details
-                  </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => onViewDetails(app, 'application')}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />View Details
+                        </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleContactUser(app.user_id)}
                         >
-                          <MessageSquare className="w-4 h-4" />Contact
+                          <MessageSquare className="w-4 h-4 mr-1" />Contact
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleViewProfile(app.user_id)}
+                        >
+                          <User className="w-4 h-4 mr-1" />Profile
                         </Button>
                         {app.status === 'Applied' && (
                           <>
@@ -163,7 +168,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                               className="text-green-600"
                               onClick={() => handleAcceptApplication(app.id)}
                             >
-                              <Check className="w-4 h-4"/> Accept
+                              <Check className="w-4 h-4 mr-1"/> Accept
                             </Button>
                             <Button 
                               variant="outline" 
@@ -171,7 +176,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                               className="text-red-600"
                               onClick={() => handleRejectApplication(app.id)}
                             >
-                              <X className="w-4 h-4" /> Reject
+                              <X className="w-4 h-4 mr-1" /> Reject
                             </Button>
                           </>
                         )}
