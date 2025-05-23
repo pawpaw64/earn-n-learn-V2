@@ -153,13 +153,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                         >
                           <MessageSquare className="w-4 h-4 mr-1" />Contact
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleViewProfile(app.user_id)}
-                        >
-                          <User className="w-4 h-4 mr-1" />Profile
-                        </Button>
+                        
                         {app.status === 'Applied' && (
                           <>
                             <Button 
