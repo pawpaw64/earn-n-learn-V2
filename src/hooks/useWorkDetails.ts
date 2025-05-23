@@ -5,7 +5,8 @@ import { NavigateFunction } from "react-router-dom";
 import { getApplicationDetails, updateApplicationStatus } from "@/services/applications";
 import { 
   createWorkFromApplication, 
-  createWorkFromContact,
+  createWorkFromMaterialContact, 
+  createWorkFromSkillContact, 
   getWorkDetails, 
   updateWorkStatus 
 } from "@/services/works";
@@ -101,13 +102,12 @@ export const useWorkDetails = ({
       }
       
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
-      setIsProcessing(false);
-      return true;
+      // This is handled by the component that calls this function
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
       toast.error(`Failed to delete ${type}`);
+    } finally {
       setIsProcessing(false);
-      return false;
     }
   };
 
@@ -135,13 +135,13 @@ export const useWorkDetails = ({
         setIsDetailsOpen(false);
       }
       
-      setIsProcessing(false);
       return true;
     } catch (error) {
       console.error(`Error updating ${type} status:`, error);
       toast.error('Failed to update status');
-      setIsProcessing(false);
       return false;
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -152,8 +152,11 @@ export const useWorkDetails = ({
       if (type === 'job_application') {
         await createWorkFromApplication(id);
       } 
-      else if (type === 'skill_contact' || type === 'material_contact') {
-        await createWorkFromContact(id, type);
+      else if (type === 'skill_contact') {
+        await createWorkFromSkillContact(id);
+      }
+      else if (type === 'material_contact') {
+        await createWorkFromMaterialContact(id);
       }
       
       toast.success('Work assignment created successfully');
@@ -163,13 +166,13 @@ export const useWorkDetails = ({
         setIsDetailsOpen(false);
       }
       
-      setIsProcessing(false);
       return true;
     } catch (error) {
       console.error(`Error creating work from ${type}:`, error);
       toast.error('Failed to create work assignment');
-      setIsProcessing(false);
       return false;
+    } finally {
+      setIsProcessing(false);
     }
   };
 

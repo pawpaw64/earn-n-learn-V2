@@ -1,8 +1,7 @@
-
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Users } from "lucide-react";
+import { Eye, Edit, Trash2 } from "lucide-react";
 
 interface JobType {
   id: number;
@@ -19,10 +18,9 @@ interface JobPostCardProps {
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onViewApplicants?: () => void;
 }
 
-export function JobPostCard({ job, onView, onEdit, onDelete, onViewApplicants }: JobPostCardProps) {
+export function JobPostCard({ job, onView, onEdit, onDelete }: JobPostCardProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader>
@@ -48,11 +46,6 @@ export function JobPostCard({ job, onView, onEdit, onDelete, onViewApplicants }:
           <Button variant="outline" size="sm" onClick={onView}>
             <Eye className="w-4 h-4" />
           </Button>
-          {onViewApplicants && (
-            <Button variant="outline" size="sm" onClick={onViewApplicants}>
-              <Users className="w-4 h-4" />
-            </Button>
-          )}
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Edit className="w-4 h-4" />
           </Button>
