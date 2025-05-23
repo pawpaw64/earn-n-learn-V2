@@ -1,7 +1,8 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, X, PlayCircle, EditIcon } from "lucide-react";
+import { Check, X, PlayCircle, DollarSign } from "lucide-react";
+import { EscrowDialog } from "../dialogs/EscrowDialog";
 
 interface ActionButtonsProps {
   type: string;
@@ -15,13 +16,21 @@ interface ActionButtonsProps {
  */
 export function ActionButtons({ type, item, onStatusChange, onCreateWork }: ActionButtonsProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showEscrowDialog, setShowEscrowDialog] = useState(false);
+  const [acceptedApplication, setAcceptedApplication] = useState<any>(null);
 
   const handleStatusChange = async (id: number, itemType: string, newStatus: string) => {
     if (!onStatusChange) return;
     
     try {
       setIsLoading(true);
-      await onStatusChange(id, itemType, newStatus);
+      const success = await onStatusChange(id, itemType, newStatus);
+      
+      // If successfully accepted, show escrow dialog
+      if (success && newStatus === 'Accepted' && type === 'application') {
+        setAcceptedApplication(item);
+        setShowEscrowDialog(true);
+      }
     } catch (error) {
       console.error("Status change error:", error);
     } finally {
@@ -42,40 +51,65 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
     }
   };
 
+  const handleEscrowCreated = () => {
+    setAcceptedApplication(null);
+    // Optionally trigger a refresh of the applications list
+  };
+
   if (!item) return null;
 
   // Application actions
   if (type === 'application') {
     if (item.status === 'Applied' && item.poster_email === localStorage.getItem('userEmail')) {
       return (
-        <div className="flex gap-2">
-          <Button 
-            variant="default" 
-            disabled={isLoading}
-            onClick={() => handleStatusChange(item.id, 'job_application', 'Accepted')}
-          >
-            <Check className="mr-1 h-4 w-4" /> Accept
-          </Button>
-          <Button 
-            variant="destructive" 
-            disabled={isLoading}
-            onClick={() => handleStatusChange(item.id, 'job_application', 'Rejected')}
-          >
-            <X className="mr-1 h-4 w-4" /> Reject
-          </Button>
-        </div>
+        <>
+          <div className="flex gap-2">
+            <Button 
+              variant="default" 
+              disabled={isLoading}
+              onClick={() => handleStatusChange(item.id, 'job_application', 'Accepted')}
+            >
+              <Check className="mr-1 h-4 w-4" /> Accept
+            </Button>
+            <Button 
+              variant="destructive" 
+              disabled={isLoading}
+              onClick={() => handleStatusChange(item.id, 'job_application', 'Rejected')}
+            >
+              <X className="mr-1 h-4 w-4" /> Reject
+            </Button>
+          </div>
+          
+          <EscrowDialog
+            isOpen={showEscrowDialog}
+            onOpenChange={setShowEscrowDialog}
+            application={acceptedApplication}
+            onEscrowCreated={handleEscrowCreated}
+          />
+        </>
       );
     }
     
     if (item.status === 'Accepted' && item.poster_email === localStorage.getItem('userEmail')) {
       return (
-        <Button 
-          variant="default" 
-          disabled={isLoading}
-          onClick={() => handleCreateWork(item.id, 'job_application')}
-        >
-          <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setAcceptedApplication(item);
+              setShowEscrowDialog(true);
+            }}
+          >
+            <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
+          </Button>
+          <Button 
+            variant="default" 
+            disabled={isLoading}
+            onClick={() => handleCreateWork(item.id, 'job_application')}
+          >
+            <PlayCircle className="mr-1 h-4 w-4" /> Create Work
+          </Button>
+        </div>
       );
     }
     
@@ -99,28 +133,37 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
         item.seller_email === localStorage.getItem('userEmail')) && 
         item.status === 'Pending') {
       return (
-        <div className="flex gap-2">
-          <Button 
-            variant="default"
-            disabled={isLoading}
-            onClick={() => {
-              const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
-              handleStatusChange(item.id, contactType, 'Accepted');
-            }}
-          >
-            <Check className="mr-1 h-4 w-4" /> Accept
-          </Button>
-          <Button 
-            variant="destructive"
-            disabled={isLoading}
-            onClick={() => {
-              const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
-              handleStatusChange(item.id, contactType, 'Rejected');
-            }}
-          >
-            <X className="mr-1 h-4 w-4" /> Reject
-          </Button>
-        </div>
+        <>
+          <div className="flex gap-2">
+            <Button 
+              variant="default"
+              disabled={isLoading}
+              onClick={() => {
+                const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
+                handleStatusChange(item.id, contactType, 'Accepted');
+              }}
+            >
+              <Check className="mr-1 h-4 w-4" /> Accept
+            </Button>
+            <Button 
+              variant="destructive"
+              disabled={isLoading}
+              onClick={() => {
+                const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
+                handleStatusChange(item.id, contactType, 'Rejected');
+              }}
+            >
+              <X className="mr-1 h-4 w-4" /> Reject
+            </Button>
+          </div>
+          
+          <EscrowDialog
+            isOpen={showEscrowDialog}
+            onOpenChange={setShowEscrowDialog}
+            application={acceptedApplication}
+            onEscrowCreated={handleEscrowCreated}
+          />
+        </>
       );
     }
     
@@ -129,16 +172,27 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
         item.seller_email === localStorage.getItem('userEmail')) && 
         item.status === 'Accepted') {
       return (
-        <Button 
-          variant="default"
-          disabled={isLoading}
-          onClick={() => {
-            const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
-            handleCreateWork(item.id, contactType);
-          }}
-        >
-          <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setAcceptedApplication(item);
+              setShowEscrowDialog(true);
+            }}
+          >
+            <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
+          </Button>
+          <Button 
+            variant="default"
+            disabled={isLoading}
+            onClick={() => {
+              const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
+              handleCreateWork(item.id, contactType);
+            }}
+          >
+            <PlayCircle className="mr-1 h-4 w-4" /> Create Work
+          </Button>
+        </div>
       );
     }
   }
