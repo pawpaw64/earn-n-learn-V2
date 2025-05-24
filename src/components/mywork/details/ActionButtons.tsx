@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, X, PlayCircle, DollarSign } from "lucide-react";
 import { EscrowDialog } from "../dialogs/EscrowDialog";
+import { MyApplicationActionButtons } from "./MyApplicationActionButtons";
 
 interface ActionButtonsProps {
   type: string;
@@ -58,7 +58,17 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
 
   if (!item) return null;
 
-  // Application actions
+  // User's own application actions
+  if (type === 'my_application') {
+    return (
+      <MyApplicationActionButtons 
+        item={item} 
+        onStatusChange={onStatusChange}
+      />
+    );
+  }
+
+  // Received application actions
   if (type === 'application') {
     if (item.status === 'Applied' && item.poster_email === localStorage.getItem('userEmail')) {
       return (
@@ -110,18 +120,6 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
             <PlayCircle className="mr-1 h-4 w-4" /> Create Work
           </Button>
         </div>
-      );
-    }
-    
-    if (item.status === 'Applied' && item.applicant_email === localStorage.getItem('userEmail')) {
-      return (
-        <Button 
-          variant="destructive"
-          disabled={isLoading}
-          onClick={() => handleStatusChange(item.id, 'job_application', 'Withdrawn')}
-        >
-          Withdraw Application
-        </Button>
       );
     }
   }

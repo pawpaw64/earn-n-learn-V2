@@ -1,6 +1,7 @@
 
 import React from "react";
 import { ApplicationDetails } from "./ApplicationDetails";
+import { MyApplicationDetails } from "./MyApplicationDetails";
 import { JobDetails } from "./JobDetails";
 import { SkillMaterialDetails } from "./SkillMaterialDetails";
 import { WorkDetails } from "./WorkDetails";
@@ -21,6 +22,8 @@ export const DetailContent: React.FC<DetailContentProps> = ({ detailsItem, detai
   switch (detailsType) {
     case 'application':
       return <ApplicationDetails item={detailsItem} />;
+    case 'my_application':
+      return <MyApplicationDetails item={detailsItem} />;
     case 'job':
       return <JobDetails item={detailsItem} />;
     case 'skill':

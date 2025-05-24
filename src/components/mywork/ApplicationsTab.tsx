@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -21,7 +20,6 @@ interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => void;
   onStatusChange: (id: number, type: string, status: string) => void;
   onCreateWork?: (id: number, type: string) => void;
-  
 }
 
 /**
@@ -32,7 +30,6 @@ export function ApplicationsTab({
   onViewDetails, 
   onStatusChange, 
   onCreateWork,
-
 }: ApplicationsTabProps)  {
   const [applicationsTab, setApplicationsTab] = useState("job");
   const [activeContactsTab, setActiveContactsTab] = useState("received");
@@ -104,17 +101,30 @@ export function ApplicationsTab({
   });
 
   // Handle status changes with automatic refetch
-  const handleStatusChange = async (id: number, type: string, status: string) => {
-    await onStatusChange(id, type, status);
-    refetchAll();
+  const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
+    try {
+      const success = await onStatusChange(id, type, status);
+      refetchAll();
+      return success || true;
+    } catch (error) {
+      console.error("Status change error:", error);
+      return false;
+    }
   };
 
   // Handle work creation with automatic refetch
-  const handleCreateWork = async (id: number, type: string) => {
+  const handleCreateWork = async (id: number, type: string): Promise<boolean> => {
     if (onCreateWork) {
-      await onCreateWork(id, type);
-      refetchAll();
+      try {
+        const success = await onCreateWork(id, type);
+        refetchAll();
+        return success || true;
+      } catch (error) {
+        console.error("Create work error:", error);
+        return false;
+      }
     }
+    return false;
   };
 
   // Ensure all data arrays are valid arrays

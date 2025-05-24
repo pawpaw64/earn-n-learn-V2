@@ -1,4 +1,3 @@
-
 // src/api/applications.ts
 import axios from 'axios';
 import { ApplicationType } from '@/types/marketplace';
@@ -68,9 +67,10 @@ export const getmyApplicationDetails = async (id: number): Promise<ApplicationTy
     const response = await axios.get(`${API_URL}/applications/${id}`);
     return response.data;
   } catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to fetch application details");  
+    toast.error(error.response?.data?.message || "Failed to fetch application details");
+    throw error;
   }
-  };
+};
 
 /**
  * Get all applicants for a specific job
