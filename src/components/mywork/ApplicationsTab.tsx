@@ -9,7 +9,6 @@ import { JobApplicationCard } from "./applications/JobApplicationCard";
 import { ContactCard } from "./applications/ContactCard";
 import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTable";
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
-
 import { fetchMyApplications, fetchJobApplications } from "@/services/applications";
 import { 
   fetchUserSkillContacts, 
