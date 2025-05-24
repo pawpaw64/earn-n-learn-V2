@@ -67,17 +67,17 @@ export function JobApplicationCard({ app, onViewDetails, onStatusChange }: JobAp
         
         <div className="flex gap-2 pt-2">
           <Button 
-            variant="outline" 
-            size="sm" 
+         className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black w-full xs:w-auto flex items-center gap-1"
+        size="sm"
             onClick={() => onViewDetails(app, 'my_application')}
-            className="flex-1"
-          >
+            
+          ><span className="hidden sm:inline"></span>
             <Eye className="mr-1 h-4 w-4" /> View Details
           </Button>
           
           {app.status === 'Applied' && (
             <Button 
-              variant="destructive" 
+              className="bg-red-600 hover:bg-red-700 text-white w-full xs:w-auto flex items-center gap-1"
               size="sm"
               onClick={handleWithdraw}
             >

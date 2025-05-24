@@ -108,6 +108,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
               <h3 className="text-lg font-semibold">{group.title}</h3>
               {group.applications.length > 0 && (
                 <Button 
+                className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black "
                   variant="outline" 
                   size="sm" 
                   onClick={() => onViewDetails(group.applications[0], 'job')}
@@ -158,13 +159,14 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button 
-                            variant="outline" 
+                           className="bg-white border border-black text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1"
                             size="sm"
                             onClick={() => onViewDetails(app, 'application')}
                           >
                             <Eye className="w-4 h-4 mr-1" />View Details
                           </Button>
                           <Button 
+                         className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                             variant="outline" 
                             size="sm"
                             onClick={() => handleContactUser(app.user_id)}
@@ -175,9 +177,11 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                           {app.status === 'Applied' && (
                             <>
                               <Button 
+                               
                                 variant="outline" 
                                 size="sm"
-                                className="text-green-600"
+                               className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+
                                 onClick={() => handleAcceptApplication(app.id, app)}
                               >
                                 <Check className="w-4 h-4 mr-1"/> Accept
@@ -185,7 +189,8 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                className="text-red-600"
+                               className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+
                                 onClick={() => handleRejectApplication(app.id)}
                               >
                                 <X className="w-4 h-4 mr-1" /> Reject

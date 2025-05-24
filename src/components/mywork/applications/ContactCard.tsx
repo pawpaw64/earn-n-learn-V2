@@ -92,7 +92,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, type, onViewD
         <Button 
           variant="outline" 
           size="sm"
-          className="gap-1.5"
+             className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black w-full xs:w-auto flex items-center gap-1"
           onClick={() => onViewDetails(contact, 'contact')}
         >
           <Eye className="w-3.5 h-3.5" /> View Details

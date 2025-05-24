@@ -104,6 +104,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
             <h3 className="text-lg font-semibold">{group.name}</h3>
             {group.contacts.length > 0 && (
               <Button 
+                  className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black "
                 variant="outline" 
                 size="sm" 
                 onClick={() => onViewDetails(group.contacts[0], type)}
@@ -157,7 +158,8 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button 
+                        <Button
+                        className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1" 
                     variant="outline" 
                     size="sm"
                     onClick={() => onViewDetails(contact, 'contact')}
@@ -165,6 +167,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                     <Eye className="w-4 h-4" />View Details
                   </Button>
                         <Button 
+                        className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                           variant="outline" 
                           size="sm"
                           onClick={() => handleContactUser(contact.user_id)}
@@ -179,7 +182,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="text-green-600"
+                              className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                               onClick={() => onStatusChange(
                                 contact.id, 
                                 type === 'skill' ? 'skill_contact' : 'material_contact', 
@@ -192,7 +195,8 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                             <Button 
                               variant="outline" 
                               size="sm"
-                              className="text-red-600"
+                              className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+
                               onClick={() => onStatusChange(
                                 contact.id, 
                                 type === 'skill' ? 'skill_contact' : 'material_contact', 
