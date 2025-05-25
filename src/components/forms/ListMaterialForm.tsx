@@ -9,9 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
-import { createMaterial } from "@/services/materials";
+import { MaterialType } from "@/types/marketplace";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),
@@ -25,25 +24,32 @@ const formSchema = z.object({
 
 type ListMaterialFormValues = z.infer<typeof formSchema>;
 
-export default function ListMaterialForm() {
-  const [imagePreview, setImagePreview] = useState("");
+interface ListMaterialFormProps {
+  initialData?: MaterialType;
+  onSubmit: (formData: any) => Promise<void>;
+  isLoading: boolean;
+}
+
+export default function ListMaterialForm({ initialData, onSubmit, isLoading }: ListMaterialFormProps) {
+  const [imagePreview, setImagePreview] = useState(initialData?.image_url || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const form = useForm<ListMaterialFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      materialName: "",
-      condition: "Like New",
-      price: "",
+      materialName: initialData?.title || "",
+      condition: initialData?.condition || "Like New",
+      price: initialData?.price || "",
       type: "sale",
-      availability: "",
-      description: "",
+      availability: initialData?.availability || "",
+      description: initialData?.description || "",
       contactInfo: ""
     }
   });
 
   const watchType = form.watch("type");
 
-  async function onSubmit(values: ListMaterialFormValues) {
+  async function handleSubmit(values: ListMaterialFormValues) {
     try {
       // Prepare data for API
       const materialData = {
@@ -52,23 +58,27 @@ export default function ListMaterialForm() {
         condition: values.condition,
         price: values.price,
         availability: values.availability,
+        contactInfo: values.contactInfo,
+        type: values.type,
+        image: imageFile // Include the image file
       };
 
-      // Call API to create material
-      await createMaterial(materialData);
-
-      toast.success("Material listed successfully!");
-      form.reset();
-      setImagePreview("");
+      await onSubmit(materialData);
+      
+      if (!initialData) {
+        form.reset();
+        setImagePreview("");
+        setImageFile(null);
+      }
     } catch (error) {
-      console.error("Error listing material:", error);
-      toast.error("Failed to list material. Please try again.");
+      console.error("Error in form submission:", error);
     }
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -79,7 +89,7 @@ export default function ListMaterialForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="materialName"
@@ -93,6 +103,7 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -149,6 +160,7 @@ export default function ListMaterialForm() {
             )}
           />
         </div>
+        
         <FormField
           control={form.control}
           name="price"
@@ -171,6 +183,7 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
+        
         <div>
           <label className="block text-sm font-medium mb-2">Upload Image (Optional)</label>
           <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:bg-gray-50">
@@ -185,7 +198,10 @@ export default function ListMaterialForm() {
                   type="button"
                   variant="outline" 
                   size="sm"
-                  onClick={() => setImagePreview("")}
+                  onClick={() => {
+                    setImagePreview("");
+                    setImageFile(null);
+                  }}
                   className="absolute top-0 right-0"
                 >
                   Remove
@@ -216,6 +232,7 @@ export default function ListMaterialForm() {
             )}
           </div>
         </div>
+        
         <FormField
           control={form.control}
           name="description"
@@ -233,6 +250,7 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="availability"
@@ -250,6 +268,7 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="contactInfo"
@@ -263,10 +282,17 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700">
-          {watchType === "sale" ? "List for Sale" : 
-           watchType === "rent" ? "List for Rent" : 
-           "List to Borrow"}
+        
+        <Button 
+          type="submit" 
+          className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700"
+          disabled={isLoading}
+        >
+          {isLoading ? "Saving..." : (
+            watchType === "sale" ? "List for Sale" : 
+            watchType === "rent" ? "List for Rent" : 
+            "List to Borrow"
+          )}
         </Button>
       </form>
     </Form>

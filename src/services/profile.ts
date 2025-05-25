@@ -1,6 +1,8 @@
+
 // src/services/profile.ts
 import axios from 'axios';
 import { setAuthToken } from './auth';
+import { uploadImage } from './imageUpload';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -74,16 +76,12 @@ export const updateUserProfile = async (profileData: any) => {
   return response.data;
 };
 
-export const uploadProfileImage = async (imageFile: File) => {
-  setAuthToken(localStorage.getItem('token'));
-  const formData = new FormData();
-  formData.append('image', imageFile);
-  
-  const response = await axios.post(`${API_URL}/users/upload-avatar`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
-  
-  return response.data.imageUrl;
+export const uploadProfileImage = async (imageFile: File): Promise<string> => {
+  try {
+    const imageUrl = await uploadImage(imageFile, 'profile');
+    return imageUrl;
+  } catch (error) {
+    console.error('Error uploading profile image:', error);
+    throw error;
+  }
 };

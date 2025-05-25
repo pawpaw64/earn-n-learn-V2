@@ -1,3 +1,4 @@
+
 import MaterialModel from '../models/materialModel.js';
 
 // Get all materials
@@ -18,6 +19,7 @@ export async function getAllMaterials(req, res) {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
 // Get material by ID
 export async function getMaterialById(req, res) {
   try {
@@ -34,7 +36,7 @@ export async function getMaterialById(req, res) {
 
 // Create new material
 export async function createMaterial(req, res) {
-  const { title, description, condition, price, availability } = req.body;
+  const { title, description, condition, price, availability, image_url, type } = req.body;
   
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
@@ -47,7 +49,9 @@ export async function createMaterial(req, res) {
       description,
       condition,
       price,
-      availability
+      availability,
+      image_url,
+      type
     });
     
     res.status(201).json({ 
