@@ -2,7 +2,6 @@
 import axios from 'axios';
 import { MaterialType } from '@/types/marketplace';
 import { setAuthToken } from './auth';
-import { uploadImage } from './imageUpload';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -23,47 +22,13 @@ export const fetchMaterials = async (excludeUserId?: number): Promise<MaterialTy
 
 export const createMaterial = async (materialData: any): Promise<{ materialId: number }> => {
   setAuthToken(localStorage.getItem('token'));
-  
-  let imageUrl = '';
-  if (materialData.image && materialData.image instanceof File) {
-    try {
-      imageUrl = await uploadImage(materialData.image, 'material');
-    } catch (error) {
-      console.error('Error uploading material image:', error);
-      // Continue without image if upload fails
-    }
-  }
-  
-  const dataToSend = {
-    ...materialData,
-    image_url: imageUrl,
-    image: undefined // Remove the file object
-  };
-  
-  const response = await axios.post(`${API_URL}/materials`, dataToSend);
+  const response = await axios.post(`${API_URL}/materials`, materialData);
   return response.data;
 };
 
 export const updateMaterial = async (id: number, materialData: any): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
-  
-  let imageUrl = materialData.image_url || '';
-  if (materialData.image && materialData.image instanceof File) {
-    try {
-      imageUrl = await uploadImage(materialData.image, 'material');
-    } catch (error) {
-      console.error('Error uploading material image:', error);
-      // Keep existing image if upload fails
-    }
-  }
-  
-  const dataToSend = {
-    ...materialData,
-    image_url: imageUrl,
-    image: undefined // Remove the file object
-  };
-  
-  const response = await axios.put(`${API_URL}/materials/${id}`, dataToSend);
+  const response = await axios.put(`${API_URL}/materials/${id}`, materialData);
   return response.data;
 };
 

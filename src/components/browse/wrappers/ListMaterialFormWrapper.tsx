@@ -20,34 +20,13 @@ export const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = (
     try {
       setIsLoading(true);
       
-      // Handle image upload if present
-      let imageUrl = initialData?.image_url || "";
-      if (formData.image) {
-        // For now, we'll create a placeholder URL. In a real app, you'd upload to a service
-        const reader = new FileReader();
-        reader.readAsDataURL(formData.image);
-        imageUrl = await new Promise((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-        });
-      }
-      
-      const materialData = {
-        title: formData.title,
-        description: formData.description,
-        condition: formData.condition,
-        price: formData.price,
-        availability: formData.availability,
-        image_url: imageUrl,
-        type: formData.type
-      };
-      
       if (initialData?.id) {
         // Update existing material
-        await updateMaterial(initialData.id, materialData);
+        await updateMaterial(initialData.id, formData);
         toast.success("Material updated successfully");
       } else {
         // Create new material
-        await createMaterial(materialData);
+        await createMaterial(formData);
         toast.success("Material listed successfully");
       }
       
