@@ -41,10 +41,11 @@ export const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = (
   };
   
   return (
-    <ListMaterialForm 
-      initialData={initialData} 
-      onSubmit={handleSubmit} 
-      isLoading={isLoading} 
-    />
+    <div>
+      <ListMaterialForm 
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
+    </div>
   );
 };

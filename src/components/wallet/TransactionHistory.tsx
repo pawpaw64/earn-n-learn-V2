@@ -18,58 +18,6 @@ interface Transaction {
   status: 'completed' | 'pending' | 'failed';
 }
 
-// Mock data as fallback
-const mockTransactions: Transaction[] = [
-  {
-    id: "tx1",
-    date: new Date(2023, 5, 15),
-    description: "Top up from Credit Card",
-    amount: 100,
-    type: "deposit",
-    status: "completed"
-  },
-  {
-    id: "tx2",
-    date: new Date(2023, 5, 10),
-    description: "Withdrawal to Bank Account",
-    amount: 50,
-    type: "withdrawal",
-    status: "completed"
-  },
-  {
-    id: "tx3",
-    date: new Date(2023, 5, 8),
-    description: "Payment for Web Design Project",
-    amount: 200,
-    type: "payment",
-    status: "completed"
-  },
-  {
-    id: "tx4",
-    date: new Date(2023, 5, 5),
-    description: "Escrow for Logo Design",
-    amount: 75,
-    type: "escrow",
-    status: "pending"
-  },
-  {
-    id: "tx5",
-    date: new Date(2023, 4, 28),
-    description: "Payment Release for Content Writing",
-    amount: 120,
-    type: "release",
-    status: "completed"
-  },
-  {
-    id: "tx6",
-    date: new Date(2023, 4, 20),
-    description: "Payment for Translation Services",
-    amount: 150,
-    type: "payment",
-    status: "completed"
-  },
-];
-
 export function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [filter, setFilter] = useState<string>("all");
@@ -81,7 +29,6 @@ export function TransactionHistory() {
       const token = localStorage.getItem('token');
       if (!token) {
         console.error('No authentication token found');
-        setTransactions(mockTransactions); // Fallback to mock data
         setIsLoading(false);
         return;
       }
@@ -101,12 +48,11 @@ export function TransactionHistory() {
         }));
         setTransactions(transformedTransactions);
       } else {
-        // Use mock data if no transactions returned
-        setTransactions(mockTransactions);
+        setTransactions([]);
       }
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      setTransactions(mockTransactions); // Fallback to mock data
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,11 +24,11 @@ export function WalletOverview() {
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData>({
-    balance: 2580.42, // Fallback data
-    pendingEscrow: 750.00,
-    monthlyEarnings: 1200.00,
-    monthlySpending: 450.50,
-    savingsProgress: 65
+    balance: 0,
+    pendingEscrow: 0,
+    monthlyEarnings: 0,
+    monthlySpending: 0,
+    savingsProgress: 0
   });
 
   const fetchWalletData = async () => {
@@ -47,7 +48,11 @@ export function WalletOverview() {
       setWalletData(response.data);
     } catch (error) {
       console.error('Error fetching wallet data:', error);
-      // We keep the fallback data in case of error
+      toast({
+        title: "Error",
+        description: "Failed to load wallet data",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -206,13 +211,12 @@ export function WalletOverview() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-medium">Savings Goal Progress</CardTitle>
-          <CardDescription>Laptop Fund</CardDescription>
+          <CardDescription>Overall progress</CardDescription>
         </CardHeader>
         <CardContent>
           <Progress value={walletData.savingsProgress} className="h-2" />
           <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-            <span>${walletData.savingsProgress * 10}</span>
-            <span>${1000}</span>
+            <span>{walletData.savingsProgress}% completed</span>
           </div>
         </CardContent>
       </Card>

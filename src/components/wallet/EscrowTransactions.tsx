@@ -8,17 +8,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import axios from 'axios';
 
 interface EscrowTransaction {
   id: string;
-  job_title: string;
-  provider_name: string;
-  client_name: string;
+  title: string;
+  jobType: string;
   amount: number;
   status: 'funded' | 'in_progress' | 'completed' | 'released' | 'disputed' | 'refunded';
-  funded_date: Date;
-  completed_date?: Date;
-  released_date?: Date;
+  clientName: string;
+  clientEmail: string;
+  providerName: string;
+  providerEmail: string;
+  createdAt: string;
+  updatedAt: string;
+  description: string;
+  isProvider: boolean;
 }
 
 export function EscrowTransactions() {
@@ -28,87 +33,68 @@ export function EscrowTransactions() {
   const [isDisputeDialogOpen, setIsDisputeDialogOpen] = useState(false);
   const [currentTransaction, setCurrentTransaction] = useState<EscrowTransaction | null>(null);
   const [disputeReason, setDisputeReason] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Load mock data - in a real app, this would be from an API
-  useEffect(() => {
-    // Simulating API call
-    const mockData: EscrowTransaction[] = [
-      {
-        id: "escrow1",
-        job_title: "Website Development",
-        provider_name: "John Developer",
-        client_name: "Alice Client",
-        amount: 500,
-        status: "in_progress",
-        funded_date: new Date(2023, 5, 1)
-      },
-      {
-        id: "escrow2",
-        job_title: "Logo Design",
-        provider_name: "Mark Designer",
-        client_name: "Bob Client",
-        amount: 150,
-        status: "completed",
-        funded_date: new Date(2023, 4, 15),
-        completed_date: new Date(2023, 5, 5)
-      },
-      {
-        id: "escrow3",
-        job_title: "Content Writing",
-        provider_name: "Sarah Writer",
-        client_name: "Charlie Client",
-        amount: 300,
-        status: "released",
-        funded_date: new Date(2023, 4, 10),
-        completed_date: new Date(2023, 4, 25),
-        released_date: new Date(2023, 4, 27)
-      },
-      {
-        id: "escrow4",
-        job_title: "Mobile App Redesign",
-        provider_name: "David UX",
-        client_name: "Edward Client",
-        amount: 800,
-        status: "funded",
-        funded_date: new Date(2023, 5, 10)
-      },
-      {
-        id: "escrow5",
-        job_title: "SEO Optimization",
-        provider_name: "Emma SEO",
-        client_name: "Frank Client",
-        amount: 350,
-        status: "disputed",
-        funded_date: new Date(2023, 4, 20)
+  const fetchEscrowTransactions = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setIsLoading(false);
+        return;
       }
-    ];
-    
-    setTransactions(mockData);
-  }, []);
 
-  const handleReleasePayment = (id: string) => {
-    setTransactions(prev =>
-      prev.map(tx =>
-        tx.id === id
-          ? {
-              ...tx,
-              status: 'released',
-              released_date: new Date()
-            }
-          : tx
-      )
-    );
-    
-    setIsReleaseDialogOpen(false);
-    setCurrentTransaction(null);
-    
-    toast({
-      title: "Payment Released",
-      description: "The payment has been released to the service provider."
-    });
+      const response = await axios.get('http://localhost:8080/api/wallet/escrow', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setTransactions(response.data || []);
+    } catch (error) {
+      console.error('Error fetching escrow transactions:', error);
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDispute = (id: string, reason: string) => {
+  useEffect(() => {
+    fetchEscrowTransactions();
+  }, []);
+
+  const handleReleasePayment = async (id: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.post(`http://localhost:8080/api/wallet/escrow/${id}/release`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Refresh transactions
+      fetchEscrowTransactions();
+      
+      setIsReleaseDialogOpen(false);
+      setCurrentTransaction(null);
+      
+      toast({
+        title: "Payment Released",
+        description: "The payment has been released to the service provider."
+      });
+    } catch (error) {
+      console.error('Error releasing payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to release payment. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDispute = async (id: string, reason: string) => {
     if (!reason.trim()) {
       toast({
         title: "Error",
@@ -118,25 +104,37 @@ export function EscrowTransactions() {
       return;
     }
     
-    setTransactions(prev =>
-      prev.map(tx =>
-        tx.id === id
-          ? {
-              ...tx,
-              status: 'disputed'
-            }
-          : tx
-      )
-    );
-    
-    setIsDisputeDialogOpen(false);
-    setCurrentTransaction(null);
-    setDisputeReason('');
-    
-    toast({
-      title: "Dispute Filed",
-      description: "Your dispute has been filed and will be reviewed by our team."
-    });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      await axios.post(`http://localhost:8080/api/wallet/escrow/${id}/dispute`, 
+        { reason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Refresh transactions
+      fetchEscrowTransactions();
+      
+      setIsDisputeDialogOpen(false);
+      setCurrentTransaction(null);
+      setDisputeReason('');
+      
+      toast({
+        title: "Dispute Filed",
+        description: "Your dispute has been filed and will be reviewed by our team."
+      });
+    } catch (error) {
+      console.error('Error filing dispute:', error);
+      toast({
+        title: "Error",
+        description: "Failed to file dispute. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -164,80 +162,82 @@ export function EscrowTransactions() {
         <h2 className="text-2xl font-semibold">Escrow Transactions</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {transactions.map((transaction) => (
-          <Card key={transaction.id}>
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>{transaction.job_title}</CardTitle>
-                  <CardDescription>
-                    Provider: {transaction.provider_name}
-                    <br />
-                    Client: {transaction.client_name}
-                  </CardDescription>
+      {isLoading ? (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Loading escrow transactions...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {transactions.map((transaction) => (
+            <Card key={transaction.id}>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{transaction.title}</CardTitle>
+                    <CardDescription>
+                      {transaction.isProvider ? (
+                        <>Client: {transaction.clientName}</>
+                      ) : (
+                        <>Provider: {transaction.providerName}</>
+                      )}
+                    </CardDescription>
+                  </div>
+                  {getStatusBadge(transaction.status)}
                 </div>
-                {getStatusBadge(transaction.status)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Amount:</span>
-                  <span className="font-semibold">${transaction.amount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Funded Date:</span>
-                  <span>{format(transaction.funded_date, 'MMM d, yyyy')}</span>
-                </div>
-                {transaction.completed_date && (
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Completed Date:</span>
-                    <span>{format(transaction.completed_date, 'MMM d, yyyy')}</span>
+                    <span className="text-muted-foreground">Amount:</span>
+                    <span className="font-semibold">${transaction.amount.toFixed(2)}</span>
                   </div>
-                )}
-                {transaction.released_date && (
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Released Date:</span>
-                    <span>{format(transaction.released_date, 'MMM d, yyyy')}</span>
+                    <span className="text-muted-foreground">Created:</span>
+                    <span>{format(new Date(transaction.createdAt), 'MMM d, yyyy')}</span>
                   </div>
-                )}
-                
-                {transaction.status === 'completed' && (
-                  <div className="pt-2 flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setCurrentTransaction(transaction);
-                        setIsDisputeDialogOpen(true);
-                      }}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      Dispute
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setCurrentTransaction(transaction);
-                        setIsReleaseDialogOpen(true);
-                      }}
-                    >
-                      Release Payment
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        
-        {transactions.length === 0 && (
-          <div className="col-span-full text-center py-8">
-            <p className="text-muted-foreground">No escrow transactions found</p>
-          </div>
-        )}
-      </div>
+                  {transaction.description && (
+                    <div className="mt-2">
+                      <span className="text-muted-foreground text-sm">Description:</span>
+                      <p className="text-sm">{transaction.description}</p>
+                    </div>
+                  )}
+                  
+                  {transaction.status === 'completed' && !transaction.isProvider && (
+                    <div className="pt-2 flex justify-end space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentTransaction(transaction);
+                          setIsDisputeDialogOpen(true);
+                        }}
+                        className="text-red-600 border-red-300 hover:bg-red-50"
+                      >
+                        Dispute
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setCurrentTransaction(transaction);
+                          setIsReleaseDialogOpen(true);
+                        }}
+                      >
+                        Release Payment
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          
+          {transactions.length === 0 && (
+            <div className="col-span-full text-center py-8">
+              <p className="text-muted-foreground">No escrow transactions found</p>
+            </div>
+          )}
+        </div>
+      )}
       
       {/* Release Payment Dialog */}
       <Dialog 
@@ -251,7 +251,7 @@ export function EscrowTransactions() {
           <DialogHeader>
             <DialogTitle>Release Payment</DialogTitle>
             <DialogDescription>
-              Are you sure you want to release the payment for {currentTransaction?.job_title}?
+              Are you sure you want to release the payment for {currentTransaction?.title}?
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
@@ -264,7 +264,7 @@ export function EscrowTransactions() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Provider:</span>
-                <span>{currentTransaction?.provider_name}</span>
+                <span>{currentTransaction?.providerName}</span>
               </div>
             </div>
           </div>
@@ -303,7 +303,7 @@ export function EscrowTransactions() {
           <DialogHeader>
             <DialogTitle>File a Dispute</DialogTitle>
             <DialogDescription>
-              Please provide a reason for disputing the payment for {currentTransaction?.job_title}.
+              Please provide a reason for disputing the payment for {currentTransaction?.title}.
             </DialogDescription>
           </DialogHeader>
           
