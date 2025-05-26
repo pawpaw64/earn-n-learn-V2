@@ -1,13 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { ClientEscrowCard } from "./escrow/ClientEscrowCard";
+import { ProviderEscrowCard } from "./escrow/ProviderEscrowCard";
+import { Users, Wallet2 } from "lucide-react";
 import axios from 'axios';
 
 interface EscrowTransaction {
@@ -74,9 +76,7 @@ export function EscrowTransactions() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Refresh transactions
       fetchEscrowTransactions();
-      
       setIsReleaseDialogOpen(false);
       setCurrentTransaction(null);
       
@@ -116,9 +116,7 @@ export function EscrowTransactions() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Refresh transactions
       fetchEscrowTransactions();
-      
       setIsDisputeDialogOpen(false);
       setCurrentTransaction(null);
       setDisputeReason('');
@@ -137,24 +135,8 @@ export function EscrowTransactions() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'funded':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">Funded</Badge>;
-      case 'in_progress':
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">In Progress</Badge>;
-      case 'completed':
-        return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300">Completed</Badge>;
-      case 'released':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Released</Badge>;
-      case 'disputed':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Disputed</Badge>;
-      case 'refunded':
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">Refunded</Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
-    }
-  };
+  const clientTransactions = transactions.filter(tx => !tx.isProvider);
+  const providerTransactions = transactions.filter(tx => tx.isProvider);
 
   return (
     <div className="space-y-6">
@@ -167,76 +149,89 @@ export function EscrowTransactions() {
           <p className="text-muted-foreground">Loading escrow transactions...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {transactions.map((transaction) => (
-            <Card key={transaction.id}>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{transaction.title}</CardTitle>
-                    <CardDescription>
-                      {transaction.isProvider ? (
-                        <>Client: {transaction.clientName}</>
-                      ) : (
-                        <>Provider: {transaction.providerName}</>
-                      )}
-                    </CardDescription>
-                  </div>
-                  {getStatusBadge(transaction.status)}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Amount:</span>
-                    <span className="font-semibold">${transaction.amount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Created:</span>
-                    <span>{format(new Date(transaction.createdAt), 'MMM d, yyyy')}</span>
-                  </div>
-                  {transaction.description && (
-                    <div className="mt-2">
-                      <span className="text-muted-foreground text-sm">Description:</span>
-                      <p className="text-sm">{transaction.description}</p>
-                    </div>
-                  )}
-                  
-                  {transaction.status === 'completed' && !transaction.isProvider && (
-                    <div className="pt-2 flex justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentTransaction(transaction);
-                          setIsDisputeDialogOpen(true);
-                        }}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
-                      >
-                        Dispute
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setCurrentTransaction(transaction);
-                          setIsReleaseDialogOpen(true);
-                        }}
-                      >
-                        Release Payment
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all">All Transactions</TabsTrigger>
+            <TabsTrigger value="client" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Client ({clientTransactions.length})
+            </TabsTrigger>
+            <TabsTrigger value="provider" className="flex items-center gap-2">
+              <Wallet2 className="w-4 h-4" />
+              Provider ({providerTransactions.length})
+            </TabsTrigger>
+          </TabsList>
           
-          {transactions.length === 0 && (
-            <div className="col-span-full text-center py-8">
-              <p className="text-muted-foreground">No escrow transactions found</p>
+          <TabsContent value="all" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {clientTransactions.map((transaction) => (
+                <ClientEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onRelease={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsReleaseDialogOpen(true);
+                  }}
+                  onDispute={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsDisputeDialogOpen(true);
+                  }}
+                />
+              ))}
+              {providerTransactions.map((transaction) => (
+                <ProviderEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                />
+              ))}
+              {transactions.length === 0 && (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground">No escrow transactions found</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+          
+          <TabsContent value="client" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {clientTransactions.map((transaction) => (
+                <ClientEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onRelease={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsReleaseDialogOpen(true);
+                  }}
+                  onDispute={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsDisputeDialogOpen(true);
+                  }}
+                />
+              ))}
+              {clientTransactions.length === 0 && (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground">No client transactions found</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="provider" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {providerTransactions.map((transaction) => (
+                <ProviderEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                />
+              ))}
+              {providerTransactions.length === 0 && (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-muted-foreground">No provider transactions found</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
       
       {/* Release Payment Dialog */}

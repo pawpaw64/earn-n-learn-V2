@@ -485,6 +485,8 @@ export async function releaseEscrowFunds(req, res) {
     const userId = req.user.id;
     const { transactionId } = req.params;
     
+    console.log('Release escrow request:', { userId, transactionId });
+    
     // Get the escrow transaction
     const escrowTransactions = await WalletModel.getEscrowTransactions(userId);
     const transaction = escrowTransactions.find(tx => tx.id === parseInt(transactionId));
@@ -499,9 +501,9 @@ export async function releaseEscrowFunds(req, res) {
     }
     
     // Check if the transaction is in the correct state
-    if (!['funded', 'in_progress'].includes(transaction.status)) {
+    if (!['funded', 'in_progress', 'completed'].includes(transaction.status)) {
       return res.status(400).json({ 
-        message: 'Escrow funds can only be released from funded or in-progress status' 
+        message: 'Escrow funds can only be released from funded, in-progress, or completed status' 
       });
     }
     
@@ -521,12 +523,72 @@ export async function releaseEscrowFunds(req, res) {
       referenceType: 'escrow'
     });
     
+    console.log('Escrow funds released successfully:', { transactionId, amount: transaction.amount });
+    
     res.json({
       message: 'Escrow funds released successfully'
     });
     
   } catch (error) {
     console.error('Release escrow funds error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+// Dispute escrow funds
+export async function disputeEscrowFunds(req, res) {
+  try {
+    const userId = req.user.id;
+    const { transactionId } = req.params;
+    const { reason } = req.body;
+    
+    console.log('Dispute escrow request:', { userId, transactionId, reason });
+    
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ message: 'Dispute reason is required' });
+    }
+    
+    // Get the escrow transaction
+    const escrowTransactions = await WalletModel.getEscrowTransactions(userId);
+    const transaction = escrowTransactions.find(tx => tx.id === parseInt(transactionId));
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
+    }
+    
+    // Only the client can dispute funds
+    if (transaction.client_id !== userId) {
+      return res.status(403).json({ message: 'Unauthorized to dispute this transaction' });
+    }
+    
+    // Check if the transaction is in the correct state
+    if (!['funded', 'in_progress', 'completed'].includes(transaction.status)) {
+      return res.status(400).json({ 
+        message: 'Escrow funds can only be disputed from funded, in-progress, or completed status' 
+      });
+    }
+    
+    // Update the escrow status to disputed
+    await WalletModel.updateEscrowStatus(transactionId, 'disputed');
+    
+    // Record the dispute reason in the transaction
+    await WalletModel.addTransaction(userId, {
+      description: `Dispute filed for ${transaction.title || 'work'}: ${reason}`,
+      amount: parseFloat(transaction.amount),
+      type: 'payment',
+      status: 'pending',
+      referenceId: transaction.id,
+      referenceType: 'escrow'
+    });
+    
+    console.log('Escrow dispute filed successfully:', { transactionId, reason });
+    
+    res.json({
+      message: 'Dispute filed successfully. Our team will review your case.'
+    });
+    
+  } catch (error) {
+    console.error('Dispute escrow funds error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }

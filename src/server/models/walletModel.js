@@ -133,81 +133,83 @@ class WalletModel {
       throw new Error(error.message);
     }
   }
-// In walletModel.js (add this method)
-static async getMonthlyFinancials(userId, year, month) {
-  try {
-    // Calculate earnings (money coming in)
-    const [earningsResult] = await execute(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
-       WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-       AND type IN ('deposit', 'release')`,
-      [userId, year, month]
-    );
-    
-    // Calculate spending (money going out)
-    const [spendingResult] = await execute(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
-       WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-       AND type IN ('withdrawal', 'payment', 'escrow')`,
-      [userId, year, month]
-    );
-    
-    return {
-      earnings: parseFloat(earningsResult[0]?.total || 0),
-      spending: parseFloat(spendingResult[0]?.total || 0)
-    };
-  } catch (error) {
-    console.error('Error getting monthly financials:', error);
-    throw error;
-  }
-}
 
-// Also make sure these methods exist in WalletModel:
-static async getEscrowTransactions(userId) {
-  try {
-    const result = await execute(
-      `SELECT et.*, 
-        COALESCE(j.title, sm.skill_name, mm.title) as title,
-        COALESCE(j.description, sm.description, mm.description) as description,
-        CASE 
-          WHEN et.job_id IS NOT NULL THEN 'job'
-          WHEN et.skill_id IS NOT NULL THEN 'skill'
-          WHEN et.material_id IS NOT NULL THEN 'material'
-          ELSE 'unknown'
-        END as job_type,
-        provider.name as provider_name,
-        provider.email as provider_email,
-        client.name as client_name,
-        client.email as client_email
-      FROM escrow_transactions et
-      LEFT JOIN jobs j ON et.job_id = j.id
-      LEFT JOIN skill_marketplace sm ON et.skill_id = sm.id
-      LEFT JOIN material_marketplace mm ON et.material_id = mm.id
-      LEFT JOIN users provider ON et.provider_id = provider.id
-      LEFT JOIN users client ON et.client_id = client.id
-      WHERE et.provider_id = ? OR et.client_id = ?
-      ORDER BY et.created_at DESC`,
-      [userId, userId]
-    );
-    return Array.isArray(result) ? result : result.rows || [];
-  } catch (error) {
-    console.error('Error getting escrow transactions:', error);
-    throw error;
+  // In walletModel.js (add this method)
+  static async getMonthlyFinancials(userId, year, month) {
+    try {
+      // Calculate earnings (money coming in)
+      const [earningsResult] = await execute(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
+         WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
+         AND type IN ('deposit', 'release')`,
+        [userId, year, month]
+      );
+      
+      // Calculate spending (money going out)
+      const [spendingResult] = await execute(
+        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
+         WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
+         AND type IN ('withdrawal', 'payment', 'escrow')`,
+        [userId, year, month]
+      );
+      
+      return {
+        earnings: parseFloat(earningsResult[0]?.total || 0),
+        spending: parseFloat(spendingResult[0]?.total || 0)
+      };
+    } catch (error) {
+      console.error('Error getting monthly financials:', error);
+      throw error;
+    }
   }
-}
 
-static async getSavingsGoals(userId) {
-  try {
-    const result = await execute(
-      'SELECT * FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC',
-      [userId]
-    );
-    return Array.isArray(result) ? result : result.rows || [];
-  } catch (error) {
-    console.error('Error getting savings goals:', error);
-    throw error;
+  // Also make sure these methods exist in WalletModel:
+  static async getEscrowTransactions(userId) {
+    try {
+      const result = await execute(
+        `SELECT et.*, 
+          COALESCE(j.title, sm.skill_name, mm.title) as title,
+          COALESCE(j.description, sm.description, mm.description) as description,
+          CASE 
+            WHEN et.job_id IS NOT NULL THEN 'job'
+            WHEN et.skill_id IS NOT NULL THEN 'skill'
+            WHEN et.material_id IS NOT NULL THEN 'material'
+            ELSE 'unknown'
+          END as job_type,
+          provider.name as provider_name,
+          provider.email as provider_email,
+          client.name as client_name,
+          client.email as client_email
+        FROM escrow_transactions et
+        LEFT JOIN jobs j ON et.job_id = j.id
+        LEFT JOIN skill_marketplace sm ON et.skill_id = sm.id
+        LEFT JOIN material_marketplace mm ON et.material_id = mm.id
+        LEFT JOIN users provider ON et.provider_id = provider.id
+        LEFT JOIN users client ON et.client_id = client.id
+        WHERE et.provider_id = ? OR et.client_id = ?
+        ORDER BY et.created_at DESC`,
+        [userId, userId]
+      );
+      return Array.isArray(result) ? result : result.rows || [];
+    } catch (error) {
+      console.error('Error getting escrow transactions:', error);
+      throw error;
+    }
   }
-}
+
+  static async getSavingsGoals(userId) {
+    try {
+      const result = await execute(
+        'SELECT * FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC',
+        [userId]
+      );
+      return Array.isArray(result) ? result : result.rows || [];
+    } catch (error) {
+      console.error('Error getting savings goals:', error);
+      throw error;
+    }
+  }
+
   // Get transactions
   static async getTransactions(userId, limit = 50) {
     try {
@@ -296,8 +298,6 @@ static async getSavingsGoals(userId) {
       throw new Error('Failed to update escrow status');
     }
   }
-
-
 }
 
 export default WalletModel;

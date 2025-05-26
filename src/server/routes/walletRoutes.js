@@ -33,5 +33,6 @@ router.put('/savings-goals/:goalId', walletController.updateSavingsGoal);
 router.get('/escrow', walletController.getEscrowTransactions);
 router.post('/escrow', walletController.createEscrowTransaction);
 router.post('/escrow/:transactionId/release', walletController.releaseEscrowFunds);
+router.post('/escrow/:transactionId/dispute', walletController.disputeEscrowFunds);
 
 export default router;
