@@ -249,7 +249,7 @@ class WalletModel {
   static async createEscrowTransaction(data) {
     const { 
       jobId, skillId, materialId, providerId, clientId, 
-      amount, description 
+      amount, status, description 
     } = data;
     
     try {
@@ -264,7 +264,7 @@ class WalletModel {
           providerId, 
           clientId, 
           amount, 
-          'pending_acceptance', 
+          status || 'funded', 
           description || ''
         ]
       );
@@ -274,47 +274,9 @@ class WalletModel {
       console.error('Error creating escrow transaction:', {
         error: error.message,
         query: 'INSERT INTO escrow_transactions...',
-        parameters: [jobId, skillId, materialId, providerId, clientId, amount, 'pending_acceptance', description]
+        parameters: [jobId, skillId, materialId, providerId, clientId, amount, status, description]
       });
       throw new Error('Failed to create escrow transaction');
-    }
-  }
-
-  // Accept escrow transaction by provider
-  static async acceptEscrowTransaction(transactionId, providerId) {
-    try {
-      const result = await execute(
-        'UPDATE escrow_transactions SET accepted_by_provider = TRUE, accepted_at = NOW(), status = ? WHERE id = ? AND provider_id = ?',
-        ['funds_deposited', transactionId, providerId]
-      );
-      
-      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-    } catch (error) {
-      console.error('Error accepting escrow transaction:', {
-        error: error.message,
-        query: 'UPDATE escrow_transactions...',
-        parameters: ['funds_deposited', transactionId, providerId]
-      });
-      throw new Error('Failed to accept escrow transaction');
-    }
-  }
-
-  // Update progress
-  static async updateEscrowProgress(transactionId, status, notes = null) {
-    try {
-      const result = await execute(
-        'UPDATE escrow_transactions SET status = ?, progress_notes = ?, updated_at = NOW() WHERE id = ?',
-        [status, notes, transactionId]
-      );
-      
-      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-    } catch (error) {
-      console.error('Error updating escrow progress:', {
-        error: error.message,
-        query: 'UPDATE escrow_transactions...',
-        parameters: [status, notes, transactionId]
-      });
-      throw new Error('Failed to update escrow progress');
     }
   }
 

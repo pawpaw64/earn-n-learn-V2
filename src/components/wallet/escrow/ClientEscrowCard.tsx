@@ -4,8 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { DollarSign, AlertTriangle, CheckCircle } from "lucide-react";
-import { EscrowProgress } from "./EscrowProgress";
+import { DollarSign, AlertTriangle, CheckCircle, Clock } from "lucide-react";
 
 interface ClientEscrowCardProps {
   transaction: any;
@@ -14,8 +13,8 @@ interface ClientEscrowCardProps {
 }
 
 export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEscrowCardProps) {
-  const canRelease = ['completed'].includes(transaction.status);
-  const canDispute = ['funds_deposited', 'in_progress', 'completed'].includes(transaction.status);
+  const canRelease = ['funded', 'in_progress', 'completed'].includes(transaction.status);
+  const canDispute = ['funded', 'in_progress', 'completed'].includes(transaction.status);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -23,9 +22,7 @@ export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEs
       case 'disputed': return 'bg-red-100 text-red-800 border-red-300';
       case 'completed': return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       case 'in_progress': return 'bg-amber-100 text-amber-800 border-amber-300';
-      case 'funds_deposited': return 'bg-blue-100 text-blue-800 border-blue-300';
-      case 'pending_acceptance': return 'bg-purple-100 text-purple-800 border-purple-300';
-      default: return 'bg-gray-100 text-gray-800 border-gray-300';
+      default: return 'bg-blue-100 text-blue-800 border-blue-300';
     }
   };
 
@@ -39,7 +36,7 @@ export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEs
               <DollarSign className="w-4 h-4 text-blue-600" />
               <span className="text-blue-700 font-medium">Client (You pay)</span>
               <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
-                {transaction.job_type}
+                {transaction.jobType}
               </Badge>
             </CardDescription>
           </div>
@@ -53,7 +50,7 @@ export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEs
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Provider:</span>
-              <span className="font-medium text-blue-900">{transaction.provider_name}</span>
+              <span className="font-medium text-blue-900">{transaction.providerName}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Amount:</span>
@@ -63,33 +60,18 @@ export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEs
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Created:</span>
-              <span>{format(new Date(transaction.created_at), 'MMM d, yyyy')}</span>
+              <span>{format(new Date(transaction.createdAt), 'MMM d, yyyy')}</span>
             </div>
-            {transaction.accepted_at && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Accepted:</span>
-                <span>{format(new Date(transaction.accepted_at), 'MMM d, yyyy')}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Status:</span>
+              <span className="capitalize">{transaction.status.replace('_', ' ')}</span>
+            </div>
           </div>
         </div>
-        
-        <EscrowProgress 
-          status={transaction.status} 
-          acceptedByProvider={transaction.accepted_by_provider}
-          acceptedAt={transaction.accepted_at}
-        />
         
         {transaction.description && (
           <div className="pt-2 border-t border-blue-200">
             <p className="text-sm text-muted-foreground">{transaction.description}</p>
-          </div>
-        )}
-        
-        {transaction.progress_notes && (
-          <div className="pt-2 border-t border-blue-200">
-            <p className="text-sm font-medium text-blue-900">Progress Notes:</p>
-            <p className="text-sm text-muted-foreground">{transaction.progress_notes}</p>
           </div>
         )}
         
