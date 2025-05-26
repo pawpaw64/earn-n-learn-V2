@@ -1,17 +1,18 @@
 
 import WalletModel from '../models/walletModel.js';
-import UserModel from '../models/userModel.js';
 
 // Get wallet details
 export async function getWalletDetails(req, res) {
   try {
     const userId = req.user.id;
+    console.log('Getting wallet details for user:', userId);
     
     // Get wallet, if doesn't exist, create one
     let wallet = await WalletModel.getWallet(userId);
     if (!wallet) {
+      console.log('Creating new wallet for user:', userId);
       await WalletModel.createWallet(userId);
-      wallet = { id: null, user_id: userId, balance: 0 };
+      wallet = { id: null, user_id: userId, balance: 0.00 };
     }
     
     // Get current month's financials
@@ -20,29 +21,32 @@ export async function getWalletDetails(req, res) {
     const month = now.getMonth() + 1;
     const financials = await WalletModel.getMonthlyFinancials(userId, year, month);
     
-    // Get escrow balance (sum of all in-progress escrow transactions)
+    // Get escrow balance (sum of all funded/in-progress escrow transactions where user is provider)
     const escrowTransactions = await WalletModel.getEscrowTransactions(userId);
     const pendingEscrow = escrowTransactions
-      .filter(tx => tx.status === 'in_progress' && tx.provider_id === userId)
-      .reduce((total, tx) => total + parseFloat(tx.amount), 0);
+      .filter(tx => ['funded', 'in_progress'].includes(tx.status) && tx.provider_id === userId)
+      .reduce((total, tx) => total + parseFloat(tx.amount || 0), 0);
     
-    // Get a sample savings goal
+    // Get savings goals for progress calculation
     const savingsGoals = await WalletModel.getSavingsGoals(userId);
-    const savingsProgress = savingsGoals.length > 0 
-      ? Math.round((savingsGoals[0].current_amount / savingsGoals[0].target_amount) * 100)
+    const savingsProgress = savingsGoals.length > 0 && savingsGoals[0].target_amount > 0
+      ? Math.round((parseFloat(savingsGoals[0].current_amount) / parseFloat(savingsGoals[0].target_amount)) * 100)
       : 0;
     
-    res.json({
-      balance: wallet.balance,
+    const response = {
+      balance: parseFloat(wallet.balance || 0),
       pendingEscrow,
       monthlyEarnings: financials.earnings,
       monthlySpending: financials.spending,
       savingsProgress
-    });
+    };
+    
+    console.log('Wallet details response:', response);
+    res.json(response);
     
   } catch (error) {
     console.error('Get wallet details error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -52,35 +56,43 @@ export async function topUpWallet(req, res) {
     const userId = req.user.id;
     const { amount, paymentMethod } = req.body;
     
+    console.log('Top up request:', { userId, amount, paymentMethod });
+    
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
     }
     
-    // In a real app, this would call a payment processor API
-    // For now, we'll simulate a successful payment
+    // Ensure wallet exists
+    let wallet = await WalletModel.getWallet(userId);
+    if (!wallet) {
+      await WalletModel.createWallet(userId);
+    }
     
     // Update the wallet balance
-    await WalletModel.updateBalance(userId, amount);
+    const updated = await WalletModel.updateBalance(userId, parseFloat(amount));
+    if (!updated) {
+      return res.status(500).json({ message: 'Failed to update wallet balance' });
+    }
     
     // Record the transaction
     await WalletModel.addTransaction(userId, {
       description: `Top up via ${paymentMethod || 'card'}`,
-      amount,
+      amount: parseFloat(amount),
       type: 'deposit',
       status: 'completed'
     });
     
     // Get the updated wallet
-    const wallet = await WalletModel.getWallet(userId);
+    wallet = await WalletModel.getWallet(userId);
     
     res.json({
       message: 'Top up successful',
-      balance: wallet.balance
+      balance: parseFloat(wallet.balance)
     });
     
   } catch (error) {
     console.error('Top up wallet error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -90,23 +102,28 @@ export async function withdrawFromWallet(req, res) {
     const userId = req.user.id;
     const { amount, withdrawMethod } = req.body;
     
+    console.log('Withdraw request:', { userId, amount, withdrawMethod });
+    
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
     }
     
     // Check if user has enough balance
     const wallet = await WalletModel.getWallet(userId);
-    if (!wallet || wallet.balance < amount) {
+    if (!wallet || parseFloat(wallet.balance) < parseFloat(amount)) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
     
     // Update the wallet balance (subtract the amount)
-    await WalletModel.updateBalance(userId, -amount);
+    const updated = await WalletModel.updateBalance(userId, -parseFloat(amount));
+    if (!updated) {
+      return res.status(500).json({ message: 'Failed to update wallet balance' });
+    }
     
     // Record the transaction
     await WalletModel.addTransaction(userId, {
       description: `Withdrawal to ${withdrawMethod || 'bank account'}`,
-      amount,
+      amount: parseFloat(amount),
       type: 'withdrawal',
       status: 'completed'
     });
@@ -116,12 +133,12 @@ export async function withdrawFromWallet(req, res) {
     
     res.json({
       message: 'Withdrawal successful',
-      balance: updatedWallet.balance
+      balance: parseFloat(updatedWallet.balance)
     });
     
   } catch (error) {
     console.error('Withdraw from wallet error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -146,7 +163,7 @@ export async function getPaymentMethods(req, res) {
     
   } catch (error) {
     console.error('Get payment methods error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -177,7 +194,7 @@ export async function addPaymentMethod(req, res) {
     
   } catch (error) {
     console.error('Add payment method error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -200,7 +217,7 @@ export async function setDefaultPaymentMethod(req, res) {
     
   } catch (error) {
     console.error('Set default payment method error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -237,7 +254,7 @@ export async function deletePaymentMethod(req, res) {
     
   } catch (error) {
     console.error('Delete payment method error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -268,7 +285,7 @@ export async function getTransactions(req, res) {
     
   } catch (error) {
     console.error('Get transactions error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -285,14 +302,14 @@ export async function getSavingsGoals(req, res) {
       targetAmount: parseFloat(goal.target_amount),
       currentAmount: parseFloat(goal.current_amount),
       deadline: goal.deadline,
-      progress: Math.round((goal.current_amount / goal.target_amount) * 100)
+      progress: goal.target_amount > 0 ? Math.round((goal.current_amount / goal.target_amount) * 100) : 0
     }));
     
     res.json(transformedGoals);
     
   } catch (error) {
     console.error('Get savings goals error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -321,7 +338,7 @@ export async function addSavingsGoal(req, res) {
     
   } catch (error) {
     console.error('Add savings goal error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -338,26 +355,26 @@ export async function updateSavingsGoal(req, res) {
     
     // Check if user has enough balance
     const wallet = await WalletModel.getWallet(userId);
-    if (!wallet || wallet.balance < amount) {
+    if (!wallet || parseFloat(wallet.balance) < parseFloat(amount)) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
     
     // Update the wallet balance (subtract the amount)
-    await WalletModel.updateBalance(userId, -amount);
+    await WalletModel.updateBalance(userId, -parseFloat(amount));
     
     // Update the savings goal
-    const success = await WalletModel.updateSavingsGoal(userId, goalId, amount);
+    const success = await WalletModel.updateSavingsGoal(userId, goalId, parseFloat(amount));
     
     if (!success) {
       // Rollback the wallet balance update
-      await WalletModel.updateBalance(userId, amount);
+      await WalletModel.updateBalance(userId, parseFloat(amount));
       return res.status(404).json({ message: 'Savings goal not found' });
     }
     
     // Record the transaction
     await WalletModel.addTransaction(userId, {
       description: 'Transfer to savings goal',
-      amount,
+      amount: parseFloat(amount),
       type: 'payment',
       status: 'completed'
     });
@@ -368,7 +385,7 @@ export async function updateSavingsGoal(req, res) {
     
   } catch (error) {
     console.error('Update savings goal error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -381,12 +398,14 @@ export async function getEscrowTransactions(req, res) {
     // Transform the database format to the frontend format
     const transformedTransactions = transactions.map(tx => ({
       id: tx.id,
-      title: tx.title,
+      title: tx.title || 'Untitled',
       jobType: tx.job_type,
       amount: parseFloat(tx.amount),
       status: tx.status,
       clientName: tx.client_name,
       clientEmail: tx.client_email,
+      providerName: tx.provider_name,
+      providerEmail: tx.provider_email,
       createdAt: tx.created_at,
       updatedAt: tx.updated_at,
       description: tx.description,
@@ -397,7 +416,7 @@ export async function getEscrowTransactions(req, res) {
     
   } catch (error) {
     console.error('Get escrow transactions error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -420,12 +439,12 @@ export async function createEscrowTransaction(req, res) {
     
     // Check if client has enough balance
     const wallet = await WalletModel.getWallet(clientId);
-    if (!wallet || wallet.balance < amount) {
+    if (!wallet || parseFloat(wallet.balance) < parseFloat(amount)) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
     
     // Deduct from client's wallet
-    await WalletModel.updateBalance(clientId, -amount);
+    await WalletModel.updateBalance(clientId, -parseFloat(amount));
     
     // Create the escrow transaction
     const escrowId = await WalletModel.createEscrowTransaction({
@@ -434,7 +453,7 @@ export async function createEscrowTransaction(req, res) {
       materialId, 
       providerId, 
       clientId, 
-      amount, 
+      amount: parseFloat(amount), 
       status: 'funded',
       description
     });
@@ -442,11 +461,11 @@ export async function createEscrowTransaction(req, res) {
     // Record the transaction
     await WalletModel.addTransaction(clientId, {
       description: `Escrow deposit for ${description || 'work'}`,
-      amount,
+      amount: parseFloat(amount),
       type: 'escrow',
       status: 'completed',
-      reference_id: escrowId,
-      reference_type: 'escrow'
+      referenceId: escrowId,
+      referenceType: 'escrow'
     });
     
     res.json({
@@ -456,7 +475,7 @@ export async function createEscrowTransaction(req, res) {
     
   } catch (error) {
     console.error('Create escrow transaction error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
 
@@ -480,7 +499,7 @@ export async function releaseEscrowFunds(req, res) {
     }
     
     // Check if the transaction is in the correct state
-    if (transaction.status !== 'funded' && transaction.status !== 'in_progress') {
+    if (!['funded', 'in_progress'].includes(transaction.status)) {
       return res.status(400).json({ 
         message: 'Escrow funds can only be released from funded or in-progress status' 
       });
@@ -490,16 +509,16 @@ export async function releaseEscrowFunds(req, res) {
     await WalletModel.updateEscrowStatus(transactionId, 'released');
     
     // Add the funds to the provider's wallet
-    await WalletModel.updateBalance(transaction.provider_id, transaction.amount);
+    await WalletModel.updateBalance(transaction.provider_id, parseFloat(transaction.amount));
     
     // Record the transaction for the provider
     await WalletModel.addTransaction(transaction.provider_id, {
       description: `Payment received for ${transaction.title || 'work'}`,
-      amount: transaction.amount,
+      amount: parseFloat(transaction.amount),
       type: 'release',
       status: 'completed',
-      reference_id: transaction.id,
-      reference_type: 'escrow'
+      referenceId: transaction.id,
+      referenceType: 'escrow'
     });
     
     res.json({
@@ -508,6 +527,6 @@ export async function releaseEscrowFunds(req, res) {
     
   } catch (error) {
     console.error('Release escrow funds error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 }

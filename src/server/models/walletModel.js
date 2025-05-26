@@ -6,9 +6,9 @@ class WalletModel {
     try {
       const [result] = await execute(
         'INSERT INTO wallets (user_id, balance) VALUES (?, ?) ON DUPLICATE KEY UPDATE updated_at = NOW()',
-        [userId, 0]
+        [userId, 0.00]
       );
-      return result.insertId;
+      return result.insertId || userId;
     } catch (error) {
       console.error('Error creating wallet:', error);
       throw error;
@@ -21,7 +21,7 @@ class WalletModel {
         'SELECT * FROM wallets WHERE user_id = ?',
         [userId]
       );
-      return rows[0];
+      return rows[0] || null;
     } catch (error) {
       console.error('Error getting wallet:', error);
       throw error;
@@ -31,7 +31,7 @@ class WalletModel {
   static async updateBalance(userId, amount) {
     try {
       const [result] = await execute(
-        'UPDATE wallets SET balance = balance + ? WHERE user_id = ?',
+        'UPDATE wallets SET balance = balance + ?, updated_at = NOW() WHERE user_id = ?',
         [amount, userId]
       );
       return result.affectedRows > 0;
@@ -44,7 +44,7 @@ class WalletModel {
   static async getPaymentMethods(userId) {
     try {
       const [rows] = await execute(
-        'SELECT * FROM payment_methods WHERE user_id = ?',
+        'SELECT * FROM payment_methods WHERE user_id = ? ORDER BY is_default DESC, created_at DESC',
         [userId]
       );
       return rows;
@@ -55,7 +55,7 @@ class WalletModel {
   }
 
   static async addPaymentMethod(userId, data) {
-    const { type, last4, expiryMonth, expiryYear, isDefault } = data;
+    const { type, last4, expiryMonth, expiryYear, provider, isDefault } = data;
     try {
       // If the new method is set as default, unset any existing default
       if (isDefault) {
@@ -66,8 +66,8 @@ class WalletModel {
       }
       
       const [result] = await execute(
-        'INSERT INTO payment_methods (user_id, type, last4, expiry_month, expiry_year, is_default) VALUES (?, ?, ?, ?, ?, ?)',
-        [userId, type, last4, expiryMonth, expiryYear, isDefault ? 1 : 0]
+        'INSERT INTO payment_methods (user_id, type, last4, expiry_month, expiry_year, provider, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userId, type, last4, expiryMonth || null, expiryYear || null, provider || 'card', isDefault ? 1 : 0]
       );
       return result.insertId;
     } catch (error) {
@@ -109,11 +109,11 @@ class WalletModel {
     }
   }
 
-  static async getTransactions(userId) {
+  static async getTransactions(userId, limit = 50) {
     try {
       const [rows] = await execute(
-        'SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC',
-        [userId]
+        'SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC LIMIT ?',
+        [userId, limit]
       );
       return rows;
     } catch (error) {
@@ -123,11 +123,11 @@ class WalletModel {
   }
 
   static async addTransaction(userId, data) {
-    const { description, amount, type, status } = data;
+    const { description, amount, type, status, referenceId, referenceType } = data;
     try {
       const [result] = await execute(
-        'INSERT INTO transactions (user_id, description, amount, type, status) VALUES (?, ?, ?, ?, ?)',
-        [userId, description, amount, type, status]
+        'INSERT INTO transactions (user_id, description, amount, type, status, reference_id, reference_type) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userId, description, amount, type, status || 'completed', referenceId || null, referenceType || null]
       );
       return result.insertId;
     } catch (error) {
@@ -139,7 +139,7 @@ class WalletModel {
   static async getSavingsGoals(userId) {
     try {
       const [rows] = await execute(
-        'SELECT * FROM savings_goals WHERE user_id = ?',
+        'SELECT * FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC',
         [userId]
       );
       return rows;
@@ -150,11 +150,11 @@ class WalletModel {
   }
 
   static async addSavingsGoal(userId, data) {
-    const { name, targetAmount, currentAmount } = data;
+    const { name, targetAmount, currentAmount, deadline } = data;
     try {
       const [result] = await execute(
-        'INSERT INTO savings_goals (user_id, name, target_amount, current_amount) VALUES (?, ?, ?, ?)',
-        [userId, name, targetAmount, currentAmount]
+        'INSERT INTO savings_goals (user_id, name, target_amount, current_amount, deadline) VALUES (?, ?, ?, ?, ?)',
+        [userId, name, targetAmount, currentAmount || 0, deadline || null]
       );
       return result.insertId;
     } catch (error) {
@@ -166,7 +166,7 @@ class WalletModel {
   static async updateSavingsGoal(userId, goalId, amount) {
     try {
       const [result] = await execute(
-        'UPDATE savings_goals SET current_amount = current_amount + ? WHERE id = ? AND user_id = ?',
+        'UPDATE savings_goals SET current_amount = current_amount + ?, updated_at = NOW() WHERE id = ? AND user_id = ?',
         [amount, goalId, userId]
       );
       return result.affectedRows > 0;
@@ -181,15 +181,23 @@ class WalletModel {
       const [rows] = await execute(
         `SELECT et.*, 
           COALESCE(j.title, sm.skill_name, mm.title) as title,
-          COALESCE(j.type, 'skill', 'material') as job_type,
-          u.name as client_name,
-          e.email as client_email
+          COALESCE(j.description, sm.description, mm.description) as description,
+          CASE 
+            WHEN et.job_id IS NOT NULL THEN 'job'
+            WHEN et.skill_id IS NOT NULL THEN 'skill'
+            WHEN et.material_id IS NOT NULL THEN 'material'
+            ELSE 'unknown'
+          END as job_type,
+          provider.name as provider_name,
+          provider.email as provider_email,
+          client.name as client_name,
+          client.email as client_email
         FROM escrow_transactions et
         LEFT JOIN jobs j ON et.job_id = j.id
         LEFT JOIN skill_marketplace sm ON et.skill_id = sm.id
         LEFT JOIN material_marketplace mm ON et.material_id = mm.id
-        LEFT JOIN users u ON et.client_id = u.id
-        LEFT JOIN users e ON et.client_id = e.id
+        LEFT JOIN users provider ON et.provider_id = provider.id
+        LEFT JOIN users client ON et.client_id = client.id
         WHERE et.provider_id = ? OR et.client_id = ?
         ORDER BY et.created_at DESC`,
         [userId, userId]
@@ -212,7 +220,7 @@ class WalletModel {
         `INSERT INTO escrow_transactions 
         (job_id, skill_id, material_id, provider_id, client_id, amount, status, description) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [jobId, skillId, materialId, providerId, clientId, amount, status, description]
+        [jobId || null, skillId || null, materialId || null, providerId, clientId, amount, status || 'funded', description || '']
       );
       return result.insertId;
     } catch (error) {
@@ -224,7 +232,7 @@ class WalletModel {
   static async updateEscrowStatus(transactionId, status) {
     try {
       const [result] = await execute(
-        'UPDATE escrow_transactions SET status = ? WHERE id = ?',
+        'UPDATE escrow_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
         [status, transactionId]
       );
       return result.affectedRows > 0;
@@ -238,23 +246,23 @@ class WalletModel {
     try {
       // Calculate earnings (money coming in)
       const [earnings] = await execute(
-        `SELECT SUM(amount) as total FROM transactions 
+        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
          WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-         AND (type = 'deposit' OR type = 'release')`,
+         AND type IN ('deposit', 'release')`,
         [userId, year, month]
       );
       
       // Calculate spending (money going out)
       const [spending] = await execute(
-        `SELECT SUM(amount) as total FROM transactions 
+        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
          WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-         AND (type = 'withdrawal' OR type = 'payment')`,
+         AND type IN ('withdrawal', 'payment', 'escrow')`,
         [userId, year, month]
       );
       
       return {
-        earnings: earnings[0]?.total || 0,
-        spending: spending[0]?.total || 0
+        earnings: parseFloat(earnings[0]?.total || 0),
+        spending: parseFloat(spending[0]?.total || 0)
       };
     } catch (error) {
       console.error('Error getting monthly financials:', error);

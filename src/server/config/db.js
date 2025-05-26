@@ -1,38 +1,45 @@
 
-import { createPool } from 'mysql2/promise';
-import { config } from 'dotenv';
-config();
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
 
-const pool = createPool({
-  host: process.env.DB_HOST ,
-  user: process.env.DB_USER ,
-  password: process.env.DB_PASSWORD ,
-  database: process.env.DB_NAME ,
+dotenv.config();
+
+// Create connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'earn_n_learn',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  acquireTimeout: 60000,
+  timeout: 60000,
+  reconnect: true
 });
 
-export async function testConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log('Database connection successful');
+// Test the connection
+pool.getConnection()
+  .then(connection => {
+    console.log('✅ Database connected successfully');
     connection.release();
-    return true;
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-    return false;
-  }
-}
+  })
+  .catch(err => {
+    console.error('❌ Database connection failed:', err.message);
+  });
 
-// Helper function for executing queries
+// Execute query function
 export async function execute(query, params = []) {
   try {
-    const [rows] = await pool.query(query, params);
-    return rows;
+    console.log('Executing query:', query);
+    console.log('With params:', params);
+    
+    const [results] = await pool.execute(query, params);
+    return [results];
   } catch (error) {
-     console.error('Database error:', error.message); // Simplified error
+    console.error('Database query error:', error);
     throw error;
   }
 }
+
 export default pool;
