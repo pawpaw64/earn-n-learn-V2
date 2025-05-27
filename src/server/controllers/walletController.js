@@ -449,6 +449,9 @@ export async function getEscrowTransactions(req, res) {
       providerEmail: tx.provider_email,
       createdAt: tx.created_at,
       updatedAt: tx.updated_at,
+      acceptedAt: tx.accepted_at,
+      acceptedByProvider: tx.accepted_by_provider,
+      progressNotes: tx.progress_notes,
       description: tx.description,
       isProvider: tx.provider_id === userId
     }));
@@ -460,6 +463,62 @@ export async function getEscrowTransactions(req, res) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+// Create escrow transaction
+export async function createEscrowTransaction(req, res) {
+  try {
+    const userId = req.user.id;
+    const { providerId, jobId, skillId, materialId, amount, description } = req.body;
+    
+    console.log('Create escrow request:', { userId, providerId, jobId, skillId, materialId, amount });
+    
+    if (!providerId || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Provider ID and valid amount are required' });
+    }
+    
+    // Check if user has sufficient balance
+    const wallet = await WalletModel.getWallet(userId);
+    if (!wallet || wallet.balance < parseFloat(amount)) {
+      return res.status(400).json({ message: 'Insufficient balance' });
+    }
+    
+    // Create the escrow transaction
+    const escrowId = await WalletModel.createEscrowTransaction({
+      jobId,
+      skillId,
+      materialId,
+      providerId,
+      clientId: userId,
+      amount: parseFloat(amount),
+      description
+    });
+    
+    // Deduct amount from client's wallet
+    await WalletModel.updateBalance(userId, -parseFloat(amount));
+    
+    // Record the transaction
+    await WalletModel.addTransaction(userId, {
+      description: `Escrow payment created for ${description || 'work'}`,
+      amount: parseFloat(amount),
+      type: 'escrow',
+      status: 'completed',
+      referenceId: escrowId,
+      referenceType: 'escrow'
+    });
+    
+    console.log('Escrow transaction created successfully:', { escrowId });
+    
+    res.status(201).json({
+      message: 'Escrow transaction created successfully',
+      escrowId
+    });
+    
+  } catch (error) {
+    console.error('Create escrow transaction error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
 // Accept escrow transaction
 export async function acceptEscrowTransaction(req, res) {
   try {
@@ -502,59 +561,50 @@ export async function acceptEscrowTransaction(req, res) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
-export async function createEscrowTransaction(req, res) {
+
+// Update escrow progress
+export async function updateEscrowProgress(req, res) {
   try {
     const userId = req.user.id;
-    const { providerId, jobId, skillId, materialId, amount, description } = req.body;
+    const { transactionId } = req.params;
+    const { status, notes } = req.body;
     
-    console.log('Create escrow request:', { userId, providerId, jobId, skillId, materialId, amount });
+    console.log('Update escrow progress request:', { userId, transactionId, status, notes });
     
-    if (!providerId || !amount || amount <= 0) {
-      return res.status(400).json({ message: 'Provider ID and valid amount are required' });
+    // Get the escrow transaction
+    const escrowTransactions = await WalletModel.getEscrowTransactions(userId);
+    const transaction = escrowTransactions.find(tx => tx.id === parseInt(transactionId));
+    
+    if (!transaction) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
     }
     
-    // Check if user has sufficient balance (in real implementation, this would be handled by payment processing)
-    const wallet = await WalletModel.getWallet(userId);
-    if (!wallet || wallet.balance < parseFloat(amount)) {
-      return res.status(400).json({ message: 'Insufficient balance' });
+    // Only the provider can update progress
+    if (transaction.provider_id !== userId) {
+      return res.status(403).json({ message: 'Unauthorized to update progress' });
     }
     
-    // Create the escrow transaction
-    const escrowId = await WalletModel.createEscrowTransaction({
-      jobId,
-      skillId,
-      materialId,
-      providerId,
-      clientId: userId,
-      amount: parseFloat(amount),
-      description
-    });
+    // Valid status transitions
+    const validStatuses = ['in_progress', 'completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
     
-    // Deduct amount from client's wallet
-    await WalletModel.updateBalance(userId, -parseFloat(amount));
+    // Update the progress
+    await WalletModel.updateEscrowProgress(transactionId, status, notes);
     
-    // Record the transaction
-    await WalletModel.addTransaction(userId, {
-      description: `Escrow payment created for ${description || 'work'}`,
-      amount: parseFloat(amount),
-      type: 'escrow',
-      status: 'completed',
-      referenceId: escrowId,
-      referenceType: 'escrow'
-    });
+    console.log('Escrow progress updated successfully:', { transactionId, status });
     
-    console.log('Escrow transaction created successfully:', { escrowId });
-    
-    res.status(201).json({
-      message: 'Escrow transaction created successfully',
-      escrowId
+    res.json({
+      message: 'Progress updated successfully'
     });
     
   } catch (error) {
-    console.error('Create escrow transaction error:', error);
+    console.error('Update escrow progress error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
 // Release escrow funds
 export async function releaseEscrowFunds(req, res) {
   try {
@@ -577,9 +627,9 @@ export async function releaseEscrowFunds(req, res) {
     }
     
     // Check if the transaction is in the correct state
-    if (!['funded', 'in_progress', 'completed'].includes(transaction.status)) {
+    if (!['funds_deposited', 'in_progress', 'completed'].includes(transaction.status)) {
       return res.status(400).json({ 
-        message: 'Escrow funds can only be released from funded, in-progress, or completed status' 
+        message: 'Escrow funds can only be released from deposited, in-progress, or completed status' 
       });
     }
     
@@ -638,9 +688,9 @@ export async function disputeEscrowFunds(req, res) {
     }
     
     // Check if the transaction is in the correct state
-    if (!['funded', 'in_progress', 'completed'].includes(transaction.status)) {
+    if (!['funds_deposited', 'in_progress', 'completed'].includes(transaction.status)) {
       return res.status(400).json({ 
-        message: 'Escrow funds can only be disputed from funded, in-progress, or completed status' 
+        message: 'Escrow funds can only be disputed from deposited, in-progress, or completed status' 
       });
     }
     
@@ -651,7 +701,7 @@ export async function disputeEscrowFunds(req, res) {
     await WalletModel.addTransaction(userId, {
       description: `Dispute filed for ${transaction.title || 'work'}: ${reason}`,
       amount: parseFloat(transaction.amount),
-      type: 'payment',
+      type: 'dispute',
       status: 'pending',
       referenceId: transaction.id,
       referenceType: 'escrow'

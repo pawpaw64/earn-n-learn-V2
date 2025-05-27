@@ -1,3 +1,4 @@
+
 import { execute } from '../config/db.js';
 
 class WalletModel {
@@ -134,11 +135,11 @@ class WalletModel {
     }
   }
 
-  // In walletModel.js (add this method)
+  // Get monthly financials
   static async getMonthlyFinancials(userId, year, month) {
     try {
       // Calculate earnings (money coming in)
-      const [earningsResult] = await execute(
+      const earningsResult = await execute(
         `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
          WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
          AND type IN ('deposit', 'release')`,
@@ -146,16 +147,19 @@ class WalletModel {
       );
       
       // Calculate spending (money going out)
-      const [spendingResult] = await execute(
+      const spendingResult = await execute(
         `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
          WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
          AND type IN ('withdrawal', 'payment', 'escrow')`,
         [userId, year, month]
       );
       
+      const earnings = Array.isArray(earningsResult) ? earningsResult[0] : earningsResult;
+      const spending = Array.isArray(spendingResult) ? spendingResult[0] : spendingResult;
+      
       return {
-        earnings: parseFloat(earningsResult[0]?.total || 0),
-        spending: parseFloat(spendingResult[0]?.total || 0)
+        earnings: parseFloat(earnings?.total || 0),
+        spending: parseFloat(spending?.total || 0)
       };
     } catch (error) {
       console.error('Error getting monthly financials:', error);
@@ -163,41 +167,41 @@ class WalletModel {
     }
   }
 
-  // Also make sure these methods exist in WalletModel:
- 
-static async getEscrowTransactions(userId) {
-  try {
-    const result = await execute(
-      `SELECT et.*, 
-        COALESCE(j.title, sm.skill_name, mm.title) as title,
-        COALESCE(j.description, sm.description, mm.description) as description,
-        CASE 
-          WHEN et.job_id IS NOT NULL THEN 'job'
-          WHEN et.skill_id IS NOT NULL THEN 'skill'
-          WHEN et.material_id IS NOT NULL THEN 'material'
-          ELSE 'unknown'
-        END as job_type,
-        provider.name as provider_name,
-        provider.email as provider_email,
-        client.name as client_name,
-        client.email as client_email
-      FROM escrow_transactions et
-      LEFT JOIN jobs j ON et.job_id = j.id
-      LEFT JOIN skill_marketplace sm ON et.skill_id = sm.id
-      LEFT JOIN material_marketplace mm ON et.material_id = mm.id
-      LEFT JOIN users provider ON et.provider_id = provider.id
-      LEFT JOIN users client ON et.client_id = client.id
-      WHERE et.provider_id = ? OR et.client_id = ?
-      ORDER BY et.created_at DESC`,
-      [userId, userId]
-    );
-    return Array.isArray(result) ? result : result.rows || [];
-  } catch (error) {
-    console.error('Error getting escrow transactions:', error);
-    throw error;
+  // Get escrow transactions
+  static async getEscrowTransactions(userId) {
+    try {
+      const result = await execute(
+        `SELECT et.*, 
+          COALESCE(j.title, sm.skill_name, mm.title) as title,
+          COALESCE(j.description, sm.description, mm.description) as description,
+          CASE 
+            WHEN et.job_id IS NOT NULL THEN 'job'
+            WHEN et.skill_id IS NOT NULL THEN 'skill'
+            WHEN et.material_id IS NOT NULL THEN 'material'
+            ELSE 'unknown'
+          END as job_type,
+          provider.name as provider_name,
+          provider.email as provider_email,
+          client.name as client_name,
+          client.email as client_email
+        FROM escrow_transactions et
+        LEFT JOIN jobs j ON et.job_id = j.id
+        LEFT JOIN skill_marketplace sm ON et.skill_id = sm.id
+        LEFT JOIN material_marketplace mm ON et.material_id = mm.id
+        LEFT JOIN users provider ON et.provider_id = provider.id
+        LEFT JOIN users client ON et.client_id = client.id
+        WHERE et.provider_id = ? OR et.client_id = ?
+        ORDER BY et.created_at DESC`,
+        [userId, userId]
+      );
+      return Array.isArray(result) ? result : result.rows || [];
+    } catch (error) {
+      console.error('Error getting escrow transactions:', error);
+      throw error;
+    }
   }
-}
 
+  // Get savings goals
   static async getSavingsGoals(userId) {
     try {
       const result = await execute(
@@ -207,6 +211,38 @@ static async getEscrowTransactions(userId) {
       return Array.isArray(result) ? result : result.rows || [];
     } catch (error) {
       console.error('Error getting savings goals:', error);
+      throw error;
+    }
+  }
+
+  // Add savings goal
+  static async addSavingsGoal(userId, data) {
+    const { name, targetAmount, currentAmount, deadline } = data;
+    
+    try {
+      const result = await execute(
+        'INSERT INTO savings_goals (user_id, name, target_amount, current_amount, deadline) VALUES (?, ?, ?, ?, ?)',
+        [userId, name, targetAmount, currentAmount || 0, deadline || null]
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Error adding savings goal:', error);
+      throw error;
+    }
+  }
+
+  // Update savings goal
+  static async updateSavingsGoal(userId, goalId, amount) {
+    try {
+      const result = await execute(
+        'UPDATE savings_goals SET current_amount = current_amount + ?, updated_at = NOW() WHERE id = ? AND user_id = ?',
+        [amount, goalId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating savings goal:', error);
       throw error;
     }
   }
@@ -247,75 +283,97 @@ static async getEscrowTransactions(userId) {
     }
   }
 
-// Accept escrow transaction by provider
-static async acceptEscrowTransaction(transactionId, providerId) {
-  try {
-    const result = await execute(
-      'UPDATE escrow_transactions SET accepted_by_provider = TRUE, accepted_at = NOW(), status = ? WHERE id = ? AND provider_id = ?',
-      ['funds_deposited', transactionId, providerId]
-    );
+  // Create escrow transaction
+  static async createEscrowTransaction(data) {
+    const { 
+      jobId, skillId, materialId, providerId, clientId, 
+      amount, description 
+    } = data;
     
-    return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-  } catch (error) {
-    console.error('Error accepting escrow transaction:', {
-      error: error.message,
-      query: 'UPDATE escrow_transactions...',
-      parameters: ['funds_deposited', transactionId, providerId]
-    });
-    throw new Error('Failed to accept escrow transaction');
+    try {
+      const result = await execute(
+        `INSERT INTO escrow_transactions 
+        (job_id, skill_id, material_id, provider_id, client_id, amount, status, description) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          jobId || null, 
+          skillId || null, 
+          materialId || null, 
+          providerId, 
+          clientId, 
+          amount, 
+          'pending_acceptance', 
+          description || ''
+        ]
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Error creating escrow transaction:', {
+        error: error.message,
+        query: 'INSERT INTO escrow_transactions...',
+        parameters: [jobId, skillId, materialId, providerId, clientId, amount, 'pending_acceptance', description]
+      });
+      throw new Error('Failed to create escrow transaction');
+    }
   }
-}
-static async createEscrowTransaction(data) {
-  const { 
-    jobId, skillId, materialId, providerId, clientId, 
-    amount, description 
-  } = data;
-  
-  try {
-    const result = await execute(
-      `INSERT INTO escrow_transactions 
-      (job_id, skill_id, material_id, provider_id, client_id, amount, status, description) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        jobId || null, 
-        skillId || null, 
-        materialId || null, 
-        providerId, 
-        clientId, 
-        amount, 
-        'pending_acceptance', 
-        description || ''
-      ]
-    );
-    
-    return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
-  } catch (error) {
-    console.error('Error creating escrow transaction:', {
-      error: error.message,
-      query: 'INSERT INTO escrow_transactions...',
-      parameters: [jobId, skillId, materialId, providerId, clientId, amount, 'pending_acceptance', description]
-    });
-    throw new Error('Failed to create escrow transaction');
-  }
-}
 
-  static async updateEscrowProgress(transactionId, status, notes = null) {
-  try {
-    const result = await execute(
-      'UPDATE escrow_transactions SET status = ?, progress_notes = ?, updated_at = NOW() WHERE id = ?',
-      [status, notes, transactionId]
-    );
-    
-    return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-  } catch (error) {
-    console.error('Error updating escrow progress:', {
-      error: error.message,
-      query: 'UPDATE escrow_transactions...',
-      parameters: [status, notes, transactionId]
-    });
-    throw new Error('Failed to update escrow progress');
+  // Accept escrow transaction by provider
+  static async acceptEscrowTransaction(transactionId, providerId) {
+    try {
+      const result = await execute(
+        'UPDATE escrow_transactions SET accepted_by_provider = TRUE, accepted_at = NOW(), status = ? WHERE id = ? AND provider_id = ?',
+        ['funds_deposited', transactionId, providerId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error accepting escrow transaction:', {
+        error: error.message,
+        query: 'UPDATE escrow_transactions...',
+        parameters: ['funds_deposited', transactionId, providerId]
+      });
+      throw new Error('Failed to accept escrow transaction');
+    }
   }
-}
+
+  // Update escrow progress
+  static async updateEscrowProgress(transactionId, status, notes = null) {
+    try {
+      const result = await execute(
+        'UPDATE escrow_transactions SET status = ?, progress_notes = ?, updated_at = NOW() WHERE id = ?',
+        [status, notes, transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating escrow progress:', {
+        error: error.message,
+        query: 'UPDATE escrow_transactions...',
+        parameters: [status, notes, transactionId]
+      });
+      throw new Error('Failed to update escrow progress');
+    }
+  }
+
+  // Update escrow status (for release/dispute)
+  static async updateEscrowStatus(transactionId, status) {
+    try {
+      const result = await execute(
+        'UPDATE escrow_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
+        [status, transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating escrow status:', {
+        error: error.message,
+        query: 'UPDATE escrow_transactions...',
+        parameters: [status, transactionId]
+      });
+      throw new Error('Failed to update escrow status');
+    }
+  }
 }
 
 export default WalletModel;
