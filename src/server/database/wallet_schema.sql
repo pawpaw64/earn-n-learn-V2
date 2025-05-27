@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS savings_goals (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Escrow transactions table
+-- Escrow transactions table with progress tracking
 CREATE TABLE IF NOT EXISTS escrow_transactions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   job_id INT,
@@ -60,8 +60,11 @@ CREATE TABLE IF NOT EXISTS escrow_transactions (
   provider_id INT NOT NULL,
   client_id INT NOT NULL,
   amount DECIMAL(10,2) NOT NULL,
-  status ENUM('funded', 'in_progress', 'completed', 'released', 'disputed', 'refunded') NOT NULL,
+  status ENUM('pending_acceptance', 'funds_deposited', 'in_progress', 'completed', 'released', 'disputed', 'refunded') NOT NULL DEFAULT 'pending_acceptance',
   description VARCHAR(255),
+  accepted_by_provider BOOLEAN DEFAULT FALSE,
+  accepted_at TIMESTAMP NULL,
+  progress_notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
