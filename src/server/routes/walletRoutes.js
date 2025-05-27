@@ -32,8 +32,6 @@ router.put('/savings-goals/:goalId', walletController.updateSavingsGoal);
 // Escrow transactions
 router.get('/escrow', walletController.getEscrowTransactions);
 router.post('/escrow', walletController.createEscrowTransaction);
-router.post('/escrow/:transactionId/accept', walletController.acceptEscrowTransaction);
-router.put('/escrow/:transactionId/progress', walletController.updateEscrowProgress);
 router.post('/escrow/:transactionId/release', walletController.releaseEscrowFunds);
 router.post('/escrow/:transactionId/dispute', walletController.disputeEscrowFunds);
 

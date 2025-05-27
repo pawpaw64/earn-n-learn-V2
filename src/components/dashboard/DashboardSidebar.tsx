@@ -1,3 +1,4 @@
+
 import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -28,11 +29,6 @@ const mainMenuItems = [
     title: "Messages",
     icon: MessageSquare,
     href: "/dashboard/messages"
-  },
-  {
-    title: "Profile",
-    icon: User,
-    href: "/dashboard/profile"
   }
 ];
 
@@ -65,41 +61,36 @@ const DashboardSidebar = () => {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map(item => {
-                if (item.title === "Profile") {
-                  return (
-                    <DropdownMenu key={item.title}>
-                      <DropdownMenuTrigger asChild>
-                        <SidebarMenuButton>
-                          <User />
-                          <span>Profile</span>
-                        </SidebarMenuButton>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent side="right" align="start" className="w-56">
-                        {profileMenuItems.map(profileItem => (
-                          <DropdownMenuItem key={profileItem.title} asChild>
-                            <Link to={profileItem.href} className="flex items-center gap-2">
-                              <profileItem.icon className="w-4 h-4" />
-                              <span>{profileItem.title}</span>
-                            </Link>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  );
-                }
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.href}>
-                      <Link to={item.href}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {mainMenuItems.map(item => <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href}>
+                    <Link to={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>)}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton>
+                  <User />
+                  <span>Profile</span>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="right" align="start" className="w-56">
+                {profileMenuItems.map(item => <DropdownMenuItem key={item.title} asChild>
+                    <Link to={item.href} className="flex items-center gap-2">
+                      <item.icon className="w-4 h-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </DropdownMenuItem>)}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
