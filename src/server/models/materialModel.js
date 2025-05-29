@@ -28,7 +28,7 @@ class MaterialModel {
   }
   static async getAllExcludingUser(userId) {
     try {
-      const [rows] = await execute(`
+      const result= await execute(`
         SELECT 
           m.id,
           u.name,
@@ -47,10 +47,10 @@ class MaterialModel {
         ORDER BY m.created_at DESC
       `, [userId]);
   
-      const resultRows = Array.isArray(rows) ? rows : [rows].filter(Boolean);
-      return resultRows.map(row => ({
+       const rows = await this.#handleQueryResult(result);
+      return rows.map(row => ({
         ...row,
-        created_at: formatDate(row.created_at)
+        deadline: formatDate(row.deadline),
       }));
     } catch (error) {
       console.error('Database error in getAllExcludingUser:', error);
@@ -61,7 +61,7 @@ class MaterialModel {
   static async getAll() {
     try {
       // mysql2/promise returns [rows, fields] format
-      const [rows] = await execute(`
+      const result = await execute(`
         SELECT 
           m.id,
           u.name,
@@ -80,11 +80,11 @@ class MaterialModel {
       `);
 
       // Ensure we always have an array
-      const resultRows = Array.isArray(rows) ? rows : [rows].filter(Boolean);
+    const rows = await this.#handleQueryResult(result);
 
-      return resultRows.map(row => ({
+      return rows.map(row => ({
         ...row,
-        created_at: formatDate(row.created_at)
+        deadline: formatDate(row.deadline),
       }));
     } catch (error) {
       console.error('Database error in MaterialModel.getAll:', {
