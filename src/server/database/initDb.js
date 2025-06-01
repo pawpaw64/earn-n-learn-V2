@@ -28,13 +28,15 @@ async function initDatabase() {
     const schemaPath = join(__dirname, 'schema.sql');
     const walletSchemaPath = join(__dirname, 'wallet_schema.sql');
     const messageSchemaPath = join(__dirname, 'message_schema.sql');
+    const bkashSchemaPath = join(__dirname, 'bkash_schema.sql');
     
     const schema = readFileSync(schemaPath, 'utf8');
     const walletSchema = readFileSync(walletSchemaPath, 'utf8');
     const messageSchema = readFileSync(messageSchemaPath, 'utf8');
+    const bkashSchema = readFileSync(bkashSchemaPath, 'utf8');
 
     // Combine schemas
-    const fullSchema = schema + walletSchema + messageSchema;
+    const fullSchema = schema + walletSchema + messageSchema + bkashSchema;
 
     // Split schema into separate SQL statements
     const statements = fullSchema
