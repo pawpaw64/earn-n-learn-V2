@@ -154,10 +154,8 @@ export const updateSkillContactStatus = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Updating skill contact status:', { id, status });
-    // Get the skill contact to verify ownership or recipient status
     const contact = await ContactModel.getSkillContactById(id);
-    
+    console.log('Retrieved contact:', contact);
     if (!contact) {
       return res.status(404).json({ message: 'Skill contact not found' });
     }
@@ -186,27 +184,27 @@ export const updateSkillContactStatus = async (req, res) => {
       return res.status(400).json({ message: 'Failed to update contact status' });
     }
     
-    // Create notification for contact initiator
-    if (isProvider) {
-      await NotificationModel.create({
-        user_id: contact.user_id,
-        title: 'Skill Inquiry Update',
-        message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'skill_contact'
-      });
-    } else {
-      // Notification for provider if initiator updates
-      await NotificationModel.create({
-        user_id: contact.provider_id,
-        title: 'Skill Inquiry Update',
-        message: `A contact regarding your skill "${contact.skill_name}" has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'skill_contact'
-      });
-    }
+    // // Create notification for contact initiator
+    // if (isProvider) {
+    //   await NotificationModel.create({
+    //     user_id: contact.user_id,
+    //     title: 'Skill Inquiry Update',
+    //     message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
+    //     type: 'contact_status',
+    //     reference_id: parseInt(id),
+    //     reference_type: 'skill_contact'
+    //   });
+    // } else {
+    //   // Notification for provider if initiator updates
+    //   await NotificationModel.create({
+    //     user_id: contact.provider_id,
+    //     title: 'Skill Inquiry Update',
+    //     message: `A contact regarding your skill "${contact.skill_name}" has been updated to: ${status}`,
+    //     type: 'contact_status',
+    //     reference_id: parseInt(id),
+    //     reference_type: 'skill_contact'
+    //   });
+    // }
     
     res.json({ 
       message: 'Contact status updated successfully',
@@ -233,8 +231,6 @@ export const updateMaterialContactStatus = async (req, res) => {
   }
   
   try {
-    console.log('[controller] Updating material contact status:', { id, status });
-    // Get the material contact to verify ownership or recipient status
     const contact = await ContactModel.getMaterialContactById(id);
     
     if (!contact) {
@@ -265,27 +261,27 @@ export const updateMaterialContactStatus = async (req, res) => {
       return res.status(400).json({ message: 'Failed to update contact status' });
     }
     
-    // Create notification for contact initiator
-    if (isSeller) {
-      await NotificationModel.create({
-        user_id: contact.user_id,
-        title: 'Material Inquiry Update',
-        message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'material_contact'
-      });
-    } else {
-      // Notification for seller if initiator updates
-      await NotificationModel.create({
-        user_id: contact.seller_id,
-        title: 'Material Inquiry Update',
-        message: `A contact regarding your material "${contact.title}" has been updated to: ${status}`,
-        type: 'contact_status',
-        reference_id: parseInt(id),
-        reference_type: 'material_contact'
-      });
-    }
+    // // Create notification for contact initiator
+    // if (isSeller) {
+    //   await NotificationModel.create({
+    //     user_id: contact.user_id,
+    //     title: 'Material Inquiry Update',
+    //     message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
+    //     type: 'contact_status',
+    //     reference_id: parseInt(id),
+    //     reference_type: 'material_contact'
+    //   });
+    // } else {
+    //   // Notification for seller if initiator updates
+    //   await NotificationModel.create({
+    //     user_id: contact.seller_id,
+    //     title: 'Material Inquiry Update',
+    //     message: `A contact regarding your material "${contact.title}" has been updated to: ${status}`,
+    //     type: 'contact_status',
+    //     reference_id: parseInt(id),
+    //     reference_type: 'material_contact'
+    //   });
+    // }
     
     res.json({ 
       message: 'Contact status updated successfully',

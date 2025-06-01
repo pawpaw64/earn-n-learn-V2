@@ -142,23 +142,36 @@ class JobModel {
       throw new Error('Failed to create job');
     }
   }
-  static async getById(userId) {
-    try {
-      const result = await execute(
-        `SELECT j.*, u.name as poster_name, u.avatar as poster_avatar
-         FROM jobs j
-         JOIN users u ON j.user_id = u.id
-         WHERE j.user_id = ?`,
-        [userId]
-      );
-      
-      const rows = await this.#handleQueryResult(result);
-      return rows;
-    } catch (error) {
-      console.error('Error in getByUserId:', error);
-      throw error;
-    }
-  }
+//  static async getByJobId(jobId) {
+//   try {
+//     const result = await execute(`
+//       SELECT 
+//         a.*, 
+//         u.name as applicant_name, 
+//         u.email as applicant_email, 
+//         u.avatar as applicant_avatar,
+//         u.bio as applicant_bio,
+//         u.university as applicant_university,
+//         j.title as job_title,
+//         j.user_id as poster_id  // Important for authorization
+//       FROM applications a
+//       JOIN users u ON a.user_id = u.id
+//       JOIN jobs j ON a.job_id = j.id
+//       WHERE a.job_id = ?
+//       ORDER BY a.created_at DESC
+//     `, [jobId]);
+
+//     return this.#handleQueryResult(result);
+    
+//   } catch (error) {
+//     console.error('ApplicationModel.getByJobId() - Error', {
+//       jobId,
+//       error: error.message,
+//       stack: error.stack
+//     });
+//     throw error;
+//   }
+// }
 
 
   // Update job
@@ -198,7 +211,33 @@ class JobModel {
     } catch (error) {
       throw new Error(error.message);
     }
+  }static async getById(id) {
+  try {
+    const result = await execute(`
+      SELECT 
+        j.*,
+        u.id as user_id,
+        u.name as poster_name,
+        u.email as poster_email,
+        u.avatar as poster_avatar
+      FROM jobs j
+      JOIN users u ON j.user_id = u.id
+      WHERE j.id = ?
+      LIMIT 1
+    `, [id]);
+
+   
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows[0];
+  } catch (error) {
+    console.error('JobModel.getById() - Error:', {
+      id,
+      error: error.message,
+      stack: error.stack
+    });
+    throw new Error('Failed to fetch job');
   }
+}
 }
 
 export default JobModel;

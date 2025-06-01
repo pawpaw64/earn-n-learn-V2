@@ -22,25 +22,7 @@ interface PaymentMethod {
 export function PaymentMethods() {
   const { toast } = useToast();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    // Fallback data
-    {
-      id: "pm_1",
-      type: "visa",
-      provider: "card",
-      last4: "4242",
-      expiryMonth: "12",
-      expiryYear: "2025",
-      isDefault: true
-    },
-    {
-      id: "pm_2",
-      type: "mastercard",
-      provider: "card",
-      last4: "5678",
-      expiryMonth: "09",
-      expiryYear: "2024",
-      isDefault: false
-    }
+   
   ]);
   const [isAddCardOpen, setIsAddCardOpen] = useState(false);
   const [isAddBkashOpen, setIsAddBkashOpen] = useState(false);
