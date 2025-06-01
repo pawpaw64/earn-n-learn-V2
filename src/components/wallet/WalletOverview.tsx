@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { TopUpDialog } from './TopUpDialog';
 import { WithdrawDialog } from './WithdrawDialog';
+import { BkashTopUpDialog } from './BkashTopUpDialog';
+import { BkashWithdrawDialog } from './BkashWithdrawDialog';
 import axios from 'axios';
 
 interface WalletData {
@@ -22,6 +24,8 @@ export function WalletOverview() {
   const { toast } = useToast();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [isBkashTopUpOpen, setIsBkashTopUpOpen] = useState(false);
+  const [isBkashWithdrawOpen, setIsBkashWithdrawOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData>({
     balance: 0,
@@ -75,7 +79,6 @@ export function WalletOverview() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update wallet data
       fetchWalletData();
       
       toast({
@@ -108,7 +111,6 @@ export function WalletOverview() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update wallet data
       fetchWalletData();
       
       toast({
@@ -126,6 +128,10 @@ export function WalletOverview() {
     }
     
     setIsWithdrawOpen(false);
+  };
+
+  const handleBkashSuccess = () => {
+    fetchWalletData();
   };
 
   return (
@@ -154,23 +160,45 @@ export function WalletOverview() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex gap-2">
-            <Button 
-              variant="default" 
-              className="flex-1"
-              onClick={() => setIsTopUpOpen(true)}
-              disabled={isLoading}
-            >
-              Top Up
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex-1"
-              onClick={() => setIsWithdrawOpen(true)}
-              disabled={isLoading}
-            >
-              Withdraw
-            </Button>
+          <CardFooter className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 w-full">
+              <Button 
+                variant="default" 
+                className="flex-1"
+                onClick={() => setIsTopUpOpen(true)}
+                disabled={isLoading}
+              >
+                Top Up
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setIsWithdrawOpen(true)}
+                disabled={isLoading}
+              >
+                Withdraw
+              </Button>
+            </div>
+            <div className="flex gap-2 w-full">
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-pink-50 border-pink-200 hover:bg-pink-100"
+                onClick={() => setIsBkashTopUpOpen(true)}
+                disabled={isLoading}
+              >
+                <Wallet className="w-4 h-4 mr-1 text-pink-500" />
+                bKash Top Up
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1 bg-pink-50 border-pink-200 hover:bg-pink-100"
+                onClick={() => setIsBkashWithdrawOpen(true)}
+                disabled={isLoading}
+              >
+                <Wallet className="w-4 h-4 mr-1 text-pink-500" />
+                bKash Withdraw
+              </Button>
+            </div>
           </CardFooter>
         </Card>
 
@@ -232,6 +260,19 @@ export function WalletOverview() {
         isOpen={isWithdrawOpen} 
         onClose={() => setIsWithdrawOpen(false)} 
         onWithdraw={handleWithdraw}
+        maxAmount={walletData.balance}
+      />
+
+      <BkashTopUpDialog
+        isOpen={isBkashTopUpOpen}
+        onClose={() => setIsBkashTopUpOpen(false)}
+        onSuccess={handleBkashSuccess}
+      />
+
+      <BkashWithdrawDialog
+        isOpen={isBkashWithdrawOpen}
+        onClose={() => setIsBkashWithdrawOpen(false)}
+        onSuccess={handleBkashSuccess}
         maxAmount={walletData.balance}
       />
     </div>
