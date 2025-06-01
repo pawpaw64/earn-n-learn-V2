@@ -1,72 +1,73 @@
 
-import fs from 'fs';
-import path from 'path';
+import { createConnection } from 'mysql2/promise';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { execute } from '../config/db.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
+// __dirname replacement for ES Modules
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 async function initDatabase() {
+  let connection;
   try {
-    console.log('Starting database initialization...');
+    // Create connection with database selection
+    connection = await createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: 3306 // Default MySQL port
+    });
+
+    console.log('Connected to MySQL server');
+
+    // Read schema files
+    const schemaPath = join(__dirname, 'schema.sql');
+    const walletSchemaPath = join(__dirname, 'wallet_schema.sql');
+    const messageSchemaPath = join(__dirname, 'message_schema.sql');
     
-    // Read and execute main schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
-    
-    // Split by semicolon and execute each statement
-    const statements = schemaSQL.split(';').filter(stmt => stmt.trim());
-    
+    const schema = readFileSync(schemaPath, 'utf8');
+    const walletSchema = readFileSync(walletSchemaPath, 'utf8');
+    const messageSchema = readFileSync(messageSchemaPath, 'utf8');
+
+    // Combine schemas
+    const fullSchema = schema + walletSchema + messageSchema;
+
+    // Split schema into separate SQL statements
+    const statements = fullSchema
+      .split(';')
+      .filter(statement => statement.trim() !== '');
+
+    // Execute each statement
     for (const statement of statements) {
-      if (statement.trim()) {
-        await execute(statement);
-      }
-    }
-    
-    // Read and execute wallet schema
-    const walletSchemaPath = path.join(__dirname, 'wallet_schema.sql');
-    const walletSchemaSQL = fs.readFileSync(walletSchemaPath, 'utf8');
-    
-    const walletStatements = walletSchemaSQL.split(';').filter(stmt => stmt.trim());
-    
-    for (const statement of walletStatements) {
-      if (statement.trim()) {
-        await execute(statement);
+      try {
+        await connection.query(statement + ';'); // Using query() instead of execute()
+      } catch (error) {
+        console.error('Error executing statement:', statement);
+        throw error;
       }
     }
 
-    // Read and execute bKash schema
-    const bkashSchemaPath = path.join(__dirname, 'bkash_schema.sql');
-    const bkashSchemaSQL = fs.readFileSync(bkashSchemaPath, 'utf8');
-    
-    const bkashStatements = bkashSchemaSQL.split(';').filter(stmt => stmt.trim());
-    
-    for (const statement of bkashStatements) {
-      if (statement.trim()) {
-        await execute(statement);
-      }
-    }
-
-    // Read and execute message schema
-    const messageSchemaPath = path.join(__dirname, 'message_schema.sql');
-    if (fs.existsSync(messageSchemaPath)) {
-      const messageSchemaSQL = fs.readFileSync(messageSchemaPath, 'utf8');
-      
-      const messageStatements = messageSchemaSQL.split(';').filter(stmt => stmt.trim());
-      
-      for (const statement of messageStatements) {
-        if (statement.trim()) {
-          await execute(statement);
-        }
-      }
-    }
-    
-    console.log('Database initialization completed successfully');
+    console.log('Database initialized successfully');
   } catch (error) {
-    console.error('Database initialization error:', error);
-    throw error;
+    console.error('Error initializing database:', error);
+    throw error; // Re-throw to handle in calling code
+  } finally {
+    if (connection) {
+      await connection.end();
+    }
   }
+}
+
+// Run if executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  initDatabase().catch(err => {
+    console.error('Initialization failed:', err);
+    process.exit(1);
+  });
 }
 
 export default initDatabase;
