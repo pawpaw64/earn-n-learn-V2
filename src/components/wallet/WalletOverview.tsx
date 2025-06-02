@@ -5,11 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
 import { TopUpDialog } from './TopUpDialog';
 import { WithdrawDialog } from './WithdrawDialog';
-import { BkashTopUpDialog } from './BkashTopUpDialog';
-import { BkashWithdrawDialog } from './BkashWithdrawDialog';
 import axios from 'axios';
 
 interface WalletData {
@@ -24,8 +22,6 @@ export function WalletOverview() {
   const { toast } = useToast();
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
-  const [isBkashTopUpOpen, setIsBkashTopUpOpen] = useState(false);
-  const [isBkashWithdrawOpen, setIsBkashWithdrawOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [walletData, setWalletData] = useState<WalletData>({
     balance: 0,
@@ -132,45 +128,6 @@ export function WalletOverview() {
     setIsWithdrawOpen(false);
   };
 
-  const handleBkashTopUpSuccess = (amount: number) => {
-    // Refresh wallet data after successful bKash top-up
-    fetchWalletData();
-    setIsBkashTopUpOpen(false);
-  };
-
-  const handleBkashWithdraw = async (amount: number, accountNumber: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-
-      // For now, we'll simulate bKash withdrawal by regular withdrawal
-      // In a real implementation, you'd integrate with bKash disbursement API
-      await axios.post('http://localhost:8080/api/wallet/withdraw', 
-        { amount, withdrawMethod: 'bkash', bkashAccount: accountNumber },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      // Update wallet data
-      fetchWalletData();
-      
-      toast({
-        title: "Success",
-        description: `৳${amount.toFixed(2)} withdrawal initiated to ${accountNumber}`,
-      });
-      
-    } catch (error: any) {
-      console.error('bKash withdraw error:', error);
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to withdraw to bKash.",
-        variant: "destructive"
-      });
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -197,45 +154,23 @@ export function WalletOverview() {
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="default" 
-                className="flex-1"
-                onClick={() => setIsTopUpOpen(true)}
-                disabled={isLoading}
-              >
-                Top Up
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => setIsWithdrawOpen(true)}
-                disabled={isLoading}
-              >
-                Withdraw
-              </Button>
-            </div>
-            <div className="flex gap-2 w-full">
-              <Button 
-                variant="outline" 
-                className="flex-1 bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100"
-                onClick={() => setIsBkashTopUpOpen(true)}
-                disabled={isLoading}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                bKash Top Up
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex-1 bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100"
-                onClick={() => setIsBkashWithdrawOpen(true)}
-                disabled={isLoading}
-              >
-                <Wallet className="h-4 w-4 mr-2" />
-                bKash Withdraw
-              </Button>
-            </div>
+          <CardFooter className="flex gap-2">
+            <Button 
+              variant="default" 
+              className="flex-1"
+              onClick={() => setIsTopUpOpen(true)}
+              disabled={isLoading}
+            >
+              Top Up
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex-1"
+              onClick={() => setIsWithdrawOpen(true)}
+              disabled={isLoading}
+            >
+              Withdraw
+            </Button>
           </CardFooter>
         </Card>
 
@@ -297,19 +232,6 @@ export function WalletOverview() {
         isOpen={isWithdrawOpen} 
         onClose={() => setIsWithdrawOpen(false)} 
         onWithdraw={handleWithdraw}
-        maxAmount={walletData.balance}
-      />
-
-      <BkashTopUpDialog 
-        isOpen={isBkashTopUpOpen} 
-        onClose={() => setIsBkashTopUpOpen(false)} 
-        onSuccess={handleBkashTopUpSuccess} 
-      />
-
-      <BkashWithdrawDialog 
-        isOpen={isBkashWithdrawOpen} 
-        onClose={() => setIsBkashWithdrawOpen(false)} 
-        onWithdraw={handleBkashWithdraw}
         maxAmount={walletData.balance}
       />
     </div>
