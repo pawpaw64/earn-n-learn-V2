@@ -40,7 +40,7 @@ export const DetailContent: React.FC<DetailContentProps> = ({ detailsItem, detai
       return <div className="space-y-4">
         <h3 className="text-lg font-semibold">Project Details</h3>
         <p className="text-muted-foreground">
-          Project details are now shown in the dedicated Projects tab.
+          Project details are shown in the dedicated project dialog.
         </p>
       </div>;
     default:

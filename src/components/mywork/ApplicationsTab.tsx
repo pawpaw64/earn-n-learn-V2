@@ -1,7 +1,8 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMyApplications, fetchReceivedApplications, fetchMyContacts, fetchReceivedContacts } from "@/services/applications";
+import { fetchMyApplications, fetchReceivedApplications } from "@/services/applications";
+import { fetchMyContacts, fetchReceivedContacts } from "@/services/contacts";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { ApplicationList } from "./applications/ApplicationList";
 
