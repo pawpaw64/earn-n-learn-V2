@@ -1,41 +1,29 @@
 
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchProviderWorks } from "@/services/works";
-import { getUserProjects } from "@/services/projects";
+import { fetchMyWorks, fetchProviderWorks } from "@/services/works";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { WorksHeader } from "./works/WorksHeader";
 import { WorksGrid } from "./works/WorksGrid";
-import { ProjectsGrid } from "../projects/ProjectsGrid";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { WorkType } from "@/types/marketplace";
-import { Project } from "@/services/projects";
 
 interface MyWorksTabProps {
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => Promise<void>;
+  onStatusChange: (id: number, type: string, status: string) => Promise<boolean>;
 }
 
 /**
- * Main component for the My Works tab with integrated project management
+ * Main component for the My Works tab
+ * Handles data fetching and displaying work items
  */
 export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
-  // Fetch works data
+  // Fetch works data with React Query
   const { 
     data: works = [], 
     isLoading: isLoadingWorks
   } = useQuery({
     queryKey: ['myWorks'],
     queryFn: fetchProviderWorks
-  });
-
-  // Fetch projects data
-  const { 
-    data: projects = [], 
-    isLoading: isLoadingProjects
-  } = useQuery({
-    queryKey: ['userProjects'],
-    queryFn: getUserProjects
   });
 
   // Ensure works is always an array
@@ -56,57 +44,19 @@ export function MyWorksTab({ onViewDetails, onStatusChange }: MyWorksTabProps) {
     ...work
   }));
 
-  const handleProjectViewDetails = (project: Project) => {
-    onViewDetails(project, 'project');
-  };
-
   // Show loading state while fetching data
-  if (isLoadingWorks || isLoadingProjects) {
+  if (isLoadingWorks) {
     return <LoadingSkeleton />;
   }
 
-  const activeProjects = projects.filter((p: Project) => p.status === 'active');
-  const completedProjects = projects.filter((p: Project) => p.status === 'completed');
-
   return (
-    <div className="space-y-6">
+    <>
       <WorksHeader />
-      
-      <Tabs defaultValue="active-projects" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="active-projects">
-            Active Projects ({activeProjects.length})
-          </TabsTrigger>
-          <TabsTrigger value="completed-projects">
-            Completed Projects ({completedProjects.length})
-          </TabsTrigger>
-          <TabsTrigger value="work-assignments">
-            Work Assignments ({formattedWorks.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="active-projects" className="mt-6">
-          <ProjectsGrid 
-            projects={activeProjects}
-            onViewDetails={handleProjectViewDetails}
-          />
-        </TabsContent>
-
-        <TabsContent value="completed-projects" className="mt-6">
-          <ProjectsGrid 
-            projects={completedProjects}
-            onViewDetails={handleProjectViewDetails}
-          />
-        </TabsContent>
-
-        <TabsContent value="work-assignments" className="mt-6">
-          <WorksGrid 
-            works={formattedWorks}
-            onViewDetails={onViewDetails}
-            onStatusChange={onStatusChange}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+      <WorksGrid 
+        works={formattedWorks}
+        onViewDetails={onViewDetails}
+        onStatusChange={onStatusChange}
+      />
+    </>
   );
 }
