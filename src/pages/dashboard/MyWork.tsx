@@ -8,6 +8,7 @@ import { ApplicationsTab } from "@/components/mywork/ApplicationsTab";
 import { MyWorksTab } from "@/components/mywork/MyWorksTab";
 import { InvoicesTab } from "@/components/mywork/InvoicesTab";
 import { DetailsDialog } from "@/components/mywork/DetailsDialog";
+import { ProjectsTab } from "@/components/projects/ProjectsTab";
 
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 
@@ -16,11 +17,6 @@ export default function MyWork() {
   const [detailsItem, setDetailsItem] = useState<any>(null);
   const [detailsType, setDetailsType] = useState<string>("");
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  
-  // New state for the applicants dialog
-  const [isApplicantsDialogOpen, setIsApplicantsDialogOpen] = useState(false);
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
-  const [selectedJobTitle, setSelectedJobTitle] = useState<string>("");
 
   const { 
     handleViewDetails,
@@ -35,18 +31,16 @@ export default function MyWork() {
     detailsItem,
   });
 
-  const handleViewApplicants = (jobId: number, jobTitle: string) => {
-    setSelectedJobId(jobId);
-    setSelectedJobTitle(jobTitle);
-    setIsApplicantsDialogOpen(true);
-  };
-
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">My Work</h1>
       
-      <Tabs defaultValue="applications" className="w-full">
-        <TabsList className="mb-6 grid grid-cols-3 gap-4">
+      <Tabs defaultValue="projects" className="w-full">
+        <TabsList className="mb-6 grid grid-cols-4 gap-4">
+          <TabsTrigger value="projects" className="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Projects
+          </TabsTrigger>
           <TabsTrigger value="applications" className="flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M20 8H4"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 16h.01"/></svg>
             Applications
@@ -61,12 +55,16 @@ export default function MyWork() {
           </TabsTrigger>
         </TabsList>
 
+        {/* Projects Tab Content */}
+        <TabsContent value="projects">
+          <ProjectsTab />
+        </TabsContent>
+
         {/* Applications Tab Content */}
         <TabsContent value="applications">
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
             onStatusChange={handleStatusChange}
-           
           />
         </TabsContent>
 
@@ -93,8 +91,6 @@ export default function MyWork() {
         onStatusChange={handleStatusChange}
         onCreateWork={handleCreateWork}
       />
-
-      
     </div>
   );
 }
