@@ -1,5 +1,4 @@
 
-
 import React from "react";
 import { ProjectCard } from "./ProjectCard";
 import { Project } from "@/services/projects";
@@ -17,7 +16,7 @@ export function ProjectsGrid({ projects, onViewDetails, onOpenChat }: ProjectsGr
         <div className="space-y-4">
           <div className="text-6xl">📋</div>
           <div>
-            <h3 className="text-lg font-medium">No Active Projects</h3>
+            <h3 className="text-lg font-medium">No Projects</h3>
             <p className="text-sm">Your accepted work assignments will appear here as projects.</p>
           </div>
         </div>

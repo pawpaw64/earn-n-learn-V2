@@ -9,6 +9,7 @@ import {
   getWorkDetails, 
   updateWorkStatus 
 } from "@/services/works";
+import { createProjectFromWork } from "@/services/projects";
 import { deleteJob } from "@/services/jobs";
 import { deleteSkill } from "@/services/skills";
 import { deleteMaterial } from "@/services/materials";
@@ -39,7 +40,6 @@ export const useWorkDetails = ({
   const [isProcessing, setIsProcessing] = useState(false);
   
   const handleViewDetails = async (item: any, type: string) => {
-    // For certain types, we need to fetch more details
     let detailItem = item;
     
     try {
@@ -130,7 +130,6 @@ export const useWorkDetails = ({
       
       toast.success(`Status updated to ${newStatus}`);
       
-      // Close the details dialog if open
       if (isDetailsOpen && detailsItem?.id === id) {
         setIsDetailsOpen(false);
       }
@@ -149,16 +148,22 @@ export const useWorkDetails = ({
     try {
       setIsProcessing(true);
       
+      let work;
       if (type === 'job_application') {
-        await createWorkFromApplication(id);
+        work = await createWorkFromApplication(id);
       } 
       else if (type === 'skill_contact' || type === 'material_contact') {
-        await createWorkFromSkillContact(id);
+        work = await createWorkFromSkillContact(id);
       }
       
-      toast.success('Work assignment created successfully');
+      // Auto-create project from work
+      if (work) {
+        await createProjectFromWork(work.id, {});
+        toast.success('Work assignment and project created successfully');
+      } else {
+        toast.success('Work assignment created successfully');
+      }
       
-      // Close the details dialog if open
       if (isDetailsOpen) {
         setIsDetailsOpen(false);
       }

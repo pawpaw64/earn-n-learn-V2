@@ -139,7 +139,6 @@ export function ProjectDetailsDialog({
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
-              {/* Project Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -165,7 +164,6 @@ export function ProjectDetailsDialog({
                 </div>
               </div>
 
-              {/* Progress */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Overall Progress</span>
@@ -176,7 +174,6 @@ export function ProjectDetailsDialog({
                 <Progress value={getProgressPercentage()} className="h-3" />
               </div>
 
-              {/* Description */}
               {project.description && (
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Description</h4>
@@ -233,7 +230,6 @@ export function ProjectDetailsDialog({
           </Tabs>
         </div>
 
-        {/* Actions */}
         <div className="flex justify-between items-center pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close

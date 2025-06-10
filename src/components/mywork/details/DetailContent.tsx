@@ -7,16 +7,12 @@ import { SkillMaterialDetails } from "./SkillMaterialDetails";
 import { WorkDetails } from "./WorkDetails";
 import { InvoiceDetails } from "./InvoiceDetails";
 import { ContactDetails } from "./ContactDetails";
-import { ProjectDetailsDialog } from "@/components/projects/ProjectDetailsDialog";
 
 interface DetailContentProps {
   detailsItem: any;
   detailsType: string;
 }
 
-/**
- * Renders the appropriate details content based on the item type
- */
 export const DetailContent: React.FC<DetailContentProps> = ({ detailsItem, detailsType }) => {
   if (!detailsItem) return null;
   
@@ -37,8 +33,6 @@ export const DetailContent: React.FC<DetailContentProps> = ({ detailsItem, detai
       return <InvoiceDetails item={detailsItem} />;
     case 'contact':
       return <ContactDetails item={detailsItem} />;
-    case 'project':
-      return <ProjectDetailsDialog item={detailsItem} />;
     default:
       return <p>No details available</p>;
   }
