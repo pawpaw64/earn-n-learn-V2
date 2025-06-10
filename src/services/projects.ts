@@ -51,11 +51,21 @@ export interface ProjectUpdate {
   created_at: string;
   user_name?: string;
 }
-
-export const createProjectFromWork = async (workId: number, projectData: any): Promise<Project> => {
+// Add these to projects.ts
+export const createProjectFromApplication = async (applicationId: number, projectData: any): Promise<Project> => {
   setAuthToken(localStorage.getItem('token'));
-  const response = await axios.post(`${API_URL}/projects/from-work`, {
-    workId,
+  const response = await axios.post(`${API_URL}/projects/from-application`, {
+    applicationId,
+    ...projectData
+  });
+  return response.data;
+};
+
+export const createProjectFromContact = async (contactId: number, contactType: string, projectData: any): Promise<Project> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/projects/from-contact`, {
+    contactId,
+    contactType,
     ...projectData
   });
   return response.data;

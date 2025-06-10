@@ -3,37 +3,61 @@
 import { execute } from '../config/db.js';
 
 class ProjectModel {
-  // Create a new project from accepted work
-  static async createFromWork(workData) {
-    const {
-      title,
-      description,
-      provider_id,
-      client_id,
-      source_type,
-      source_id,
-      project_type = 'fixed',
-      total_amount,
-      hourly_rate,
-      expected_end_date
-    } = workData;
+  // Add these methods to the ProjectModel class
 
-    const result = await execute(
-      `INSERT INTO projects (title, description, provider_id, client_id, source_type, source_id, 
-       project_type, total_amount, hourly_rate, expected_end_date) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [title, description, provider_id, client_id, source_type, source_id, 
-       project_type, total_amount, hourly_rate, expected_end_date]
-    );
+static async createFromApplication(applicationData) {
+  const {
+    title,
+    description,
+    provider_id,
+    client_id,
+    source_id,
+    project_type = 'fixed',
+    total_amount,
+    hourly_rate,
+    expected_end_date
+  } = applicationData;
 
-    const projectId = result.insertId;
+  const result = await execute(
+    `INSERT INTO projects (title, description, provider_id, client_id, 
+     source_type, source_id, project_type, total_amount, hourly_rate, expected_end_date) 
+     VALUES (?, ?, ?, ?, 'job', ?, ?, ?, ?, ?)`,
+    [title, description, provider_id, client_id, source_id, 
+     project_type, total_amount, hourly_rate, expected_end_date]
+  );
 
-    // Create default milestones based on project type
-    await this.createDefaultMilestones(projectId, source_type);
+  const projectId = result.insertId;
+  await this.createDefaultMilestones(projectId, 'job');
+  return this.getById(projectId);
+}
 
-    return this.getById(projectId);
-  }
+static async createFromContact(contactData) {
+  const {
+    title,
+    description,
+    provider_id,
+    client_id,
+    source_type,
+    source_id,
+    project_type = 'fixed',
+    total_amount,
+    hourly_rate,
+    expected_end_date
+  } = contactData;
 
+  const result = await execute(
+    `INSERT INTO projects (title, description, provider_id, client_id, 
+     source_type, source_id, project_type, total_amount, hourly_rate, expected_end_date) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [title, description, provider_id, client_id, source_type, source_id, 
+     project_type, total_amount, hourly_rate, expected_end_date]
+  );
+
+  const projectId = result.insertId;
+  await this.createDefaultMilestones(projectId, source_type);
+  return this.getById(projectId);
+}
+  
   // Create default milestones for different project types
   static async createDefaultMilestones(projectId, sourceType) {
     const milestoneTemplates = {
@@ -67,7 +91,7 @@ class ProjectModel {
 
   // Get project by ID with milestones
   static async getById(id) {
-    const [project] = await execute(
+    const project = await execute(
       `SELECT p.*, 
               provider.name as provider_name, provider.avatar as provider_avatar,
               client.name as client_name, client.avatar as client_avatar
@@ -128,7 +152,7 @@ class ProjectModel {
 
   // Update milestone status
   static async updateMilestone(milestoneId, status, notes, userId) {
-    const [milestone] = await execute(
+    const milestone = await execute(
       'SELECT * FROM project_milestones WHERE id = ?',
       [milestoneId]
     );

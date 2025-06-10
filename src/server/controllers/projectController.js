@@ -3,74 +3,125 @@ import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
 // Create project from existing work assignment
-export const createProjectFromWork = async (req, res) => {
+// Add these new controller methods to projectController.js
+
+export const createProjectFromApplication = async (req, res) => {
   try {
-    const { workId, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
+    const { applicationId, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
 
-    // Get the work assignment details
-    const workResult = await execute(
-      `SELECT wa.*, j.title as job_title, j.payment as job_payment, j.description as job_description,
-              sm.skill_name, sm.pricing as skill_pricing, sm.description as skill_description,
-              mm.title as material_title, mm.price as material_price, mm.description as material_description
-       FROM work_assignments wa
-       LEFT JOIN jobs j ON wa.job_id = j.id
-       LEFT JOIN skill_marketplace sm ON wa.skill_id = sm.id
-       LEFT JOIN material_marketplace mm ON wa.material_id = mm.id
-       WHERE wa.id = ? AND (wa.provider_id = ? OR wa.client_id = ?)`,
-      [workId, userId, userId]
+    // Get the application details
+    const [application] = await execute(
+      `SELECT a.*, j.title as job_title, j.payment as job_payment, 
+              j.description as job_description, j.user_id as client_id,
+              u.name as provider_name, u.email as provider_email
+       FROM applications a
+       JOIN jobs j ON a.job_id = j.id
+       JOIN users u ON a.user_id = u.id
+       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?)`,
+      [applicationId, userId, userId]
     );
 
-    if (workResult.length === 0) {
-      return res.status(404).json({ message: 'Work assignment not found' });
-    }
-
-    const work = workResult[0];
-
-    // Determine source type and create project data
-    let sourceType, sourceId, projectTitle, projectDescription, amount;
-
-    if (work.job_id) {
-      sourceType = 'job';
-      sourceId = work.job_id;
-      projectTitle = title || work.job_title;
-      projectDescription = description || work.job_description;
-      amount = totalAmount || work.job_payment;
-    } else if (work.skill_id) {
-      sourceType = 'skill';
-      sourceId = work.skill_id;
-      projectTitle = title || work.skill_name;
-      projectDescription = description || work.skill_description;
-      amount = totalAmount || work.skill_pricing;
-    } else if (work.material_id) {
-      sourceType = 'material';
-      sourceId = work.material_id;
-      projectTitle = title || work.material_title;
-      projectDescription = description || work.material_description;
-      amount = totalAmount || work.material_price;
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
     }
 
     const projectData = {
-      title: projectTitle,
-      description: projectDescription,
-      provider_id: work.provider_id,
-      client_id: work.client_id,
-      source_type: sourceType,
-      source_id: sourceId,
+      title: title || application.job_title,
+      description: description || application.job_description,
+      provider_id: application.user_id, // applicant is provider
+      client_id: application.client_id, // job owner is client
+      source_type: 'job',
+      source_id: application.job_id,
       project_type: projectType || 'fixed',
-      total_amount: amount,
+      total_amount: totalAmount || application.job_payment,
       hourly_rate: hourlyRate,
       expected_end_date: expectedEndDate
     };
 
-    const project = await ProjectModel.createFromWork(projectData);
+    const project = await ProjectModel.createFromApplication(projectData);
     res.status(201).json(project);
   } catch (error) {
-    console.error('Error creating project:', error);
+    console.error('Error creating project from application:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
+export const createProjectFromContact = async (req, res) => {
+  try {
+    const { contactId, contactType, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
+    const userId = req.user.id;
+
+    let contactQuery, projectData;
+
+    if (contactType === 'skill') {
+      const [contact] = await execute(
+        `SELECT sc.*, sm.skill_name, sm.pricing as skill_pricing, 
+                sm.description as skill_description, sm.user_id as provider_id,
+                u.name as client_name, u.email as client_email
+         FROM skill_contacts sc
+         JOIN skill_marketplace sm ON sc.skill_id = sm.id
+         JOIN users u ON sc.user_id = u.id
+         WHERE sc.id = ? AND (sc.user_id = ? OR sm.user_id = ?)`,
+        [contactId, userId, userId]
+      );
+
+      if (!contact) {
+        return res.status(404).json({ message: 'Skill contact not found' });
+      }
+
+      projectData = {
+        title: title || contact.skill_name,
+        description: description || contact.skill_description,
+        provider_id: contact.provider_id, // skill owner is provider
+        client_id: contact.user_id, // contact creator is client
+        source_type: 'skill',
+        source_id: contact.skill_id,
+        project_type: projectType || 'fixed',
+        total_amount: totalAmount || contact.skill_pricing,
+        hourly_rate: hourlyRate,
+        expected_end_date: expectedEndDate
+      };
+    } 
+    else if (contactType === 'material') {
+      const [contact] = await execute(
+        `SELECT mc.*, mm.title as material_title, mm.price as material_price, 
+                mm.description as material_description, mm.user_id as provider_id,
+                u.name as client_name, u.email as client_email
+         FROM material_contacts mc
+         JOIN material_marketplace mm ON mc.material_id = mm.id
+         JOIN users u ON mc.user_id = u.id
+         WHERE mc.id = ? AND (mc.user_id = ? OR mm.user_id = ?)`,
+        [contactId, userId, userId]
+      );
+
+      if (!contact) {
+        return res.status(404).json({ message: 'Material contact not found' });
+      }
+
+      projectData = {
+        title: title || contact.material_title,
+        description: description || contact.material_description,
+        provider_id: contact.provider_id, // material owner is provider
+        client_id: contact.user_id, // contact creator is client
+        source_type: 'material',
+        source_id: contact.material_id,
+        project_type: projectType || 'fixed',
+        total_amount: totalAmount || contact.material_price,
+        hourly_rate: hourlyRate,
+        expected_end_date: expectedEndDate
+      };
+    } else {
+      return res.status(400).json({ message: 'Invalid contact type' });
+    }
+
+    const project = await ProjectModel.createFromContact(projectData);
+    res.status(201).json(project);
+  } catch (error) {
+    console.error('Error creating project from contact:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 // Get user's projects
 export const getUserProjects = async (req, res) => {
   try {

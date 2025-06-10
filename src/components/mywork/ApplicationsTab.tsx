@@ -103,29 +103,15 @@ export function ApplicationsTab({
   // Handle status changes with automatic refetch
   const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
     try {
-      const success = await onStatusChange(id, type, status);
+       await onStatusChange(id, type, status);
       refetchAll();
-      return success || true;
+      return true;
     } catch (error) {
       console.error("Status change error:", error);
       return false;
     }
   };
 
-  // Handle work creation with automatic refetch
-  const handleCreateWork = async (id: number, type: string): Promise<boolean> => {
-    if (onCreateWork) {
-      try {
-        const success = await onCreateWork(id, type);
-        refetchAll();
-        return success || true;
-      } catch (error) {
-        console.error("Create work error:", error);
-        return false;
-      }
-    }
-    return false;
-  };
 
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];
@@ -268,7 +254,7 @@ export function ApplicationsTab({
               isLoading={isLoadingReceivedSkillContacts}
               onViewDetails={onViewDetails}
               onStatusChange={handleStatusChange}
-              onCreateWork={handleCreateWork}
+             
             />
           </TabsContent>
           
@@ -279,7 +265,7 @@ export function ApplicationsTab({
               isLoading={isLoadingReceivedMaterialContacts}
               onViewDetails={onViewDetails}
               onStatusChange={handleStatusChange}
-              onCreateWork={handleCreateWork}
+              
             />
           </TabsContent>
         </Tabs>
