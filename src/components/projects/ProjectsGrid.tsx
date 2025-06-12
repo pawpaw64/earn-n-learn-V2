@@ -5,7 +5,7 @@ import { Project } from "@/services/projects";
 
 interface ProjectsGridProps {
   projects: Project[];
-  onViewDetails: (project: Project) => void;
+  onViewDetails: (project: Project) => Promise<void>;
   onOpenChat?: (project: Project) => void;
 }
 
@@ -26,13 +26,21 @@ export function ProjectsGrid({ projects, onViewDetails, onOpenChat }: ProjectsGr
     );
   }
 
+  const handleViewDetails = async (project: Project) => {
+    try {
+      await onViewDetails(project);
+    } catch (error) {
+      console.error('Error viewing project details:', error);
+    }
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {projects.map((project) => (
         <ProjectCard
           key={project.id}
           project={project}
-          onViewDetails={onViewDetails}
+          onViewDetails={handleViewDetails}
           onOpenChat={onOpenChat}
         />
       ))}

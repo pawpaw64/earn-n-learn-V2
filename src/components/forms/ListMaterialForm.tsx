@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -11,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
-import { createMaterial } from "@/services/materials";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),
@@ -25,7 +23,12 @@ const formSchema = z.object({
 
 type ListMaterialFormValues = z.infer<typeof formSchema>;
 
-export default function ListMaterialForm() {
+interface ListMaterialFormProps {
+  onSubmit?: (formData: any) => Promise<void>;
+  isLoading?: boolean;
+}
+
+export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMaterialFormProps) {
   const [imagePreview, setImagePreview] = useState("");
 
   const form = useForm<ListMaterialFormValues>({
@@ -43,7 +46,7 @@ export default function ListMaterialForm() {
 
   const watchType = form.watch("type");
 
-  async function onSubmit(values: ListMaterialFormValues) {
+  async function handleSubmit(values: ListMaterialFormValues) {
     try {
       // Prepare data for API
       const materialData = {
@@ -54,10 +57,15 @@ export default function ListMaterialForm() {
         availability: values.availability,
       };
 
-      // Call API to create material
-      await createMaterial(materialData);
+      if (onSubmit) {
+        await onSubmit(materialData);
+      } else {
+        // Fallback - call createMaterial directly if no onSubmit provided
+        const { createMaterial } = await import("@/services/materials");
+        await createMaterial(materialData);
+        toast.success("Material listed successfully!");
+      }
 
-      toast.success("Material listed successfully!");
       form.reset();
       setImagePreview("");
     } catch (error) {
@@ -79,7 +87,7 @@ export default function ListMaterialForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="materialName"
@@ -263,8 +271,13 @@ export default function ListMaterialForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700">
-          {watchType === "sale" ? "List for Sale" : 
+        <Button 
+          type="submit" 
+          className="w-full mt-6 bg-emerald-600 hover:bg-emerald-700"
+          disabled={isLoading}
+        >
+          {isLoading ? "Processing..." : 
+           watchType === "sale" ? "List for Sale" : 
            watchType === "rent" ? "List for Rent" : 
            "List to Borrow"}
         </Button>

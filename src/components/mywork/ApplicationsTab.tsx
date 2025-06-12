@@ -17,8 +17,8 @@ import {
 } from "@/services/contacts";
 
 interface ApplicationsTabProps {
-  onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => void;
+  onViewDetails: (item: any, type: string) => Promise<void>;
+  onStatusChange: (id: number, type: string, status: string) => Promise<void>;
   onCreateWork?: (id: number, type: string) => void;
 }
 
@@ -101,17 +101,15 @@ export function ApplicationsTab({
   });
 
   // Handle status changes with automatic refetch
-  const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
+  const handleStatusChange = async (id: number, type: string, status: string): Promise<void> => {
     try {
-       await onStatusChange(id, type, status);
+      await onStatusChange(id, type, status);
       refetchAll();
-      return true;
     } catch (error) {
       console.error("Status change error:", error);
-      return false;
+      throw error;
     }
   };
-
 
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];

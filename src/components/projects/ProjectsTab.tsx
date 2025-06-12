@@ -8,29 +8,39 @@ import { ProjectDetailsDialog } from "./ProjectDetailsDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProjectsTabProps {
-  onCreateProject?: (workId: number) => void;
+  onViewDetails?: (item: any, type: string) => Promise<void>;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<void>;
 }
 
-export function ProjectsTab({ onCreateProject }: ProjectsTabProps) {
+export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps) {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const { 
     data: allProjects = [], 
     isLoading,
+    error,
     refetch
   } = useQuery({
     queryKey: ['userProjects'],
-    queryFn: getUserProjects
+    queryFn: getUserProjects,
+    retry: 1
   });
 
-  const handleViewDetails = (project: Project) => {
+  console.log('ProjectsTab - Projects data:', allProjects);
+  console.log('ProjectsTab - Loading:', isLoading);
+  console.log('ProjectsTab - Error:', error);
+
+  const handleViewDetails = async (project: Project) => {
+    console.log('Viewing project details:', project);
     setSelectedProject(project);
     setIsDetailsOpen(true);
+    if (onViewDetails) {
+      await onViewDetails(project, 'project');
+    }
   };
 
   const handleOpenChat = (project: Project) => {
-    // TODO: Implement project chat functionality
     console.log('Opening chat for project:', project.id);
   };
 
@@ -40,6 +50,29 @@ export function ProjectsTab({ onCreateProject }: ProjectsTabProps) {
 
   if (isLoading) {
     return <LoadingSkeleton />;
+  }
+
+  if (error) {
+    console.error('Error loading projects:', error);
+    return (
+      <div className="text-center py-10">
+        <div className="space-y-4">
+          <div className="text-6xl">⚠️</div>
+          <div>
+            <h3 className="text-lg font-medium">Error Loading Projects</h3>
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : 'Failed to load projects'}
+            </p>
+            <button 
+              onClick={() => refetch()} 
+              className="mt-2 px-4 py-2 bg-primary text-primary-foreground rounded"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -52,43 +85,55 @@ export function ProjectsTab({ onCreateProject }: ProjectsTabProps) {
           </div>
         </div>
 
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">
-              Active ({activeProjects.length})
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completed ({completedProjects.length})
-            </TabsTrigger>
-            <TabsTrigger value="other">
-              Other ({otherProjects.length})
-            </TabsTrigger>
-          </TabsList>
+        {allProjects.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground">
+            <div className="space-y-4">
+              <div className="text-6xl">📋</div>
+              <div>
+                <h3 className="text-lg font-medium">No Projects Yet</h3>
+                <p className="text-sm">Your accepted work assignments will appear here as projects.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Tabs defaultValue="active" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="active">
+                Active ({activeProjects.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed">
+                Completed ({completedProjects.length})
+              </TabsTrigger>
+              <TabsTrigger value="other">
+                Other ({otherProjects.length})
+              </TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="active" className="mt-6">
-            <ProjectsGrid 
-              projects={activeProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
+            <TabsContent value="active" className="mt-6">
+              <ProjectsGrid 
+                projects={activeProjects}
+                onViewDetails={handleViewDetails}
+                onOpenChat={handleOpenChat}
+              />
+            </TabsContent>
 
-          <TabsContent value="completed" className="mt-6">
-            <ProjectsGrid 
-              projects={completedProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
+            <TabsContent value="completed" className="mt-6">
+              <ProjectsGrid 
+                projects={completedProjects}
+                onViewDetails={handleViewDetails}
+                onOpenChat={handleOpenChat}
+              />
+            </TabsContent>
 
-          <TabsContent value="other" className="mt-6">
-            <ProjectsGrid 
-              projects={otherProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="other" className="mt-6">
+              <ProjectsGrid 
+                projects={otherProjects}
+                onViewDetails={handleViewDetails}
+                onOpenChat={handleOpenChat}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
 
       <ProjectDetailsDialog

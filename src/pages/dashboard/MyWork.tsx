@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +27,11 @@ export default function MyWork() {
     isDetailsOpen,
     detailsItem,
   });
+
+  // Wrapper to align status change to return Promise<void>
+  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<void> => {
+    await handleStatusChange(id, type, status);
+  };
 
   return (
     <div className="space-y-6">
@@ -72,7 +78,7 @@ export default function MyWork() {
         <TabsContent value="projects">
           <ProjectsTab   
             onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChange} 
+            onStatusChange={handleStatusChangeWrapper} 
           />
         </TabsContent>
 
@@ -80,7 +86,7 @@ export default function MyWork() {
         <TabsContent value="applications">
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChange}
+            onStatusChange={handleStatusChangeWrapper}
           />
         </TabsContent>
 
@@ -96,7 +102,7 @@ export default function MyWork() {
         onOpenChange={setIsDetailsOpen}
         detailsItem={detailsItem}
         detailsType={detailsType}
-        onStatusChange={handleStatusChange}
+        onStatusChange={handleStatusChangeWrapper}
       />
     </div>
   );

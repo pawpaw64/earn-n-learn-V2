@@ -13,13 +13,17 @@ CREATE TABLE IF NOT EXISTS projects (
   hourly_rate DECIMAL(10,2),
   current_phase INT DEFAULT 1,
   status ENUM('active', 'paused', 'completed', 'cancelled') DEFAULT 'active',
-  start_date DATE DEFAULT (CURRENT_DATE),
+  start_date DATE DEFAULT (CURDATE()),
   expected_end_date DATE,
   actual_end_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_provider_id (provider_id),
+  INDEX idx_client_id (client_id),
+  INDEX idx_status (status),
+  INDEX idx_source (source_type, source_id)
 ) ENGINE=InnoDB;
 
 -- Project milestones
@@ -35,7 +39,9 @@ CREATE TABLE IF NOT EXISTS project_milestones (
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+  FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+  INDEX idx_project_id (project_id),
+  INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
 -- Project progress updates
@@ -51,5 +57,7 @@ CREATE TABLE IF NOT EXISTS project_updates (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
   FOREIGN KEY (milestone_id) REFERENCES project_milestones(id) ON DELETE SET NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_project_id (project_id),
+  INDEX idx_user_id (user_id)
 ) ENGINE=InnoDB;

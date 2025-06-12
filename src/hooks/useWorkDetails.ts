@@ -42,7 +42,7 @@ export const useWorkDetails = ({
 }: UseWorkDetailsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   
-  const handleViewDetails = async (item: any, type: string) => {
+  const handleViewDetails = async (item: any, type: string): Promise<void> => {
     // For certain types, we need to fetch more details
     let detailItem = item;
     
@@ -92,7 +92,7 @@ export const useWorkDetails = ({
     navigate(`/dashboard/browse?tab=post&type=${type}`);
   };
 
-  const handleDelete = async (id: number, type: string) => {
+  const handleDelete = async (id: number, type: string): Promise<boolean> => {
     try {
       setIsProcessing(true);
       
@@ -115,15 +115,17 @@ export const useWorkDetails = ({
     }
   };
 
-  const handleStatusChange = async (id: number, type: string, newStatus: string) => {
+  const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
     try {
       setIsProcessing(true);
+      console.log(`Updating ${type} ${id} status to ${newStatus}`);
       
       if (type === 'job_application') {
         await updateApplicationStatus(id, newStatus);
         // Create project when status is accepted
         if (newStatus === 'accepted') {
           try {
+            console.log('Creating project from application:', id);
             await createProjectFromApplication(id, {});
             toast.success('Work assignment accepted and project created successfully');
           } catch (error) {
@@ -137,6 +139,7 @@ export const useWorkDetails = ({
         // Create project when status is accepted
         if (newStatus === 'accepted') {
           try {
+            console.log('Creating project from skill contact:', id);
             await createProjectFromContact(id, 'skill', {});
             toast.success('Skill contact accepted and project created successfully');
           } catch (error) {
@@ -150,6 +153,7 @@ export const useWorkDetails = ({
         // Create project when status is accepted
         if (newStatus === 'accepted') {
           try {
+            console.log('Creating project from material contact:', id);
             await createProjectFromContact(id, 'material', {});
             toast.success('Material contact accepted and project created successfully');
           } catch (error) {
@@ -171,12 +175,11 @@ export const useWorkDetails = ({
       }
       
       setIsProcessing(false);
-      return true;
     } catch (error) {
       console.error(`Error updating ${type} status:`, error);
       toast.error('Failed to update status');
       setIsProcessing(false);
-      return false;
+      throw error; // Re-throw to maintain error handling
     }
   };
 
