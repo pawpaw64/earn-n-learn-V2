@@ -1,18 +1,18 @@
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Calendar, DollarSign, User, Clock, CheckCircle, Circle, AlertCircle } from "lucide-react";
-import { Project, updateProjectStatus, updateMilestone } from "@/services/projects";  
-import { useToast } from "@/hooks/use-toast";
+import { Calendar, DollarSign, User, Clock, Target } from "lucide-react";
+import { Project, updateProjectStatus, updateMilestone } from "@/services/projects";
+import { toast } from "sonner";
 
 interface ProjectDetailsDialogProps {
   project: Project | null;
@@ -21,22 +21,32 @@ interface ProjectDetailsDialogProps {
   onProjectUpdate?: () => void;
 }
 
-export function ProjectDetailsDialog({ 
-  project, 
-  isOpen, 
-  onOpenChange, 
-  onProjectUpdate 
+export function ProjectDetailsDialog({
+  project,
+  isOpen,
+  onOpenChange,
+  onProjectUpdate
 }: ProjectDetailsDialogProps) {
-  const { toast } = useToast();
-  const [isUpdating, setIsUpdating] = useState(false);
-
   if (!project) return null;
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'default';
+      case 'completed':
+        return 'secondary';
+      case 'paused':
+        return 'outline';
+      case 'cancelled':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  };
 
   const getProgressPercentage = () => {
     if (!project.milestones || project.milestones.length === 0) return 0;
-    const completedMilestones = project.milestones.filter(m => 
-      m.status === 'completed' || m.status === 'approved'
-    ).length;
+    const completedMilestones = project.milestones.filter(m => m.status === 'completed' || m.status === 'approved').length;
     return (completedMilestones / project.milestones.length) * 100;
   };
 
@@ -55,203 +65,162 @@ export function ProjectDetailsDialog({
     return 'Not specified';
   };
 
+  const collaboratorName = project.provider_id === parseInt(localStorage.getItem('userId') || '0') 
+    ? project.client_name 
+    : project.provider_name;
+
   const handleStatusUpdate = async (newStatus: string) => {
     try {
-      setIsUpdating(true);
       await updateProjectStatus(project.id, newStatus);
-      toast({
-        title: "Success",
-        description: `Project status updated to ${newStatus}`
-      });
+      toast.success(`Project status updated to ${newStatus}`);
       onProjectUpdate?.();
       onOpenChange(false);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update project status",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdating(false);
+      console.error('Error updating project status:', error);
+      toast.error('Failed to update project status');
     }
   };
 
   const handleMilestoneUpdate = async (milestoneId: number, newStatus: string) => {
     try {
-      setIsUpdating(true);
       await updateMilestone(milestoneId, newStatus);
-      toast({
-        title: "Success",
-        description: "Milestone updated successfully"
-      });
+      toast.success('Milestone updated successfully');
       onProjectUpdate?.();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update milestone",
-        variant: "destructive"
-      });
-    } finally {
-      setIsUpdating(false);
+      console.error('Error updating milestone:', error);
+      toast.error('Failed to update milestone');
     }
   };
-
-  const getMilestoneIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-      case 'approved':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'in_progress':
-        return <AlertCircle className="h-5 w-5 text-blue-500" />;
-      default:
-        return <Circle className="h-5 w-5 text-gray-400" />;
-    }
-  };
-
-  const collaboratorName = project.provider_id === parseInt(localStorage.getItem('userId') || '0') 
-    ? project.client_name 
-    : project.provider_name;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <div className="flex justify-between items-start gap-4">
-            <div className="space-y-1">
-              <DialogTitle className="text-xl">{project.title}</DialogTitle>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Collaborating with {collaboratorName}</span>
-              </div>
-            </div>
-            <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{project.title}</span>
+            <Badge variant={getStatusColor(project.status)}>
               {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
             </Badge>
-          </div>
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="milestones">Milestones</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Start Date: {formatDate(project.start_date)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">Due Date: {formatDate(project.expected_end_date)}</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-600">
-                      {formatAmount(project.total_amount, project.hourly_rate)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Type:</span>
-                    <span className="text-sm capitalize">{project.project_type}</span>
-                  </div>
-                </div>
+        <div className="py-4 flex-grow overflow-y-auto space-y-6">
+          {/* Project Info */}
+          <div className="space-y-4">
+            {project.description && (
+              <div>
+                <h4 className="font-medium mb-2">Description</h4>
+                <p className="text-sm text-muted-foreground">{project.description}</p>
               </div>
+            )}
 
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground" />
+                <span>Collaborator: {collaboratorName || 'Unknown'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-emerald-600" />
+                <span className="font-medium text-emerald-600">
+                  {formatAmount(project.total_amount, project.hourly_rate)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span>Start: {formatDate(project.start_date)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span>Due: {formatDate(project.expected_end_date)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">Overall Progress</span>
+              <span>{Math.round(getProgressPercentage())}% Complete</span>
+            </div>
+            <Progress value={getProgressPercentage()} className="h-2" />
+          </div>
+
+          {/* Milestones */}
+          {project.milestones && project.milestones.length > 0 && (
+            <div className="space-y-4">
+              <h4 className="font-medium flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Milestones
+              </h4>
               <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(getProgressPercentage())}% Complete
-                  </span>
-                </div>
-                <Progress value={getProgressPercentage()} className="h-3" />
-              </div>
-
-              {project.description && (
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Description</h4>
-                  <p className="text-sm text-muted-foreground">{project.description}</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="milestones" className="space-y-4 mt-6">
-              {project.milestones && project.milestones.length > 0 ? (
-                <div className="space-y-3">
-                  {project.milestones.map((milestone) => (
-                    <div key={milestone.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      {getMilestoneIcon(milestone.status)}
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{milestone.title}</h4>
-                            {milestone.description && (
-                              <p className="text-sm text-muted-foreground">{milestone.description}</p>
-                            )}
-                            {milestone.due_date && (
-                              <p className="text-xs text-muted-foreground">
-                                Due: {formatDate(milestone.due_date)}
-                              </p>
-                            )}
-                          </div>
-                          {milestone.status === 'in_progress' && (
-                            <Button
-                              size="sm"
-                              disabled={isUpdating}
-                              onClick={() => handleMilestoneUpdate(milestone.id, 'completed')}
-                            >
-                              Mark Complete
-                            </Button>
-                          )}
-                        </div>
-                      </div>
+                {project.milestones.map((milestone) => (
+                  <div key={milestone.id} className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium">
+                        Phase {milestone.phase_number}: {milestone.title}
+                      </span>
+                      <Badge variant={milestone.status === 'completed' ? 'default' : 'outline'}>
+                        {milestone.status.replace('_', ' ')}
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No milestones defined for this project.
-                </p>
-              )}
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-4 mt-6">
-              <p className="text-center text-muted-foreground py-8">
-                Activity feed coming soon...
-              </p>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-          {project.status === 'active' && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                disabled={isUpdating}
-                onClick={() => handleStatusUpdate('paused')}
-              >
-                Pause Project
-              </Button>
-              <Button
-                disabled={isUpdating}
-                onClick={() => handleStatusUpdate('completed')}
-              >
-                Complete Project
-              </Button>
+                    {milestone.description && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {milestone.description}
+                      </p>
+                    )}
+                    {milestone.notes && (
+                      <p className="text-sm text-blue-600 mb-2">
+                        Notes: {milestone.notes}
+                      </p>
+                    )}
+                    <div className="flex gap-2">
+                      {milestone.status !== 'completed' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleMilestoneUpdate(milestone.id, 'completed')}
+                        >
+                          Mark Complete
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
+
+        <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+          
+          <div className="flex gap-2">
+            {project.status === 'active' && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => handleStatusUpdate('paused')}
+                >
+                  Pause
+                </Button>
+                <Button
+                  onClick={() => handleStatusUpdate('completed')}
+                >
+                  Complete
+                </Button>
+              </>
+            )}
+            {project.status === 'paused' && (
+              <Button
+                onClick={() => handleStatusUpdate('active')}
+              >
+                Resume
+              </Button>
+            )}
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

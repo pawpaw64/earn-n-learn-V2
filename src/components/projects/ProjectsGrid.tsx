@@ -10,14 +10,16 @@ interface ProjectsGridProps {
 }
 
 export function ProjectsGrid({ projects, onViewDetails, onOpenChat }: ProjectsGridProps) {
+  console.log('ProjectsGrid - Rendering with projects:', projects);
+
   if (projects.length === 0) {
     return (
-      <div className="col-span-2 text-center py-10 text-muted-foreground">
+      <div className="col-span-full text-center py-10 text-muted-foreground">
         <div className="space-y-4">
           <div className="text-6xl">📋</div>
           <div>
-            <h3 className="text-lg font-medium">No Projects</h3>
-            <p className="text-sm">Your accepted work assignments will appear here as projects.</p>
+            <h3 className="text-lg font-medium">No Projects in this category</h3>
+            <p className="text-sm">Projects will appear here when available.</p>
           </div>
         </div>
       </div>

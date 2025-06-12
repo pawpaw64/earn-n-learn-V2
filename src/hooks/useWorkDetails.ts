@@ -18,6 +18,10 @@ import {
   getSkillContactDetails,
   getMaterialContactDetails 
 } from "@/services/contacts";
+import { 
+  createProjectFromApplication, 
+  createProjectFromContact 
+} from "@/services/projects";
 
 interface UseWorkDetailsProps {
   setDetailsItem: React.Dispatch<React.SetStateAction<any>>;
@@ -110,66 +114,71 @@ export const useWorkDetails = ({
       return false;
     }
   };
-// In useWorkDetails.ts, modify the handleStatusChange function:
 
-const handleStatusChange = async (id: number, type: string, newStatus: string) => {
-  try {
-    setIsProcessing(true);
-    
-    if (type === 'job_application') {
-      await updateApplicationStatus(id, newStatus);
-      // Create work and project only when status is accepted
-      if (newStatus === 'accepted') {
-        const work = await createWorkFromApplication(id);
-        if (work) {
-          await createProjectFromWork(work.id, {});
-          toast.success('Work assignment and project created successfully');
+  const handleStatusChange = async (id: number, type: string, newStatus: string) => {
+    try {
+      setIsProcessing(true);
+      
+      if (type === 'job_application') {
+        await updateApplicationStatus(id, newStatus);
+        // Create project when status is accepted
+        if (newStatus === 'accepted') {
+          try {
+            await createProjectFromApplication(id, {});
+            toast.success('Work assignment accepted and project created successfully');
+          } catch (error) {
+            console.error('Error creating project from application:', error);
+            toast.error('Work assignment accepted but failed to create project');
+          }
+        }
+      } 
+      else if (type === 'skill_contact') {
+        await updateSkillContactStatus(id, newStatus);
+        // Create project when status is accepted
+        if (newStatus === 'accepted') {
+          try {
+            await createProjectFromContact(id, 'skill', {});
+            toast.success('Skill contact accepted and project created successfully');
+          } catch (error) {
+            console.error('Error creating project from skill contact:', error);
+            toast.error('Skill contact accepted but failed to create project');
+          }
         }
       }
-    } 
-    else if (type === 'skill_contact') {
-      await updateSkillContactStatus(id, newStatus);
-      // Create work and project only when status is accepted
-      if (newStatus === 'accepted') {
-        const work = await createWorkFromSkillContact(id);
-        if (work) {
-          await createProjectFromWork(work.id, {});
-          toast.success('Work assignment and project created successfully');
+      else if (type === 'material_contact') {
+        await updateMaterialContactStatus(id, newStatus);
+        // Create project when status is accepted
+        if (newStatus === 'accepted') {
+          try {
+            await createProjectFromContact(id, 'material', {});
+            toast.success('Material contact accepted and project created successfully');
+          } catch (error) {
+            console.error('Error creating project from material contact:', error);
+            toast.error('Material contact accepted but failed to create project');
+          }
         }
       }
-    }
-    else if (type === 'material_contact') {
-      await updateMaterialContactStatus(id, newStatus);
-      // Create work and project only when status is accepted
-      if (newStatus === 'accepted') {
-        const work = await createWorkFromSkillContact(id);
-        if (work) {
-          await createProjectFromWork(work.id, {});
-          toast.success('Work assignment and project created successfully');
-        }
+      else if (type === 'work') {
+        await updateWorkStatus(id, newStatus);
       }
+      
+      if (newStatus !== 'accepted') {
+        toast.success(`Status updated to ${newStatus}`);
+      }
+      
+      if (isDetailsOpen && detailsItem?.id === id) {
+        setIsDetailsOpen(false);
+      }
+      
+      setIsProcessing(false);
+      return true;
+    } catch (error) {
+      console.error(`Error updating ${type} status:`, error);
+      toast.error('Failed to update status');
+      setIsProcessing(false);
+      return false;
     }
-    else if (type === 'work') {
-      await updateWorkStatus(id, newStatus);
-    }
-    
-    if (newStatus !== 'accepted') {
-      toast.success(`Status updated to ${newStatus}`);
-    }
-    
-    if (isDetailsOpen && detailsItem?.id === id) {
-      setIsDetailsOpen(false);
-    }
-    
-    setIsProcessing(false);
-    return true;
-  } catch (error) {
-    console.error(`Error updating ${type} status:`, error);
-    toast.error('Failed to update status');
-    setIsProcessing(false);
-    return false;
-  }
-};
+  };
 
   return {
     handleViewDetails,
@@ -179,7 +188,3 @@ const handleStatusChange = async (id: number, type: string, newStatus: string) =
     isProcessing
   };
 };
-function createProjectFromWork(id: any, arg1: {}) {
-  throw new Error("Function not implemented.");
-}
-
