@@ -1,6 +1,41 @@
+
 import UserModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Configure multer for profile image uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/profiles/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Register
 export async function register(req, res) {
@@ -53,7 +88,7 @@ export async function register(req, res) {
     console.error('Registration failed:', {
       error: error.message,
       body: req.body,
-      stack: error.stack // Always log stack for debugging
+      stack: error.stack
     });
     
     return res.status(500).json({
@@ -74,7 +109,6 @@ export async function login(req, res) {
   }
 
   try {
-    // 1. First debug point - check if we're finding the user
     console.log('Searching for user with email:', email);
     const user = await UserModel.findByEmail(email);
     
@@ -83,7 +117,6 @@ export async function login(req, res) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // 2. Second debug point - check the passwords
     console.log('Comparing passwords:');
     console.log('Input password:', password);
     console.log('Stored hash:', user.password);
@@ -95,7 +128,6 @@ export async function login(req, res) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // 3. If we get here, login is successful
     console.log('Login successful for user:', user.email);
     
     const token = jwt.sign(
@@ -149,7 +181,6 @@ export async function getUserById(req, res) {
     const userId = req.params.id;
     const user = await UserModel.findById(userId);
    
-    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -176,13 +207,56 @@ export async function getUserById(req, res) {
 export async function updateProfile(req, res) {
   console.log('Updating user profile... [userController.js.updateProfile]');
   try {
-    const updated = await UserModel.updateProfile(req.user.id, req.body);
+    const updateData = { ...req.body };
+    
+    // If new avatar is uploaded, update the avatar URL
+    if (req.file) {
+      updateData.avatar = `/uploads/profiles/${req.file.filename}`;
+      
+      // Get current user to delete old avatar
+      const currentUser = await UserModel.getById(req.user.id);
+      if (currentUser && currentUser.avatar) {
+        const oldImagePath = path.join(process.cwd(), 'src/server', currentUser.avatar);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    }
+    
+    const updated = await UserModel.updateProfile(req.user.id, updateData);
     res.json({ 
       message: updated ? 'Profile updated successfully' : 'Profile update failed',
-      success: updated
+      success: updated,
+      avatar: updateData.avatar || null
     });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+// Upload profile avatar
+export async function uploadAvatar(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+    
+    const imageUrl = `/uploads/profiles/${req.file.filename}`;
+    
+    // Update user's avatar in database
+    const updated = await UserModel.updateProfile(req.user.id, { avatar: imageUrl });
+    
+    if (updated) {
+      res.json({ imageUrl, message: 'Avatar uploaded successfully' });
+    } else {
+      res.status(500).json({ message: 'Failed to update avatar in database' });
+    }
+  } catch (error) {
+    console.error('Upload avatar error:', error);
+    res.status(500).json({ message: 'Avatar upload failed' });
+  }
+}
+
+// Export multer middleware
+export const uploadAvatarMiddleware = upload.single('image');

@@ -1,3 +1,4 @@
+
 // src/services/profile.ts
 import axios from 'axios';
 import { setAuthToken } from './auth';
@@ -68,9 +69,24 @@ export const fetchUserById = async (userId: string): Promise<ProfileData | null>
   }
 };
 
-export const updateUserProfile = async (profileData: any) => {
+export const updateUserProfile = async (profileData: any, imageFile?: File) => {
   setAuthToken(localStorage.getItem('token'));
-  const response = await axios.put(`${API_URL}/users/profile`, profileData);
+  
+  const formData = new FormData();
+  formData.append('name', profileData.name);
+  formData.append('bio', profileData.bio || '');
+  formData.append('program', profileData.program || '');
+  formData.append('graduationYear', profileData.graduationYear || '');
+  
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+  
+  const response = await axios.put(`${API_URL}/users/profile`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
   return response.data;
 };
 

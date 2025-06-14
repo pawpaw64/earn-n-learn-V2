@@ -1,3 +1,4 @@
+
 import { execute } from '../config/db.js';
 
 function formatDate(dateString) {
@@ -26,6 +27,7 @@ class MaterialModel {
     console.error('Unexpected query result format:', result);
     return [];
   }
+  
   static async getAllExcludingUser(userId) {
     try {
       const result= await execute(`
@@ -57,6 +59,7 @@ class MaterialModel {
       throw new Error('Failed to fetch materials');
     }
   }
+  
   // Get all materials (single, unified version)
   static async getAll() {
     try {
@@ -113,30 +116,26 @@ class MaterialModel {
     }
   }
 
-  // Create material (simplified version)
+  // Create material (enhanced to include image_url)
   static async create(materialData) {
-    const { user_id, title, description, conditions, price, availability } = materialData;
+    const { user_id, title, description, conditions, price, availability, image_url } = materialData;
     
     try {
       if (!user_id || !title) {
         throw new Error('user_id and title are required fields');
       }
 
-      const { insertId } = await execute(
-        'INSERT INTO material_marketplace (user_id, title, description, `conditions`, price, availability) VALUES (?, ?, ?, ?, ?, ?)',
-        [user_id, title, description || null, conditions || null, price || null, availability || null]
+      const result = await execute(
+        'INSERT INTO material_marketplace (user_id, title, description, `conditions`, price, availability, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [user_id, title, description || null, conditions || null, price || null, availability || null, image_url || null]
       );
 
+      const insertId = result.insertId || result[0]?.insertId;
       if (!insertId) {
         throw new Error('Failed to create material - no insert ID returned');
       }
 
-      const [created] = await execute(
-        'SELECT * FROM material_marketplace WHERE id = ?',
-        [insertId]
-      );
-
-      return created[0] || null;
+      return insertId;
     } catch (error) {
       console.error('Material creation failed:', {
         error: error.message,
@@ -147,16 +146,26 @@ class MaterialModel {
     }
   }
 
-  // Update material
+  // Update material (enhanced to include image_url)
   static async update(id, materialData) {
-    const { title, description, conditions, price, availability } = materialData;
+    const { title, description, conditions, price, availability, image_url } = materialData;
     
     try {
-      const [result] = await execute(
-        'UPDATE material_marketplace SET title = ?, description = ?, `conditions` = ?, price = ?, availability = ? WHERE id = ?',
-        [title, description, conditions, price, availability, id]
-      );
-      return result.affectedRows > 0;
+      let query = 'UPDATE material_marketplace SET title = ?, description = ?, `conditions` = ?, price = ?, availability = ?';
+      let params = [title, description, conditions, price, availability];
+      
+      // Only update image_url if it's provided
+      if (image_url !== undefined) {
+        query += ', image_url = ?';
+        params.push(image_url);
+      }
+      
+      query += ' WHERE id = ?';
+      params.push(id);
+      
+      const result = await execute(query, params);
+      const affectedRows = result.affectedRows || result[0]?.affectedRows;
+      return affectedRows > 0;
     } catch (error) {
       console.error('Update material failed:', error);
       throw new Error(error.message);
@@ -166,11 +175,12 @@ class MaterialModel {
   // Delete material
   static async remove(id) {
     try {
-      const [result] = await execute(
+      const result = await execute(
         'DELETE FROM material_marketplace WHERE id = ?',
         [id]
       );
-      return result.affectedRows > 0;
+      const affectedRows = result.affectedRows || result[0]?.affectedRows;
+      return affectedRows > 0;
     } catch (error) {
       console.error('Delete material failed:', error);
       throw new Error(error.message);
@@ -180,11 +190,11 @@ class MaterialModel {
   // Get user materials
   static async getUserMaterials(userId) {
     try {
-      const [rows] = await execute(
+      const result = await execute(
         'SELECT * FROM material_marketplace WHERE user_id = ?',
         [userId]
       );
-      return rows;
+      return this.#handleQueryResult(result);
     } catch (error) {
       console.error('Get user materials failed:', error);
       throw new Error(error.message);

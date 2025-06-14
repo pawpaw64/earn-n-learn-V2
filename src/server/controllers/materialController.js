@@ -1,4 +1,39 @@
+
 import MaterialModel from '../models/materialModel.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+
+// Configure multer for image uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'uploads/materials/';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'material-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Get all materials
 export async function getAllMaterials(req, res) {
@@ -18,6 +53,7 @@ export async function getAllMaterials(req, res) {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
 // Get material by ID
 export async function getMaterialById(req, res) {
   try {
@@ -34,25 +70,29 @@ export async function getMaterialById(req, res) {
 
 // Create new material
 export async function createMaterial(req, res) {
-  const { title, description, condition, price, availability } = req.body;
+  const { title, description, conditions, price, availability } = req.body;
   
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
   }
   
   try {
-    const materialId = await MaterialModel.create({
+    const materialData = {
       user_id: req.user.id,
       title,
       description,
-      condition,
+      conditions,
       price,
-      availability
-    });
+      availability,
+      image_url: req.file ? `/uploads/materials/${req.file.filename}` : null
+    };
+
+    const materialId = await MaterialModel.create(materialData);
     
     res.status(201).json({ 
       materialId,
-      message: 'Material posted successfully' 
+      message: 'Material posted successfully',
+      image_url: materialData.image_url
     });
   } catch (error) {
     console.error('Create material error:', error);
@@ -67,7 +107,22 @@ export async function updateMaterial(req, res) {
     if (!material) return res.status(404).json({ message: 'Material not found' });
     if (material.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
     
-    const updated = await MaterialModel.update(req.params.id, req.body);
+    const updateData = { ...req.body };
+    
+    // If new image is uploaded, update the image_url
+    if (req.file) {
+      updateData.image_url = `/uploads/materials/${req.file.filename}`;
+      
+      // Delete old image if it exists
+      if (material.image_url) {
+        const oldImagePath = path.join(process.cwd(), 'src/server', material.image_url);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    }
+    
+    const updated = await MaterialModel.update(req.params.id, updateData);
     res.json(updated ? { message: 'Material updated' } : { message: 'Update failed' });
   } catch (error) {
     console.error('Update material error:', error);
@@ -81,6 +136,14 @@ export async function deleteMaterial(req, res) {
     const material = await MaterialModel.getById(req.params.id);
     if (!material) return res.status(404).json({ message: 'Material not found' });
     if (material.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
+    
+    // Delete associated image file
+    if (material.image_url) {
+      const imagePath = path.join(process.cwd(), 'src/server', material.image_url);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
     
     const deleted = await MaterialModel.remove(req.params.id);
     res.json(deleted ? { message: 'Material deleted' } : { message: 'Deletion failed' });
@@ -100,3 +163,21 @@ export async function getUserMaterials(req, res) {
     res.status(500).json({ message: 'Server error' });
   }
 }
+
+// Upload material image
+export async function uploadMaterialImage(req, res) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+    
+    const imageUrl = `/uploads/materials/${req.file.filename}`;
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Upload material image error:', error);
+    res.status(500).json({ message: 'Image upload failed' });
+  }
+}
+
+// Export multer middleware
+export const uploadMaterialImageMiddleware = upload.single('image');
