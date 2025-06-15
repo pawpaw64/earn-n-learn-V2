@@ -4,8 +4,9 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Eye, MessageSquare, Calendar, DollarSign, User, Clock } from "lucide-react";
+import { Eye, MessageSquare, Calendar, DollarSign, User, Clock, Edit } from "lucide-react";
 import { Project } from "@/types/marketplace";
+import { Action } from "@radix-ui/react-toast";
 
 interface ProjectCardProps {
   project: Project;
@@ -127,20 +128,10 @@ const formatAmount = (amount?: number | string, hourlyRate?: number | string) =>
           className="flex-1 gap-2"
           onClick={() => onViewDetails(project)}
         >
-          <Eye className="h-4 w-4" />
-          View Details
+          <Edit className="h-4 w-4" />
+          <span>Actions</span>
         </Button>
-        {onOpenChat && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 gap-2"
-            onClick={() => onOpenChat(project)}
-          >
-            <MessageSquare className="h-4 w-4" />
-            Chat
-          </Button>
-        )}
+        
       </CardFooter>
     </Card>
   );

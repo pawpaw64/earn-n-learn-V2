@@ -1,22 +1,27 @@
 
-import React, { useState } from "react";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Pause, Square, Clock, Calendar } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Clock, Calendar, DollarSign, CheckCircle, XCircle, Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface TimeEntry {
   id: number;
-  taskId?: number;
-  taskName: string;
+  project_id: number;
+  task_id?: number;
+  user_id: number;
   description: string;
-  startTime: string;
-  endTime?: string;
-  duration: number; // in minutes
+  hours: number;
   date: string;
-  user: string;
-  billable: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  user_name: string;
+  task_title?: string;
+  created_at: string;
 }
 
 interface TimeTrackingProps {
@@ -25,268 +30,223 @@ interface TimeTrackingProps {
 }
 
 export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([
-    {
-      id: 1,
-      taskId: 1,
-      taskName: "Setup project environment",
-      description: "Installing dependencies and configuring development environment",
-      startTime: "09:00",
-      endTime: "12:30",
-      duration: 210,
-      date: "2024-06-18",
-      user: "John Provider",
-      billable: true
-    },
-    {
-      id: 2,
-      taskId: 2,
-      taskName: "Database design",
-      description: "Creating database schema and relationships",
-      startTime: "14:00",
-      endTime: "17:30",
-      duration: 210,
-      date: "2024-06-18",
-      user: "John Provider",
-      billable: true
-    },
-    {
-      id: 3,
-      taskId: 2,
-      taskName: "Database design",
-      description: "Implementing database models and connections",
-      startTime: "09:00",
-      endTime: "11:30",
-      duration: 150,
-      date: "2024-06-19",
-      user: "John Provider",
-      billable: true
-    }
-  ]);
-
-  const [activeTimer, setActiveTimer] = useState<{
-    taskName: string;
-    startTime: Date;
-    description: string;
-  } | null>(null);
-
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newEntry, setNewEntry] = useState({
-    taskName: '',
-    description: '',
-    startTime: '',
-    endTime: '',
-    date: new Date().toISOString().split('T')[0],
-    billable: true
+    task_id: "",
+    description: "",
+    hours: 0,
+    date: new Date().toISOString().split('T')[0]
   });
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  };
-
-  const startTimer = () => {
-    setActiveTimer({
-      taskName: 'Current Task',
-      startTime: new Date(),
-      description: ''
-    });
-  };
-
-  const stopTimer = () => {
-    if (activeTimer) {
-      const duration = Math.round((new Date().getTime() - activeTimer.startTime.getTime()) / (1000 * 60));
-      const entry: TimeEntry = {
-        id: Date.now(),
-        taskName: activeTimer.taskName,
-        description: activeTimer.description,
-        startTime: activeTimer.startTime.toTimeString().slice(0, 5),
-        endTime: new Date().toTimeString().slice(0, 5),
-        duration,
-        date: new Date().toISOString().split('T')[0],
-        user: 'John Provider',
-        billable: true
-      };
-      setTimeEntries([...timeEntries, entry]);
-      setActiveTimer(null);
+  const loadTimeEntries = async () => {
+    try {
+      setIsLoading(true);
+      // TODO: Replace with actual API call
+      // const data = await getProjectTimeEntries(projectId);
+      setTimeEntries([]);
+    } catch (error) {
+      console.error("Error loading time entries:", error);
+      toast.error("Failed to load time entries");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const addManualEntry = () => {
-    const start = new Date(`${newEntry.date}T${newEntry.startTime}`);
-    const end = new Date(`${newEntry.date}T${newEntry.endTime}`);
-    const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60));
+  useEffect(() => {
+    loadTimeEntries();
+  }, [projectId]);
 
-    const entry: TimeEntry = {
-      id: Date.now(),
-      taskName: newEntry.taskName,
-      description: newEntry.description,
-      startTime: newEntry.startTime,
-      endTime: newEntry.endTime,
-      duration,
-      date: newEntry.date,
-      user: 'John Provider',
-      billable: newEntry.billable
-    };
+  const handleCreateEntry = async () => {
+    if (!newEntry.description.trim() || newEntry.hours <= 0) {
+      toast.error("Description and hours are required");
+      return;
+    }
 
-    setTimeEntries([...timeEntries, entry]);
-    setNewEntry({
-      taskName: '',
-      description: '',
-      startTime: '',
-      endTime: '',
-      date: new Date().toISOString().split('T')[0],
-      billable: true
-    });
+    try {
+      // TODO: Replace with actual API call
+      // await createTimeEntry(projectId, newEntry);
+      toast.success("Time entry created successfully");
+      setNewEntry({ task_id: "", description: "", hours: 0, date: new Date().toISOString().split('T')[0] });
+      setIsCreateDialogOpen(false);
+      loadTimeEntries();
+    } catch (error) {
+      console.error("Error creating time entry:", error);
+      toast.error("Failed to create time entry");
+    }
   };
 
-  const totalHours = timeEntries.reduce((sum, entry) => sum + entry.duration, 0);
-  const billableHours = timeEntries.filter(entry => entry.billable).reduce((sum, entry) => sum + entry.duration, 0);
-  const todayEntries = timeEntries.filter(entry => entry.date === new Date().toISOString().split('T')[0]);
-  const todayHours = todayEntries.reduce((sum, entry) => sum + entry.duration, 0);
+  const handleUpdateEntryStatus = async (entryId: number, status: string) => {
+    try {
+      // TODO: Replace with actual API call
+      // await updateTimeEntryStatus(entryId, status);
+      toast.success(`Time entry ${status}`);
+      loadTimeEntries();
+    } catch (error) {
+      console.error("Error updating time entry status:", error);
+      toast.error("Failed to update time entry status");
+    }
+  };
+
+  const handleDeleteEntry = async (entryId: number) => {
+    try {
+      // TODO: Replace with actual API call
+      // await deleteTimeEntry(entryId);
+      toast.success("Time entry deleted successfully");
+      loadTimeEntries();
+    } catch (error) {
+      console.error("Error deleting time entry:", error);
+      toast.error("Failed to delete time entry");
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'default';
+      case 'rejected': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  const totalHours = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+  const approvedHours = timeEntries.filter(entry => entry.status === 'approved').reduce((sum, entry) => sum + entry.hours, 0);
+
+  if (isLoading) {
+    return <div className="p-4">Loading time entries...</div>;
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Time Tracking</h3>
-          <p className="text-sm text-muted-foreground">
-            Total: {formatDuration(totalHours)} • Billable: {formatDuration(billableHours)} • Today: {formatDuration(todayHours)}
-          </p>
-        </div>
-      </div>
-
-      {/* Active Timer */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                <span className="font-medium">
-                  {activeTimer ? 'Timer Running' : 'No Active Timer'}
-                </span>
-              </div>
-              {activeTimer && (
-                <div className="text-sm text-muted-foreground">
-                  Started at {activeTimer.startTime.toTimeString().slice(0, 5)}
-                </div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              {!activeTimer ? (
-                <Button onClick={startTimer} size="sm">
-                  <Play className="h-4 w-4 mr-2" />
-                  Start Timer
-                </Button>
-              ) : (
-                <>
-                  <Button onClick={stopTimer} size="sm">
-                    <Square className="h-4 w-4 mr-2" />
-                    Stop
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Manual Entry */}
-      <Card>
-        <CardHeader>
-          <h4 className="font-medium">Add Manual Entry</h4>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Task</label>
-              <Input
-                value={newEntry.taskName}
-                onChange={(e) => setNewEntry({...newEntry, taskName: e.target.value})}
-                placeholder="Task name"
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Time Tracking</h3>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Log Time
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Log Time Entry</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <Textarea
+                placeholder="Description of work done"
+                value={newEntry.description}
+                onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
               />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Date</label>
+              <Input
+                type="number"
+                step="0.5"
+                placeholder="Hours worked"
+                value={newEntry.hours}
+                onChange={(e) => setNewEntry({ ...newEntry, hours: parseFloat(e.target.value) || 0 })}
+              />
               <Input
                 type="date"
                 value={newEntry.date}
-                onChange={(e) => setNewEntry({...newEntry, date: e.target.value})}
+                onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
               />
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium">Description</label>
-            <Input
-              value={newEntry.description}
-              onChange={(e) => setNewEntry({...newEntry, description: e.target.value})}
-              placeholder="What did you work on?"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium">Start Time</label>
-              <Input
-                type="time"
-                value={newEntry.startTime}
-                onChange={(e) => setNewEntry({...newEntry, startTime: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">End Time</label>
-              <Input
-                type="time"
-                value={newEntry.endTime}
-                onChange={(e) => setNewEntry({...newEntry, endTime: e.target.value})}
-              />
-            </div>
-            <div className="flex items-end">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={newEntry.billable}
-                  onChange={(e) => setNewEntry({...newEntry, billable: e.target.checked})}
-                />
-                <span className="text-sm">Billable</span>
-              </label>
-            </div>
-          </div>
-          <Button onClick={addManualEntry} size="sm" disabled={!newEntry.taskName || !newEntry.startTime || !newEntry.endTime}>
-            Add Entry
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Time Entries */}
-      <div className="space-y-3">
-        <h4 className="font-medium">Recent Entries</h4>
-        {timeEntries.map((entry) => (
-          <Card key={entry.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h5 className="font-medium">{entry.taskName}</h5>
-                    {entry.billable && <Badge variant="default">Billable</Badge>}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-2">{entry.description}</p>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {entry.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {entry.startTime} - {entry.endTime}
-                    </span>
-                    <span className="font-medium">{formatDuration(entry.duration)}</span>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Button onClick={handleCreateEntry}>Log Time</Button>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                  Cancel
+                </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <Clock className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+            <p className="text-2xl font-bold">{totalHours}h</p>
+            <p className="text-sm text-muted-foreground">Total Logged</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-600" />
+            <p className="text-2xl font-bold">{approvedHours}h</p>
+            <p className="text-sm text-muted-foreground">Approved</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <DollarSign className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
+            <p className="text-2xl font-bold">${(approvedHours * 50).toFixed(2)}</p>
+            <p className="text-sm text-muted-foreground">Earned</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Time Entries List */}
+      <div className="space-y-3">
+        {timeEntries.length === 0 ? (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">No time entries yet. Log your first entry to get started.</p>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          timeEntries.map((entry) => (
+            <Card key={entry.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant={getStatusColor(entry.status)}>
+                        {entry.status}
+                      </Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {entry.hours}h on {new Date(entry.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="text-sm mb-2">{entry.description}</p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>By {entry.user_name}</span>
+                      {entry.task_title && <span>Task: {entry.task_title}</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {entry.status === 'pending' && userRole === 'client' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUpdateEntryStatus(entry.id, 'approved')}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUpdateEntryStatus(entry.id, 'rejected')}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDeleteEntry(entry.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
