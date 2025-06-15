@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -117,12 +118,11 @@ export function ApplicationsTab({
   });
 
   // Handle status changes with automatic refetch
-  const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
+  const handleStatusChange = async (id: number, type: string, status: string): Promise<void> => {
     if (onStatusChange) {
       await onStatusChange(id, type, status);
-      return true;
+      refetchAll();
     }
-    return false;
   };
 
   const handleDeletePost = async (id: number, type: string) => {
