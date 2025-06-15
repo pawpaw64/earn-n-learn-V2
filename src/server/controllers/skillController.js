@@ -62,9 +62,9 @@ export async function createSkill(req, res) {
 // Update skill
 export async function updateSkill(req, res) {
   try {
-    const skill = await SkillModel.getSkillById(req.params.id);
+    const skill = await SkillModel.getById(req.params.id);
     if (!skill) return res.status(404).json({ message: 'Skill not found' });
-    if (skill.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
+    if (Number(skill.user_id) !== Number(req.user.id)) return res.status(403).json({ message: 'Not authorized' });
     
     const updated = await SkillModel.updateSkill(req.params.id, req.body);
     res.json(updated ? { message: 'Skill updated' } : { message: 'Update failed' });
@@ -80,7 +80,7 @@ export async function deleteSkill(req, res) {
     console.log('Deleting skill with ID:', req.params.id);
     const skill = await SkillModel.getById(req.params.id);
     if (!skill) return res.status(404).json({ message: 'Skill not found' });
-    if (skill.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
+    if (Number(skill.user_id) !== Number(req.user.id)) return res.status(403).json({ message: 'Not authorized' });
     
     const deleted = await SkillModel.deleteSkill(req.params.id);
     res.json(deleted ? { message: 'Skill deleted' } : { message: 'Deletion failed' });
@@ -100,5 +100,3 @@ export async function getUserSkills(req, res) {
     res.status(500).json({ message: 'Server error' });
   }
 }
-
-// REMOVE the export block at the bottom completely
