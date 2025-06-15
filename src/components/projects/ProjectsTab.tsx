@@ -5,7 +5,7 @@ import { getUserProjects} from "@/services/projects";
 import { Project } from "@/types/marketplace";
 import { LoadingSkeleton } from "../mywork/LoadingSkeleton";
 import { ProjectsGrid } from "./ProjectsGrid";
-import { ProjectDetailsDialog } from "./ProjectDetailsDialog";
+import { EnhancedProjectDetailsDialog } from "./enhanced/EnhancedProjectDetailsDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProjectsTabProps {
@@ -137,7 +137,7 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
         )}
       </div>
 
-      <ProjectDetailsDialog
+      <EnhancedProjectDetailsDialog
         project={selectedProject}
         isOpen={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
