@@ -28,9 +28,10 @@ export default function MyWork() {
     detailsItem,
   });
 
-  // Wrapper to align status change to return Promise<void>
-  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<void> => {
+  // Wrapper to align status change to return Promise<boolean>
+  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<boolean> => {
     await handleStatusChange(id, type, status);
+    return true;
   };
 
   return (
