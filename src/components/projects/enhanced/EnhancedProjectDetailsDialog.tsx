@@ -55,15 +55,19 @@ export function EnhancedProjectDetailsDialog({
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatAmount = (amount?: number, hourlyRate?: number) => {
-    if (project.project_type === 'hourly' && hourlyRate) {
-      return `$${hourlyRate}/hr`;
-    }
-    if (amount) {
-      return `$${amount.toFixed(2)}`;
-    }
-    return 'Not specified';
-  };
+const formatAmount = (amount?: number | string | null, hourlyRate?: number | string | null) => {
+  // Convert string amounts to numbers if needed
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const numHourlyRate = typeof hourlyRate === 'string' ? parseFloat(hourlyRate) : hourlyRate;
+
+  if (project.project_type === 'hourly' && numHourlyRate) {
+    return `$${numHourlyRate.toFixed(2)}/hr`;
+  }
+  if (numAmount) {
+    return `$${numAmount.toFixed(2)}`;
+  }
+  return 'Not specified';
+};
 
   const collaboratorName = project.provider_id === parseInt(localStorage.getItem('userId') || '0') 
     ? project.client_name 
