@@ -1,7 +1,7 @@
 
 import React from "react";
 import { ProjectCard } from "./ProjectCard";
-import { Project } from "@/services/projects";
+import { Project } from "@/types/marketplace";
 
 interface ProjectsGridProps {
   projects: Project[];

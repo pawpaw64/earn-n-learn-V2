@@ -2,6 +2,11 @@ import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
 
+import ProjectModel from '../models/projectModel.js';
+import { execute } from '../config/db.js';
+
+// Create project from existing work assignment
+// Add these new controller methods to projectController.js
 
 export const createProjectFromApplication = async (req, res) => {
   try {
