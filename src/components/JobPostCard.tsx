@@ -46,7 +46,7 @@ export function JobPostCard({ job, onView, onEdit, onDelete, onViewApplicants }:
         </span>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onView}>
-            <Eye className="w-4 h-4" />
+            <Eye className="w-4 h-4" />Details
           </Button>
           {onViewApplicants && (
             <Button variant="outline" size="sm" onClick={onViewApplicants}>
@@ -54,10 +54,10 @@ export function JobPostCard({ job, onView, onEdit, onDelete, onViewApplicants }:
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={onEdit}>
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4" /> Edit
           </Button>
           <Button variant="outline" size="sm" onClick={onDelete}>
-            <Trash2 className="w-4 h-4 text-red-500" />
+            <Trash2 className="w-4 h-4 text-red-500" /> Delete
           </Button>
         </div>
       </CardFooter>
