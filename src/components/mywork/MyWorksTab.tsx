@@ -1,11 +1,12 @@
 
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getUserProjects, Project } from "@/services/projects";
+import { getUserProjects } from "@/services/projects";
 import { LoadingSkeleton } from "./LoadingSkeleton";
 import { ProjectsGrid } from "../projects/ProjectsGrid";
 import { ProjectDetailsDialog } from "../projects/ProjectDetailsDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Project } from "@/types/marketplace";
 
 interface MyWorksTabProps {
   onViewDetails?: (item: any, type: string) => void;
