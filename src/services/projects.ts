@@ -18,10 +18,14 @@ export const createProjectFromApplication = async (applicationId: number): Promi
   }2
 };
 
-export const createProjectFromContact = async (contactId: number, contactType: string): Promise<Project> => {
+export const createProjectFromContact = async (contactId: number, contactType: string, projectData: any): Promise<Project> => {
   try {
     setAuthToken(localStorage.getItem('token'));
-    const response = await axios.post(`${API_URL}/projects/${contactId}/from-contact/contactType`);
+    const response = await axios.post(`${API_URL}/projects/from-contact`, {
+      contactId,
+      contactType,
+      ...projectData
+    });
     console.log('Created project from contact:', response.data);
     return response.data;
   } catch (error) {

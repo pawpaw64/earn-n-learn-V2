@@ -1,4 +1,3 @@
-
 import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
@@ -8,29 +7,24 @@ import { execute } from '../config/db.js';
 export const createProjectFromApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    // Note: The client does not send a body for this request, so these will be undefined.
-    const { title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
     console.log('Creating project from application:', applicationId);
     console.log('User ID:', userId);
-
     // Get the application details
-    const applicationResult = await execute(
+    const application = await execute(
       `SELECT a.*, j.title as job_title, j.payment as job_payment, 
               j.description as job_description, j.user_id as client_id,
               u.name as provider_name, u.email as provider_email
        FROM applications a
        JOIN jobs j ON a.job_id = j.id
        JOIN users u ON a.user_id = u.id
-       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) AND a.status = 'Accepted'`,
+       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) And a.status = 'Accepted'`,
       [applicationId, userId, userId]
     );
 
-    if (!applicationResult || applicationResult.length === 0) {
-      return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
     }
-
-    const application = applicationResult[0];
 
     const projectData = {
       title: title || application.job_title,
@@ -52,6 +46,7 @@ export const createProjectFromApplication = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 export const createProjectFromContact = async (req, res) => {
   try {
     const { contactId, contactType, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
