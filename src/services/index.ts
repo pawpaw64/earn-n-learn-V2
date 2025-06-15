@@ -1,3 +1,4 @@
+
 // src/services/index.ts
 export * from './auth';
 export * from './jobs';
@@ -37,8 +38,11 @@ export const fetchMyPosts = async (): Promise<{
     
     const applications = await axios.get(`${API_URL}/applications/user/received`);
     
-    const jobsWithAppCounts = jobs.data.map((job: any) => {
-      const jobApps = applications.data.filter((app: any) => app.job_id === job.id);
+    const jobsData = Array.isArray(jobs.data) ? jobs.data : [];
+    const applicationsData = Array.isArray(applications.data) ? applications.data : [];
+
+    const jobsWithAppCounts = jobsData.map((job: any) => {
+      const jobApps = applicationsData.filter((app: any) => app.job_id === job.id);
       return {
         ...job,
         applicationsCount: jobApps.length
@@ -46,9 +50,9 @@ export const fetchMyPosts = async (): Promise<{
     });
 
     return {
-      jobs: jobsWithAppCounts || [],
-      skills: skills.data || [],
-      materials: materials.data || []
+      jobs: jobsWithAppCounts,
+      skills: Array.isArray(skills.data) ? skills.data : [],
+      materials: Array.isArray(materials.data) ? materials.data : []
     };
   } catch (error) {
     console.error('Error fetching posts:', error);
