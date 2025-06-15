@@ -1,4 +1,3 @@
-
 // src/services/index.ts
 export * from './auth';
 export * from './jobs';
@@ -35,10 +34,17 @@ export const fetchMyPosts = async (): Promise<{
       axios.get(`${API_URL}/skills/user/skills`),
       axios.get(`${API_URL}/materials/user/materials`)
     ]);
-    
+
+    // Debug logs
+    console.log('Raw jobs response:', jobs.data);
+    console.log('Raw skills response:', skills.data);
+    console.log('Raw materials response:', materials.data);
+
+    const jobsData = Array.isArray(jobs.data) ? jobs.data : [jobs.data].filter(Boolean);
+    const skillsData = Array.isArray(skills.data) ? skills.data : [skills.data].filter(Boolean);
+    const materialsData = Array.isArray(materials.data) ? materials.data : [materials.data].filter(Boolean);
+
     const applications = await axios.get(`${API_URL}/applications/user/received`);
-    
-    const jobsData = Array.isArray(jobs.data) ? jobs.data : [];
     const applicationsData = Array.isArray(applications.data) ? applications.data : [];
 
     const jobsWithAppCounts = jobsData.map((job: any) => {
@@ -51,8 +57,8 @@ export const fetchMyPosts = async (): Promise<{
 
     return {
       jobs: jobsWithAppCounts,
-      skills: Array.isArray(skills.data) ? skills.data : [],
-      materials: Array.isArray(materials.data) ? materials.data : []
+      skills: skillsData,
+      materials: materialsData
     };
   } catch (error) {
     console.error('Error fetching posts:', error);

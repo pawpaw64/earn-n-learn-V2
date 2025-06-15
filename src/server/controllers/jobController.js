@@ -42,19 +42,12 @@ export const getJobById = async (req, res) => {
 // Get jobs by user ID
 export const getJobsByUserId = async (req, res) => {
   try {
-    // Verify the requesting user matches the userId param
-    if (req.user.id !== parseInt(req.params.userId)) {
-      return res.status(403).json({ message: 'Not authorized' });
-    }
-
     const jobs = await JobModel.getUserJobs(req.params.userId);
+    
     res.json(jobs);
   } catch (error) {
-    console.error('Get jobs by user ID error:', error);
-    res.status(500).json({ 
-      message: 'Failed to fetch jobs',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error('Get user materials error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 

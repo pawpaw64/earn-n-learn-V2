@@ -201,17 +201,33 @@ class JobModel {
   }
 
   // Get user jobs
-  static async getUserJobs(userId) {
-    try {
-      const [rows] = await execute(
-        'SELECT * FROM jobs WHERE user_id = ?',
-        [userId]
-      );
-      return rows;
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  }static async getById(id) {
+ static async getUserJobs(userId) {
+  try {
+    const result = await execute(
+      `SELECT 
+        j.*,
+        u.name as poster_name,
+        u.email as poster_email,
+        u.avatar as poster_avatar
+      FROM jobs j
+      JOIN users u ON j.user_id = u.id
+      WHERE j.user_id = ?
+      ORDER BY j.created_at DESC`,
+      [userId]
+    );
+    
+    const rows = await this.#handleQueryResult(result);
+    return rows.map(row => ({
+      ...row,
+      deadline: formatDate(row.deadline),
+    }));
+  } catch (error) {
+    console.error('Database error in getUserJobs:', error);
+    throw new Error('Failed to fetch user jobs');
+  }
+}
+  
+  static async getById(id) {
   try {
     const result = await execute(`
       SELECT 

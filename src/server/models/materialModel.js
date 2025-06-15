@@ -190,11 +190,11 @@ class MaterialModel {
   // Get user materials
   static async getUserMaterials(userId) {
     try {
-      const result = await execute(
+      const [rows] = await execute(
         'SELECT * FROM material_marketplace WHERE user_id = ?',
         [userId]
       );
-      return this.#handleQueryResult(result);
+     return rows;
     } catch (error) {
       console.error('Get user materials failed:', error);
       throw new Error(error.message);

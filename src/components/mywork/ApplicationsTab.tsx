@@ -110,12 +110,13 @@ export function ApplicationsTab({
   });
 
   const {
-    data: myPosts,
-    isLoading: isLoadingMyPosts
-  } = useQuery({
-    queryKey: ['myPosts'],
-    queryFn: fetchMyPosts,
-  });
+  data: myPosts = { jobs: [], skills: [], materials: [] },
+  isLoading: isLoadingMyPosts
+} = useQuery({
+  queryKey: ['myPosts'],
+  queryFn: fetchMyPosts,
+  staleTime: 30000,
+});
 
   // Handle status changes with automatic refetch
   const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
@@ -141,6 +142,7 @@ export function ApplicationsTab({
   const materialContactsArray = Array.isArray(materialContacts) ? materialContacts : [];
   const receivedSkillContactsArray = Array.isArray(receivedSkillContacts) ? receivedSkillContacts : [];
   const receivedMaterialContactsArray = Array.isArray(receivedMaterialContacts) ? receivedMaterialContacts : [];
+
 
   return (
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
@@ -298,72 +300,72 @@ export function ApplicationsTab({
                 <TabsTrigger value="skills">Skills</TabsTrigger>
                 <TabsTrigger value="materials">Materials</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="jobs">
-                {isLoadingMyPosts ? <LoadingSkeleton /> : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts?.jobs?.length > 0 ? (
-                      myPosts.jobs.map((job: any) => (
-                        <JobPostCard 
-                          key={job.id} 
-                          job={job}
-                          onView={() => onViewDetails(job, 'job')}
-                          onEdit={() => onEdit(job, 'job')}
-                          onDelete={() => handleDeletePost(job.id, 'job')}
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any jobs.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
+              {/* Jobs Tab */}
+<TabsContent value="jobs">
+  {isLoadingMyPosts ? <LoadingSkeleton /> : (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+      {myPosts.jobs && myPosts.jobs.length > 0 ? (
+        myPosts.jobs.map((job: any) => (
+          <JobPostCard 
+            key={job.id} 
+            job={job}
+            onView={() => onViewDetails(job, 'job')}
+            onEdit={() => onEdit(job, 'job')}
+            onDelete={() => handleDeletePost(job.id, 'job')}
+          />
+        ))
+      ) : (
+        <div className="col-span-full text-center py-10 text-muted-foreground">
+          You have not posted any jobs.
+        </div>
+      )}
+    </div>
+  )}
+</TabsContent>
 
-              <TabsContent value="skills">
-                {isLoadingMyPosts ? <LoadingSkeleton /> : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts?.skills?.length > 0 ? (
-                      myPosts.skills.map((skill: any) => (
-                        <SkillPostCard 
-                          key={skill.id} 
-                          skill={skill}
-                          onView={() => onViewDetails(skill, 'skill')}
-                          onEdit={() => onEdit(skill, 'skill')}
-                          onDelete={() => handleDeletePost(skill.id, 'skill')}
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any skills.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="materials">
-                {isLoadingMyPosts ? <LoadingSkeleton /> : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts?.materials?.length > 0 ? (
-                      myPosts.materials.map((material: any) => (
-                        <MaterialPostCard 
-                          key={material.id} 
-                          material={material}
-                          onView={() => onViewDetails(material, 'material')}
-                          onEdit={() => onEdit(material, 'material')}
-                          onDelete={() => handleDeletePost(material.id, 'material')}
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any materials.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
+{/* Skills Tab */}
+<TabsContent value="skills">
+  {isLoadingMyPosts ? <LoadingSkeleton /> : (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+      {myPosts.skills && myPosts.skills.length > 0 ? (
+        myPosts.skills.map((skill: any) => (
+          <SkillPostCard 
+            key={skill.id} 
+            skill={skill}
+            onView={() => onViewDetails(skill, 'skill')}
+            onEdit={() => onEdit(skill, 'skill')}
+            onDelete={() => handleDeletePost(skill.id, 'skill')}
+          />
+        ))
+      ) : (
+        <div className="col-span-full text-center py-10 text-muted-foreground">
+          You have not posted any skills.
+        </div>
+      )}
+    </div>
+  )}
+</TabsContent>
+<TabsContent value="materials">
+  {isLoadingMyPosts ? <LoadingSkeleton /> : (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+      {myPosts.materials && myPosts.materials.length > 0 ? (
+        myPosts.materials.map((material: any) => (
+          <MaterialPostCard 
+            key={material.id} 
+            material={material}
+            onView={() => onViewDetails(material, 'material')}
+            onEdit={() => onEdit(material, 'material')}
+            onDelete={() => handleDeletePost(material.id, 'material')}
+          />
+        ))
+      ) : (
+        <div className="col-span-full text-center py-10 text-muted-foreground">
+          You have not posted any skills.
+        </div>
+      )}
+    </div>
+  )}
+</TabsContent>
             </Tabs>
           </TabsContent>
         </Tabs>
