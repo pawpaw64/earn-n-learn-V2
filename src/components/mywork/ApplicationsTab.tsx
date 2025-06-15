@@ -117,12 +117,10 @@ export function ApplicationsTab({
   });
 
   // Handle status changes with automatic refetch
-  const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
+  const handleStatusChange = async (id: number, type: string, status: string): Promise<void> => {
     if (onStatusChange) {
       await onStatusChange(id, type, status);
-      return true;
     }
-    return false;
   };
 
   const handleDeletePost = async (id: number, type: string) => {

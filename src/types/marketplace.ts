@@ -1,4 +1,3 @@
-
 // Job types
 export interface JobType {
   id: number;
@@ -97,7 +96,6 @@ export interface ContactType {
   contact_avatar?: string;
 }
 
-
 // Invoice types
 export interface InvoiceType {
   id: number;
@@ -123,6 +121,37 @@ export interface NotificationType {
   reference_type?: string;
   is_read: boolean;
   created_at: string;
+}
+
+export interface WorkType {
+  id: number;
+  application_id?: number;
+  skill_contact_id?: number;
+  material_contact_id?: number;
+  provider_id: number;
+  client_id: number;
+  status: string;
+  start_date: string;
+  end_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+
+  // Joined properties for details
+  job_title?: string;
+  job_description?: string;
+  job_payment?: string;
+  job_type?: string;
+  skill_name?: string;
+  skill_description?: string;
+  skill_pricing?: string;
+  material_title?: string;
+  material_description?: string;
+  material_price?: string;
+  provider_name?: string;
+  client_name?: string;
+  skill_id?: number;
+  material_id?: number;
 }
 
 export interface Project {
