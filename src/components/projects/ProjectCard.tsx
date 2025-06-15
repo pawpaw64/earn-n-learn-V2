@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Eye, MessageSquare, Calendar, DollarSign, User, Clock } from "lucide-react";
-import { Project } from "@/services/projects";
+import { Project } from "@/types/marketplace";
 
 interface ProjectCardProps {
   project: Project;
@@ -40,16 +40,19 @@ export function ProjectCard({ project, onViewDetails, onOpenChat }: ProjectCardP
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatAmount = (amount?: number, hourlyRate?: number) => {
-    if (project.project_type === 'hourly' && hourlyRate) {
-      return `$${hourlyRate}/hr`;
-    }
-    if (amount) {
-      return `$${amount.toFixed(2)}`;
-    }
-    return 'Not specified';
-  };
+const formatAmount = (amount?: number | string, hourlyRate?: number | string) => {
+  // Convert string amounts to numbers if needed
+  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  const numHourlyRate = typeof hourlyRate === 'string' ? parseFloat(hourlyRate) : hourlyRate;
 
+  if (project.project_type === 'hourly' && numHourlyRate) {
+    return `$${numHourlyRate.toFixed(2)}/hr`;
+  }
+  if (numAmount) {
+    return `$${numAmount.toFixed(2)}`;
+  }
+  return 'Not specified';
+}; 
   const collaboratorName = project.provider_id === parseInt(localStorage.getItem('userId') || '0') 
     ? project.client_name 
     : project.provider_name;

@@ -75,7 +75,7 @@ export function MyWorksTab({ onViewDetails }: MyWorksTabProps) {
     <>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">My Work Projects</h2>
+          <h2 className="text-2xl font-bold">My Works</h2>
           <div className="text-sm text-muted-foreground">
             {allProjects.length} total projects
           </div>

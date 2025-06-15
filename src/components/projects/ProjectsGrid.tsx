@@ -5,7 +5,7 @@ import { Project } from "@/types/marketplace";
 
 interface ProjectsGridProps {
   projects: Project[];
-  onViewDetails: (project: Project) => void | Promise<void>;
+  onViewDetails: (project: Project) => Promise<void>;
   onOpenChat?: (project: Project) => void;
 }
 

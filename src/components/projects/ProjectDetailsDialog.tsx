@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, DollarSign, User, Clock, Target } from "lucide-react";
-import { Project, updateProjectStatus, updateMilestone } from "@/services/projects";
+import { updateProjectStatus, updateMilestone } from "@/services/projects";
 import { toast } from "sonner";
+import { Project } from "@/types/marketplace";
 
 interface ProjectDetailsDialogProps {
   project: Project | null;
