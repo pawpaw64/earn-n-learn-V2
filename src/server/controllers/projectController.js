@@ -1,4 +1,3 @@
-
 import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
@@ -7,18 +6,19 @@ import { execute } from '../config/db.js';
 
 export const createProjectFromApplication = async (req, res) => {
   try {
-    const { applicationId, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
+    const { applicationId } = req.params;
     const userId = req.user.id;
-
+    console.log('Creating project from application:', applicationId);
+    console.log('User ID:', userId);
     // Get the application details
-    const [application] = await execute(
+    const application = await execute(
       `SELECT a.*, j.title as job_title, j.payment as job_payment, 
               j.description as job_description, j.user_id as client_id,
               u.name as provider_name, u.email as provider_email
        FROM applications a
        JOIN jobs j ON a.job_id = j.id
        JOIN users u ON a.user_id = u.id
-       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?)`,
+       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) And a.status = 'Accepted'`,
       [applicationId, userId, userId]
     );
 
@@ -133,38 +133,31 @@ export const getUserProjects = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // Get project by ID
 export const getProjectById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-
     const project = await ProjectModel.getById(id);
-
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
-
     // Check if user is part of this project
     if (project.provider_id !== userId && project.client_id !== userId) {
       return res.status(403).json({ message: 'Access denied' });
     }
-
     res.json(project);
   } catch (error) {
     console.error('Error fetching project:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // Update project status
 export const updateProjectStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     const userId = req.user.id;
-
     const project = await ProjectModel.updateStatus(id, status, userId);
     res.json(project);
   } catch (error) {
@@ -172,14 +165,12 @@ export const updateProjectStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // Update milestone
 export const updateMilestone = async (req, res) => {
   try {
     const { milestoneId } = req.params;
     const { status, notes } = req.body;
     const userId = req.user.id;
-
     const project = await ProjectModel.updateMilestone(milestoneId, status, notes, userId);
     res.json(project);
   } catch (error) {
@@ -187,7 +178,6 @@ export const updateMilestone = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 // Get project activity/updates
 export const getProjectActivity = async (req, res) => {
   try {

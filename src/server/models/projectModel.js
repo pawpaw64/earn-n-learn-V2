@@ -5,30 +5,110 @@ import { execute } from '../config/db.js';
 class ProjectModel {
   // Add these methods to the ProjectModel class
 
-static async createFromApplication(applicationData) {
-  const {
-    title,
-    description,
-    provider_id,
-    client_id,
-    source_id,
-    project_type = 'fixed',
-    total_amount,
-    hourly_rate,
-    expected_end_date
-  } = applicationData;
+static async createFromApplication(projectData, transaction = null) {
+  try {
+    // 1. Validate required fields
+    const requiredFields = ['title', 'provider_id', 'client_id', 'source_type', 'source_id'];
+    for (const field of requiredFields) {
+      if (projectData[field] === undefined || projectData[field] === null) {
+        throw new Error(`Missing required field: ${field}`);
+      }
+    }
 
-  const result = await execute(
-    `INSERT INTO projects (title, description, provider_id, client_id, 
-     source_type, source_id, project_type, total_amount, hourly_rate, expected_end_date) 
-     VALUES (?, ?, ?, ?, 'job', ?, ?, ?, ?, ?)`,
-    [title, description, provider_id, client_id, source_id, 
-     project_type, total_amount, hourly_rate, expected_end_date]
+    // 2. Insert project
+    const result = await execute(
+      `INSERT INTO projects 
+       (title, description, provider_id, client_id, source_type, 
+        source_id, project_type, total_amount, hourly_rate, 
+        status, start_date, expected_end_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        projectData.title,
+        projectData.description,
+        projectData.provider_id,
+        projectData.client_id,
+        projectData.source_type,
+        projectData.source_id,
+        projectData.project_type,
+        projectData.total_amount,
+        projectData.hourly_rate,
+        projectData.status || 'active',
+        projectData.start_date || new Date().toISOString().slice(0, 10),
+        projectData.expected_end_date
+      ],
+      { transaction }
+    );
+
+    const projectId = result.insertId;
+
+    // 3. Create default milestones
+    await this.createDefaultMilestones(projectId, projectData.source_type, transaction);
+
+    // 4. Get full project details
+    const project = await this.getById(projectId, transaction);
+    
+    return project;
+
+  } catch (error) {
+    console.error('[ProjectModel] Creation failed:', error);
+    throw error; // Re-throw for controller to handle
+  }
+}
+
+static async createDefaultMilestones(projectId, sourceType, transaction = null) {
+  const milestones = [];
+  
+  // Different default milestones based on project source
+  if (sourceType === 'job') {
+    milestones.push({
+      phase_number: 1,
+      title: 'Initial Delivery',
+      description: 'First project phase completion',
+      due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+    });
+    // Add more as needed
+  }
+
+  for (const milestone of milestones) {
+    await execute(
+      `INSERT INTO project_milestones 
+       (project_id, phase_number, title, description, due_date)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        projectId,
+        milestone.phase_number,
+        milestone.title,
+        milestone.description,
+        milestone.due_date.toISOString().slice(0, 10)
+      ],
+      { transaction }
+    );
+  }
+}
+
+static async getById(projectId, transaction = null) {
+  const [project] = await execute(
+    `SELECT p.*, 
+            provider.name as provider_name, 
+            client.name as client_name
+     FROM projects p
+     JOIN users provider ON p.provider_id = provider.id
+     JOIN users client ON p.client_id = client.id
+     WHERE p.id = ?`,
+    [projectId],
+    { transaction }
   );
 
-  const projectId = result.insertId;
-  await this.createDefaultMilestones(projectId, 'job');
-  return this.getById(projectId);
+  if (!project) throw new Error('Project not found');
+
+  // Get milestones if needed
+  project.milestones = await execute(
+    `SELECT * FROM project_milestones WHERE project_id = ? ORDER BY phase_number`,
+    [projectId],
+    { transaction }
+  );
+
+  return project;
 }
 
 static async createFromContact(contactData) {

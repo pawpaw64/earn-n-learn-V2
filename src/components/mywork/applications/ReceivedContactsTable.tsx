@@ -32,7 +32,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   isLoading,
   onViewDetails,
   onStatusChange,
-  onCreateWork
+  
 }) => {
   const navigate = useNavigate();
 
@@ -87,14 +87,6 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
     navigate(`/dashboard/profile/${userId}`);
   };
 
-  const handleCreateWorkClick = (contact: any) => {
-    if (onCreateWork) {
-      onCreateWork(
-        contact.id,
-        type === 'skill' ? 'skill_contact' : 'material_contact'
-      );
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -215,7 +207,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                             variant="outline" 
                             size="sm"
                             className="text-blue-600"
-                            onClick={() => handleCreateWorkClick(contact)}
+                          
                           >
                             <UserCheck className="w-4 h-4 mr-2" />
                             Create Work

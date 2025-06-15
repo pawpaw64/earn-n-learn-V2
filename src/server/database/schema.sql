@@ -155,27 +155,6 @@ CREATE TABLE IF NOT EXISTS material_contacts (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Work assignments table - for tracking accepted applications/contacts
-CREATE TABLE IF NOT EXISTS work_assignments (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  job_id INT,
-  skill_id INT,
-  material_id INT,
-  provider_id INT NOT NULL,
-  client_id INT NOT NULL,
-  status VARCHAR(20) DEFAULT 'In Progress',
-  start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  end_date TIMESTAMP NULL,
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE SET NULL,
-  FOREIGN KEY (skill_id) REFERENCES skill_marketplace(id) ON DELETE SET NULL,
-  FOREIGN KEY (material_id) REFERENCES material_marketplace(id) ON DELETE SET NULL
-) ENGINE=InnoDB;
-
 -- Notifications table
 CREATE TABLE IF NOT EXISTS notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,

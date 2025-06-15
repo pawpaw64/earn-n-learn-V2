@@ -19,7 +19,7 @@ import {
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => Promise<void>;
   onStatusChange: (id: number, type: string, status: string) => Promise<void>;
-  onCreateWork?: (id: number, type: string) => void;
+  
 }
 
 /**
@@ -29,7 +29,7 @@ interface ApplicationsTabProps {
 export function ApplicationsTab({ 
   onViewDetails, 
   onStatusChange, 
-  onCreateWork,
+ 
 }: ApplicationsTabProps)  {
   const [applicationsTab, setApplicationsTab] = useState("job");
   const [activeContactsTab, setActiveContactsTab] = useState("received");

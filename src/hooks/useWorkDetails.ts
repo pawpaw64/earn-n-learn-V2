@@ -3,12 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { NavigateFunction } from "react-router-dom";
 import { getApplicationDetails, updateApplicationStatus } from "@/services/applications";
-import { 
-  createWorkFromApplication, 
-  createWorkFromSkillContact,
-  getWorkDetails, 
-  updateWorkStatus 
-} from "@/services/works";
+
 import { deleteJob } from "@/services/jobs";
 import { deleteSkill } from "@/services/skills";
 import { deleteMaterial } from "@/services/materials";
@@ -55,12 +50,7 @@ export const useWorkDetails = ({
           detailItem = { ...item, ...details };
         }
       }
-      else if (type === 'work' && item.id) {
-        const details = await getWorkDetails(item.id);
-        if (details) {
-          detailItem = { ...item, ...details };
-        }
-      }
+      
       else if (type === 'contact') {
         if (item.skill_id || item.skill_name) {
           const details = await getSkillContactDetails(item.id);
@@ -118,15 +108,15 @@ export const useWorkDetails = ({
   const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
     try {
       setIsProcessing(true);
-      console.log(`Updating ${type} ${id} status to ${newStatus}`);
       
       if (type === 'job_application') {
         await updateApplicationStatus(id, newStatus);
+        console.log(`[handle status chnage] Application ${id}`);
         // Create project when status is accepted
-        if (newStatus === 'accepted') {
+        if (newStatus === 'Accepted') {
           try {
-            console.log('Creating project from application:', id);
-            await createProjectFromApplication(id, {});
+            
+            await createProjectFromApplication(id);
             toast.success('Work assignment accepted and project created successfully');
           } catch (error) {
             console.error('Error creating project from application:', error);
@@ -137,9 +127,9 @@ export const useWorkDetails = ({
       else if (type === 'skill_contact') {
         await updateSkillContactStatus(id, newStatus);
         // Create project when status is accepted
-        if (newStatus === 'accepted') {
+        if (newStatus === 'Accepted') {
           try {
-            console.log('Creating project from skill contact:', id);
+           
             await createProjectFromContact(id, 'skill', {});
             toast.success('Skill contact accepted and project created successfully');
           } catch (error) {
@@ -151,9 +141,9 @@ export const useWorkDetails = ({
       else if (type === 'material_contact') {
         await updateMaterialContactStatus(id, newStatus);
         // Create project when status is accepted
-        if (newStatus === 'accepted') {
+        if (newStatus === 'Accepted') {
           try {
-            console.log('Creating project from material contact:', id);
+          
             await createProjectFromContact(id, 'material', {});
             toast.success('Material contact accepted and project created successfully');
           } catch (error) {
@@ -162,12 +152,8 @@ export const useWorkDetails = ({
           }
         }
       }
-      else if (type === 'work') {
-        await updateWorkStatus(id, newStatus);
-      }
-      
-      if (newStatus !== 'accepted') {
-        toast.success(`Status updated to ${newStatus}`);
+      if (newStatus !== 'Accepted') {
+        toast.success(`Only Status updated to ${newStatus}`);
       }
       
       if (isDetailsOpen && detailsItem?.id === id) {
