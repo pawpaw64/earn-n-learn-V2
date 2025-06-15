@@ -7,10 +7,9 @@ const API_URL = 'http://localhost:8080/api';
 
 export const createProjectFromApplication = async (applicationId: number): Promise<Project> => {
   try {
-    console.log('[projects.ts] Creating project from application with ID:', applicationId); 
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.post(`${API_URL}/projects/${applicationId}/from-application`);
-    console.log('[projects.ts] Project created successfully:', response.data);
+   
     return response.data;
   } catch (error) {
     console.error('Error creating project from application:', error);
@@ -25,29 +24,24 @@ export const createProjectFromApplication = async (applicationId: number): Promi
   }
 };
 
-export const createProjectFromContact = async (contactId: number, contactType: string, projectData: any): Promise<Project> => {
-  try {
-    console.log('[projects.ts] Creating project from contact:', { contactId, contactType, projectData });
-    setAuthToken(localStorage.getItem('token'));
-    const response = await axios.post(`${API_URL}/projects/from-contact`, {
-      contactId,
-      contactType,
-      ...projectData
-    });
-    console.log('Created project from contact:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating project from contact:', error);
-    if (axios.isAxiosError(error)) {
-      console.error('Axios error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data
-      });
-    }
-    throw error;
-  }
-};
+// export const createProjectFromContact = async (contactId: number, contactType: string): Promise<Project> => {
+//   try {
+//     setAuthToken(localStorage.getItem('token'));
+//     const response = await axios.post(`${API_URL}/projects/${contactId}from-contact/contactType`);
+//     console.log('Created project from contact:', response.data);
+//     return response.data;
+//   } catch (error) {
+//     console.error('Error creating project from contact:', error);
+//     if (axios.isAxiosError(error)) {
+//       console.error('Axios error details:', {
+//         status: error.response?.status,
+//         statusText: error.response?.statusText,
+//         data: error.response?.data
+//       });
+//     }
+//     throw error;
+//   }
+// };
 
 export const getUserProjects = async (): Promise<Project[]> => {
   try {

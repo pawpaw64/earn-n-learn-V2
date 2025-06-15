@@ -3,11 +3,9 @@ import { Router } from 'express';
 const router = Router();
 import {
   createProjectFromApplication,
-  createProjectFromContact,
   getUserProjects,
   getProjectById,
   updateProjectStatus,
-  updateMilestone,
   getProjectActivity
 } from '../controllers/projectController.js';
 import auth from '../middleware/authMiddleware.js';
@@ -26,9 +24,9 @@ router.post('/:applicationId/from-application', createProjectFromApplication);
 router.get('/my-projects', getUserProjects);
 router.get('/:id', getProjectById);
 router.put('/:id/status', updateProjectStatus);
-router.put('/milestone/:milestoneId', updateMilestone);
+// router.put('/milestone/:milestoneId', updateMilestone);
 router.get('/:id/activity', getProjectActivity);
-router.post('/from-contact', createProjectFromContact);
+// router.post('/:contactId/from-contact/contactType', createProjectFromContact);
 
 // Sub-feature routes
 router.use('/', projectTaskRoutes);

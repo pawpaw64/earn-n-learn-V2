@@ -14,8 +14,8 @@ import {
   getMaterialContactDetails 
 } from "@/services/contacts";
 import { 
-  createProjectFromApplication, 
-  createProjectFromContact 
+  createProjectFromApplication
+
 } from "@/services/projects";
 
 interface UseWorkDetailsProps {
@@ -108,16 +108,13 @@ export const useWorkDetails = ({
   const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
     try {
       setIsProcessing(true);
-      console.log(`[handleStatusChange] Updating ${type} ${id} to ${newStatus}`);
       
       if (type === 'job_application') {
         await updateApplicationStatus(id, newStatus);
-        console.log(`[handleStatusChange] Application ${id} status updated to ${newStatus}`);
-        
+       
         // Create project when status is accepted
         if (newStatus === 'Accepted') {
           try {
-            console.log(`[handleStatusChange] Creating project from application ${id}`);
             await createProjectFromApplication(id);
             toast.success('Work assignment accepted and project created successfully');
           } catch (error) {
@@ -125,33 +122,33 @@ export const useWorkDetails = ({
             toast.error('Work assignment accepted but failed to create project');
           }
         }
-      } 
-      else if (type === 'skill_contact') {
-        await updateSkillContactStatus(id, newStatus);
-        // Create project when status is accepted
-        if (newStatus === 'Accepted') {
-          try {
-            await createProjectFromContact(id, 'skill', {});
-            toast.success('Skill contact accepted and project created successfully');
-          } catch (error) {
-            console.error('Error creating project from skill contact:', error);
-            toast.error('Skill contact accepted but failed to create project');
-          }
-        }
       }
-      else if (type === 'material_contact') {
-        await updateMaterialContactStatus(id, newStatus);
-        // Create project when status is accepted
-        if (newStatus === 'Accepted') {
-          try {
-            await createProjectFromContact(id, 'material', {});
-            toast.success('Material contact accepted and project created successfully');
-          } catch (error) {
-            console.error('Error creating project from material contact:', error);
-            toast.error('Material contact accepted but failed to create project');
-          }
-        }
-      }
+      // else if (type === 'skill_contact') {
+      //   await updateSkillContactStatus(id, newStatus);
+      //  console.log('Skill contact status updated:', newStatus);
+      //   if (newStatus === 'Accepted') {
+      //     try {
+      //       await createProjectFromContact(id, 'skill');
+      //       toast.success('Skill contact accepted and project created successfully');
+      //     } catch (error) {
+      //       console.error('Error creating project from skill contact:', error);
+      //       toast.error('Skill contact accepted but failed to create project');
+      //     }
+      //   }
+      // }
+      // else if (type === 'material_contact') {
+      //   await updateMaterialContactStatus(id, newStatus);
+      //   // Create project when status is accepted
+      //   if (newStatus === 'Accepted') {
+      //     try {
+      //       await createProjectFromContact(id, 'material');
+      //       toast.success('Material contact accepted and project created successfully');
+      //     } catch (error) {
+      //       console.error('Error creating project from material contact:', error);
+      //       toast.error('Material contact accepted but failed to create project');
+      //     }
+      //   }
+      // }
       
       if (newStatus !== 'Accepted') {
         toast.success(`Status updated to ${newStatus}`);

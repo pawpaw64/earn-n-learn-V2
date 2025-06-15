@@ -7,8 +7,6 @@ export const createProjectFromApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
     const userId = req.user.id;
-    console.log('Creating project from application:', applicationId);
-    console.log('User ID:', userId);
 
     // Get the application details
     const applicationResult = await execute(
@@ -48,89 +46,88 @@ export const createProjectFromApplication = async (req, res) => {
   }
 };
 
-export const createProjectFromContact = async (req, res) => {
-  try {
-    const { contactId, contactType, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
-    const userId = req.user.id;
+// export const createProjectFromContact = async (req, res) => {
+//   try {
+//     const { contactId, contactType } = req.params;
+//     const { title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
 
-    console.log('Creating project from contact:', { contactId, contactType, userId });
+//     console.log('Creating project from contact:', { contactId, contactType, userId });
 
-    let contact, projectData;
 
-    if (contactType === 'skill') {
-      const contactResult = await execute(
-        `SELECT sc.*, sm.skill_name, sm.pricing as skill_pricing, 
-                sm.description as skill_description, sm.user_id as provider_id,
-                u.name as client_name, u.email as client_email
-         FROM skill_contacts sc
-         JOIN skill_marketplace sm ON sc.skill_id = sm.id
-         JOIN users u ON sc.user_id = u.id
-         WHERE sc.id = ? AND (sc.user_id = ? OR sm.user_id = ?)`,
-        [contactId, userId, userId]
-      );
+//     if (contactType === 'skill') {
+//       const contactResult = await execute(
+//         `SELECT sc.*, sm.skill_name, sm.pricing as skill_pricing, 
+//                 sm.description as skill_description, sm.user_id as provider_id,
+//                 u.name as client_name, u.email as client_email
+//          FROM skill_contacts sc
+//          JOIN skill_marketplace sm ON sc.skill_id = sm.id
+//          JOIN users u ON sc.user_id = u.id
+//          WHERE sc.id = ? AND (sc.user_id = ? OR sm.user_id = ?) AND sc.status = 'Accepted'`,
+//         [contactId, userId, userId]
+//       );
 
-      if (!contactResult || contactResult.length === 0) {
-        return res.status(404).json({ message: 'Skill contact not found' });
-      }
+//       if (!contactResult || contactResult.length === 0) {
+//         return res.status(404).json({ message: 'Skill contact not found' });
+//       }
 
-      contact = contactResult[0];
+//       const contact = contactResult[0];
 
-      projectData = {
-        title: title || contact.skill_name,
-        description: description || contact.skill_description,
-        provider_id: contact.provider_id, // skill owner is provider
-        client_id: contact.user_id, // contact creator is client
-        source_type: 'skill',
-        source_id: contact.skill_id,
-        project_type: projectType || 'fixed',
-        total_amount: totalAmount || contact.skill_pricing,
-        hourly_rate: hourlyRate,
-        expected_end_date: expectedEndDate,
-        status: 'active'
-      };
-    } 
-    else if (contactType === 'material') {
-      const contactResult = await execute(
-        `SELECT mc.*, mm.title as material_title, mm.price as material_price, 
-                mm.description as material_description, mm.user_id as provider_id,
-                u.name as client_name, u.email as client_email
-         FROM material_contacts mc
-         JOIN material_marketplace mm ON mc.material_id = mm.id
-         JOIN users u ON mc.user_id = u.id
-         WHERE mc.id = ? AND (mc.user_id = ? OR mm.user_id = ?)`,
-        [contactId, userId, userId]
-      );
+//       projectData = {
+//         title: contact.skill_name,
+//         description:contact.skill_description,
+//         provider_id: contact.provider_id, // skill owner is provider
+//         client_id: contact.user_id, // contact creator is client
+//         source_type: 'skill',
+//         source_id: contact.skill_id,
+//         project_type: projectType || 'fixed',
+//         total_amount: contact.skill_pricing,
+//         hourly_rate: hourlyRate,
+//         expected_end_date: expectedEndDate,
+//         status: 'active'
+//       };
+//     } 
+//     else if (contactType === 'material') {
+//       const contactResult = await execute(
+//         `SELECT mc.*, mm.title as material_title, mm.price as material_price, 
+//                 mm.description as material_description, mm.user_id as provider_id,
+//                 u.name as client_name, u.email as client_email
+//          FROM material_contacts mc
+//          JOIN material_marketplace mm ON mc.material_id = mm.id
+//          JOIN users u ON mc.user_id = u.id
+//          WHERE mc.id = ? AND (mc.user_id = ? OR mm.user_id = ?) AND mc.status = 'Accepted'`,
+//         [contactId, userId, userId]
+//       );
 
-      if (!contactResult || contactResult.length === 0) {
-        return res.status(404).json({ message: 'Material contact not found' });
-      }
+//       if (!contactResult || contactResult.length === 0) {
+//         return res.status(404).json({ message: 'Material contact not found' });
+//       }
 
-      contact = contactResult[0];
+//       const contact = contactResult[0];
 
-      projectData = {
-        title: title || contact.material_title,
-        description: description || contact.material_description,
-        provider_id: contact.provider_id, // material owner is provider
-        client_id: contact.user_id, // contact creator is client
-        source_type: 'material',
-        source_id: contact.material_id,
-        project_type: projectType || 'fixed',
-        total_amount: totalAmount || contact.material_price,
-        hourly_rate: hourlyRate,
-        expected_end_date: expectedEndDate,
-        status: 'active'
-      };
-    } else {
-      return res.status(400).json({ message: 'Invalid contact type' });
-    }
+//       projectData = {
+//         title: contact.material_title,
+//         description: contact.material_description,
+//         provider_id: contact.provider_id, // material owner is provider
+//         client_id: contact.user_id, // contact creator is client
+//         source_type: 'material',
+//         source_id: contact.material_id,
+//         project_type: projectType || 'fixed',
+//         total_amount:  contact.material_price,
+//         hourly_rate: hourlyRate,
+//         expected_end_date: expectedEndDate,
+//         status: 'active'
+//       };
+//     } else {
+//       return res.status(400).json({ message: 'Invalid contact type' });
+//     }
 
-    const project = await ProjectModel.createFromContact(projectData);
-    res.status(201).json(project);
-  } catch (error) {
-    console.error('Error creating project from contact:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
+//     const project = await ProjectModel.createFromContact(projectData);
+//     res.status(201).json(project);
+//   } catch (error) {
+//     console.error('Error creating project from contact:', error);
+//     res.status(500).json({ message: 'Server error', error: error.message });
+//   }
+// };
 
 // Get user's projects
 export const getUserProjects = async (req, res) => {
