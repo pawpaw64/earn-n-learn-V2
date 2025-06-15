@@ -109,32 +109,6 @@ export function ApplicationsTab({
     return false;
   };
 
-  // Handle work creation
-  const handleCreateWork = async (id: number, type: string): Promise<boolean> => {
-    console.log('Creating work from:', { id, type });
-    
-    try {
-      if (type === 'job_application') {
-        await createProjectFromApplication(id);
-        toast.success('Project created successfully!');
-        refetch();
-        return true;
-      } else if (type === 'skill_contact') {
-        // Handle skill contact work creation
-        console.log('Creating work from skill contact:', id);
-        return true;
-      } else if (type === 'material_contact') {
-        // Handle material contact work creation
-        console.log('Creating work from material contact:', id);
-        return true;
-      }
-    } catch (error) {
-      console.error('Error creating work:', error);
-      toast.error('Failed to create project');
-      return false;
-    }
-    return false;
-  };
 
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];
