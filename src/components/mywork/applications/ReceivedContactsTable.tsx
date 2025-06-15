@@ -202,17 +202,6 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                         )}
                         
                         {/* Show create work button for responded or in discussion status */}
-                        {(contact.status === 'Responded' || contact.status === 'In Discussion') && (
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            className="text-blue-600"
-                          
-                          >
-                            <UserCheck className="w-4 h-4 mr-2" />
-                            Create Work
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>

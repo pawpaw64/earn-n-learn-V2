@@ -130,7 +130,7 @@ export const useWorkDetails = ({
         if (newStatus === 'Accepted') {
           try {
            
-            await createProjectFromContact(id, 'skill', {});
+            await createProjectFromContact(id, 'skill');
             toast.success('Skill contact accepted and project created successfully');
           } catch (error) {
             console.error('Error creating project from skill contact:', error);
@@ -144,7 +144,7 @@ export const useWorkDetails = ({
         if (newStatus === 'Accepted') {
           try {
           
-            await createProjectFromContact(id, 'material', {});
+            await createProjectFromContact(id, 'material');
             toast.success('Material contact accepted and project created successfully');
           } catch (error) {
             console.error('Error creating project from material contact:', error);
