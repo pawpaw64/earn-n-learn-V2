@@ -1,10 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, DollarSign, Eye, MessageSquare, User, CheckCircle, XCircle, Clock, ArrowRight } from "lucide-react";
 import { ApplicationList } from "./applications/ApplicationList";
 import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTable";
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
@@ -105,6 +101,8 @@ export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsT
             contacts={receivedContacts}
             onViewDetails={onViewDetails}
             onStatusChange={handleStatusChangeWithRefresh}
+            type="contact"
+            isLoading={false}
           />
         </TabsContent>
       </Tabs>

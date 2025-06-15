@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Table, 
@@ -15,21 +14,95 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
 
-interface ApplicantsListProps {
+interface ApplicationListProps {
   applications: any[];
-  isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => void;
-  jobTitle?: string;
+  type: string;
 }
 
-export const ApplicantsList: React.FC<ApplicantsListProps> = ({
+export const ApplicationList: React.FC<ApplicationListProps> = ({
   applications,
-  isLoading,
   onViewDetails,
-  onStatusChange,
-  jobTitle
+  type
 }) => {
+  const navigate = useNavigate();
+
+  const handleViewProfile = (userId: number) => {
+    navigate(`/dashboard/profile/${userId}`);
+  };
+
+  const handleMessage = (userId: number) => {
+    navigate(`/dashboard/messages?userId=${userId}`);
+  };
+
+  if (!applications || applications.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        No applications found
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Details</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {applications.map((app: any) => (
+            <TableRow key={app.id}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <div>
+                    <p className="font-medium">
+                      {app.job_title || app.skill_name || app.title || 'Application'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {app.applicant_name || app.provider_name || app.user_name}
+                    </p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                {new Date(app.created_at).toLocaleDateString()}
+              </TableCell>
+              <TableCell>
+                <Badge variant={
+                  app.status === 'Accepted' ? 'secondary' : 
+                  app.status === 'Rejected' ? 'destructive' : 
+                  'outline'
+                }>
+                  {app.status}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => onViewDetails(app, type)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Details
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
+// Keep the existing ApplicantsList for backward compatibility
+export const ApplicantsList: React.FC<any> = ({ applications, isLoading, onViewDetails, onStatusChange, jobTitle }) => {
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -41,7 +114,6 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
   };
 
   const handleMessage = (userId: number) => {
-    // This will be implemented through the messaging system
     navigate(`/dashboard/messages?userId=${userId}`);
   };
 

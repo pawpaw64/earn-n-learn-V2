@@ -29,6 +29,30 @@ export const fetchReceivedContacts = async () => {
   }
 };
 
+export const submitSkillContact = async (contactData: { skill_id: number; message: string }): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/contacts/skill`, contactData);
+    return response.data;
+  } catch (error: any) {
+    console.error("Submit skill contact error:", error);
+    toast.error(error.response?.data?.message || "Failed to submit skill contact");
+    throw error;
+  }
+};
+
+export const submitMaterialContact = async (contactData: { material_id: number; message: string }): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/contacts/material`, contactData);
+    return response.data;
+  } catch (error: any) {
+    console.error("Submit material contact error:", error);
+    toast.error(error.response?.data?.message || "Failed to submit material contact");
+    throw error;
+  }
+};
+
 export const updateSkillContactStatus = async (id: number, status: string): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
   try {
