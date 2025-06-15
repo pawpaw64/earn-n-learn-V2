@@ -1,18 +1,20 @@
+
 import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
+// Create project from existing work assignment
+// Add these new controller methods to projectController.js
 
 export const createProjectFromApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
+    // Note: The client does not send a body for this request, so these will be undefined.
     const { title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
     console.log('Creating project from application:', applicationId);
     console.log('User ID:', userId);
 
-
     // Get the application details
-    const applicationResult = await execute(
     const applicationResult = await execute(
       `SELECT a.*, j.title as job_title, j.payment as job_payment, 
               j.description as job_description, j.user_id as client_id,
@@ -21,17 +23,12 @@ export const createProjectFromApplication = async (req, res) => {
        JOIN jobs j ON a.job_id = j.id
        JOIN users u ON a.user_id = u.id
        WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) AND a.status = 'Accepted'`,
-       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) AND a.status = 'Accepted'`,
       [applicationId, userId, userId]
     );
 
     if (!applicationResult || applicationResult.length === 0) {
       return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
-    if (!applicationResult || applicationResult.length === 0) {
-      return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
     }
-
-    const application = applicationResult[0];
 
     const application = applicationResult[0];
 
@@ -55,28 +52,29 @@ export const createProjectFromApplication = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
 export const createProjectFromContact = async (req, res) => {
-  try {const { contactId, contactType } = req.params;
-    const { title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
+  try {
+    const { contactId, contactType, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
 
+    let contactQuery, projectData;
+
     if (contactType === 'skill') {
-      const contactResult = await execute(
+      const [contact] = await execute(
         `SELECT sc.*, sm.skill_name, sm.pricing as skill_pricing, 
                 sm.description as skill_description, sm.user_id as provider_id,
                 u.name as client_name, u.email as client_email
          FROM skill_contacts sc
          JOIN skill_marketplace sm ON sc.skill_id = sm.id
          JOIN users u ON sc.user_id = u.id
-         WHERE sc.id = ? AND (sc.user_id = ? OR sm.user_id = ?) AND sc.status = 'Accepted'`,
+         WHERE sc.id = ? AND (sc.user_id = ? OR sm.user_id = ?)`,
         [contactId, userId, userId]
       );
 
-      if (!contactResult || contactResult.length === 0) {
+      if (!contact) {
         return res.status(404).json({ message: 'Skill contact not found' });
       }
-      const contact = contactResult[0];
+
       projectData = {
         title: title || contact.skill_name,
         description: description || contact.skill_description,
@@ -91,7 +89,7 @@ export const createProjectFromContact = async (req, res) => {
       };
     } 
     else if (contactType === 'material') {
-      const contactResult = await execute(
+      const [contact] = await execute(
         `SELECT mc.*, mm.title as material_title, mm.price as material_price, 
                 mm.description as material_description, mm.user_id as provider_id,
                 u.name as client_name, u.email as client_email
@@ -102,10 +100,10 @@ export const createProjectFromContact = async (req, res) => {
         [contactId, userId, userId]
       );
 
-      if (!contactResult || contactResult.length === 0) {
+      if (!contact) {
         return res.status(404).json({ message: 'Material contact not found' });
       }
-      const contact = contactResult[0];
+
       projectData = {
         title: title || contact.material_title,
         description: description || contact.material_description,
