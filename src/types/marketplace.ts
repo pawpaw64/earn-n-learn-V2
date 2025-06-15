@@ -172,16 +172,3 @@ export interface ProjectUpdate {
   created_at: string;
   user_name?: string;
 }
-
-export interface WorkType {
-  id: number;
-  title: string;
-  company: string;
-  type: string;
-  status: string;
-  description: string;
-  startDate: string;
-  endDate: string | null;
-  payment: string;
-}
-

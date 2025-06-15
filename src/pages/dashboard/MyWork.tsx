@@ -30,9 +30,10 @@ export default function MyWork() {
     detailsItem,
   });
 
-  // Wrapper for status change handler
-  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<void> => {
+  // Wrapper to align status change to return Promise<boolean>
+  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<boolean> => {
     await handleStatusChange(id, type, status);
+    return true;
   };
 
   return (
@@ -106,10 +107,7 @@ export default function MyWork() {
         onOpenChange={setIsDetailsOpen}
         detailsItem={detailsItem}
         detailsType={detailsType}
-        onStatusChange={async (id, type, status) => {
-          await handleStatusChangeWrapper(id, type, status);
-          return true;
-        }}
+        onStatusChange={handleStatusChangeWrapper}
       />
     </div>
   );
