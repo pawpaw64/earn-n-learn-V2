@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
@@ -88,7 +89,7 @@ export default function MyWork() {
         <TabsContent value="applications">
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChange} 
+            onStatusChange={handleStatusChangeWrapper}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

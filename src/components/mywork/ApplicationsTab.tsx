@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -30,7 +29,7 @@ interface ApplicationsTabProps {
     id: number,
     type: string,
     status: string
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   onEdit: (item: any, type: string) => void;
   onDelete: (id: number, type: string) => Promise<boolean>;
 }
@@ -120,10 +119,11 @@ export function ApplicationsTab({
     id: number,
     type: string,
     status: string
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     if (onStatusChange) {
-      await onStatusChange(id, type, status);
+      return await onStatusChange(id, type, status);
     }
+    return false;
   };
 
   const handleDeletePost = async (id: number, type: string) => {

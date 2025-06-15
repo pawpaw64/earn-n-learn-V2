@@ -63,7 +63,8 @@ class SkillModel {
   // Add this method to your SkillModel class
 static async getById(id) {
   try {
-    const [rows] = await execute(
+    
+    const result= await execute(
       `SELECT s.*, u.id as user_id,
         u.name as poster_name,
         u.email as poster_email,
@@ -74,7 +75,8 @@ static async getById(id) {
        LIMIT 1`,
       [id]
     );
-    return rows[0];
+    const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows[0];
   } catch (error) {
     console.error('Error in SkillModel.getById:', error);
     throw new Error('Failed to fetch skill by ID');
