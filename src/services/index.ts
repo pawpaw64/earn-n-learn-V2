@@ -1,4 +1,3 @@
-
 // src/services/index.ts
 export * from './auth';
 export * from './jobs';
@@ -32,8 +31,8 @@ export const fetchMyPosts = async (): Promise<{
   try {
     const [jobs, skills, materials] = await Promise.all([
       axios.get(`${API_URL}/jobs/user/${userId}`),
-      axios.get(`${API_URL}/skills/user/${userId}`),
-      axios.get(`${API_URL}/materials/user/${userId}`)
+      axios.get(`${API_URL}/skills/user/skills`),
+      axios.get(`${API_URL}/materials/user/materials`)
     ]);
     
     const applications = await axios.get(`${API_URL}/applications/user/received`);

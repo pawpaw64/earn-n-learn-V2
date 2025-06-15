@@ -19,6 +19,8 @@ export default function MyWork() {
   const { 
     handleViewDetails,
     handleStatusChange,
+    handleEdit,
+    handleDelete,
   } = useWorkDetails({
     setDetailsItem,
     setDetailsType,
@@ -88,6 +90,8 @@ export default function MyWork() {
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
             onStatusChange={handleStatusChangeWrapper}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
           />
         </TabsContent>
 

@@ -15,11 +15,16 @@ import {
   fetchSkillContacts, 
   fetchMaterialContacts 
 } from "@/services/contacts";
+import { fetchMyPosts } from "@/services";
+import { JobPostCard } from "@/components/JobPostCard";
+import { SkillPostCard } from "@/components/SkillPostCard";
+import { MaterialPostCard } from "@/components/MaterialPostCard";
 
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => Promise<void>;
   onStatusChange: (id: number, type: string, status: string) => Promise<void>;
-  
+  onEdit: (item: any, type: string) => void;
+  onDelete: (id: number, type: string) => Promise<boolean>;
 }
 
 /**
@@ -29,10 +34,12 @@ interface ApplicationsTabProps {
 export function ApplicationsTab({ 
   onViewDetails, 
   onStatusChange, 
- 
+  onEdit,
+  onDelete,
 }: ApplicationsTabProps)  {
   const [applicationsTab, setApplicationsTab] = useState("job");
   const [activeContactsTab, setActiveContactsTab] = useState("received");
+  const [myPostsTab, setMyPostsTab] = useState("jobs");
   const queryClient = useQueryClient();
   
   // Function to refetch all data
@@ -43,6 +50,7 @@ export function ApplicationsTab({
     queryClient.invalidateQueries({ queryKey: ['materialContacts'] });
     queryClient.invalidateQueries({ queryKey: ['receivedSkillContacts'] });
     queryClient.invalidateQueries({ queryKey: ['receivedMaterialContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['myPosts'] });
   };
 
   // Fetch all data
@@ -100,6 +108,14 @@ export function ApplicationsTab({
     staleTime: 30000
   });
 
+  const {
+    data: myPosts,
+    isLoading: isLoadingMyPosts
+  } = useQuery({
+    queryKey: ['myPosts'],
+    queryFn: fetchMyPosts,
+  });
+
   // Handle status changes with automatic refetch
   const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
     if (onStatusChange) {
@@ -109,6 +125,14 @@ export function ApplicationsTab({
     return false;
   };
 
+  const handleDeletePost = async (id: number, type: string) => {
+    if (onDelete) {
+      const success = await onDelete(id, type);
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ['myPosts'] });
+      }
+    }
+  };
 
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];
@@ -232,6 +256,7 @@ export function ApplicationsTab({
             <TabsTrigger value="received">Job Applications</TabsTrigger>
             <TabsTrigger value="skills">Skill Inquiries</TabsTrigger>
             <TabsTrigger value="materials">Material Inquiries</TabsTrigger>
+            <TabsTrigger value="myposts">My Posts</TabsTrigger>
           </TabsList>
           
           <TabsContent value="received">
@@ -264,6 +289,82 @@ export function ApplicationsTab({
               onStatusChange={handleStatusChange}
               
             />
+          </TabsContent>
+
+          <TabsContent value="myposts">
+            <Tabs value={myPostsTab} onValueChange={setMyPostsTab} className="mt-4">
+              <TabsList>
+                <TabsTrigger value="jobs">Jobs</TabsTrigger>
+                <TabsTrigger value="skills">Skills</TabsTrigger>
+                <TabsTrigger value="materials">Materials</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="jobs">
+                {isLoadingMyPosts ? <LoadingSkeleton /> : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts?.jobs?.length > 0 ? (
+                      myPosts.jobs.map((job: any) => (
+                        <JobPostCard 
+                          key={job.id} 
+                          job={job}
+                          onView={() => onViewDetails(job, 'job')}
+                          onEdit={() => onEdit(job, 'job')}
+                          onDelete={() => handleDeletePost(job.id, 'job')}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any jobs.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="skills">
+                {isLoadingMyPosts ? <LoadingSkeleton /> : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts?.skills?.length > 0 ? (
+                      myPosts.skills.map((skill: any) => (
+                        <SkillPostCard 
+                          key={skill.id} 
+                          skill={skill}
+                          onView={() => onViewDetails(skill, 'skill')}
+                          onEdit={() => onEdit(skill, 'skill')}
+                          onDelete={() => handleDeletePost(skill.id, 'skill')}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any skills.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="materials">
+                {isLoadingMyPosts ? <LoadingSkeleton /> : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts?.materials?.length > 0 ? (
+                      myPosts.materials.map((material: any) => (
+                        <MaterialPostCard 
+                          key={material.id} 
+                          material={material}
+                          onView={() => onViewDetails(material, 'material')}
+                          onEdit={() => onEdit(material, 'material')}
+                          onDelete={() => handleDeletePost(material.id, 'material')}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any materials.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </TabsContent>
