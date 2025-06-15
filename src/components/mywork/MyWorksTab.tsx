@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Project } from "@/types/marketplace";
 
 interface MyWorksTabProps {
-  onViewDetails?: (item: any, type: string) =>
+  onViewDetails?: (item: any, type: string) => void;
 }
 
 export function MyWorksTab({ onViewDetails }: MyWorksTabProps) {
@@ -27,7 +27,7 @@ export function MyWorksTab({ onViewDetails }: MyWorksTabProps) {
     retry: 1
   });
 
-  const handleViewDetails = (project: Project) => {
+  const handleViewDetails = async (project: Project) => {
     console.log('Viewing project details:', project);
     setSelectedProject(project);
     setIsDetailsOpen(true);

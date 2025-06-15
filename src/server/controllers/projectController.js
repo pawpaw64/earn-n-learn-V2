@@ -1,18 +1,11 @@
-import ProjectModel from '../models/projectModel.js';
-import { execute } from '../config/db.js';
-
 
 import ProjectModel from '../models/projectModel.js';
 import { execute } from '../config/db.js';
 
 // Create project from existing work assignment
-// Add these new controller methods to projectController.js
-
 export const createProjectFromApplication = async (req, res) => {
   try {
     const { applicationId } = req.params;
-    // Note: The client does not send a body for this request, so these will be undefined.
-    const { title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
     console.log('Creating project from application:', applicationId);
     console.log('User ID:', userId);
@@ -36,16 +29,15 @@ export const createProjectFromApplication = async (req, res) => {
     const application = applicationResult[0];
 
     const projectData = {
-      title: title || application.job_title,
-      description: description || application.job_description,
+      title: application.job_title,
+      description: application.job_description,
       provider_id: application.user_id, // applicant is provider
       client_id: application.client_id, // job owner is client
       source_type: 'job',
       source_id: application.job_id,
-      project_type: projectType || 'fixed',
-      total_amount: totalAmount || application.job_payment,
-      hourly_rate: hourlyRate,
-      expected_end_date: expectedEndDate
+      project_type: 'fixed',
+      total_amount: application.job_payment,
+      status: 'active'
     };
 
     const project = await ProjectModel.createFromApplication(projectData);
@@ -61,10 +53,12 @@ export const createProjectFromContact = async (req, res) => {
     const { contactId, contactType, title, description, projectType, totalAmount, hourlyRate, expectedEndDate } = req.body;
     const userId = req.user.id;
 
-    let contactQuery, projectData;
+    console.log('Creating project from contact:', { contactId, contactType, userId });
+
+    let contact, projectData;
 
     if (contactType === 'skill') {
-      const [contact] = await execute(
+      const contactResult = await execute(
         `SELECT sc.*, sm.skill_name, sm.pricing as skill_pricing, 
                 sm.description as skill_description, sm.user_id as provider_id,
                 u.name as client_name, u.email as client_email
@@ -75,9 +69,11 @@ export const createProjectFromContact = async (req, res) => {
         [contactId, userId, userId]
       );
 
-      if (!contact) {
+      if (!contactResult || contactResult.length === 0) {
         return res.status(404).json({ message: 'Skill contact not found' });
       }
+
+      contact = contactResult[0];
 
       projectData = {
         title: title || contact.skill_name,
@@ -89,11 +85,12 @@ export const createProjectFromContact = async (req, res) => {
         project_type: projectType || 'fixed',
         total_amount: totalAmount || contact.skill_pricing,
         hourly_rate: hourlyRate,
-        expected_end_date: expectedEndDate
+        expected_end_date: expectedEndDate,
+        status: 'active'
       };
     } 
     else if (contactType === 'material') {
-      const [contact] = await execute(
+      const contactResult = await execute(
         `SELECT mc.*, mm.title as material_title, mm.price as material_price, 
                 mm.description as material_description, mm.user_id as provider_id,
                 u.name as client_name, u.email as client_email
@@ -104,9 +101,11 @@ export const createProjectFromContact = async (req, res) => {
         [contactId, userId, userId]
       );
 
-      if (!contact) {
+      if (!contactResult || contactResult.length === 0) {
         return res.status(404).json({ message: 'Material contact not found' });
       }
+
+      contact = contactResult[0];
 
       projectData = {
         title: title || contact.material_title,
@@ -118,7 +117,8 @@ export const createProjectFromContact = async (req, res) => {
         project_type: projectType || 'fixed',
         total_amount: totalAmount || contact.material_price,
         hourly_rate: hourlyRate,
-        expected_end_date: expectedEndDate
+        expected_end_date: expectedEndDate,
+        status: 'active'
       };
     } else {
       return res.status(400).json({ message: 'Invalid contact type' });
@@ -131,6 +131,7 @@ export const createProjectFromContact = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // Get user's projects
 export const getUserProjects = async (req, res) => {
   try {
@@ -142,6 +143,7 @@ export const getUserProjects = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // Get project by ID
 export const getProjectById = async (req, res) => {
   try {
@@ -161,6 +163,7 @@ export const getProjectById = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // Update project status
 export const updateProjectStatus = async (req, res) => {
   try {
@@ -174,6 +177,7 @@ export const updateProjectStatus = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // Update milestone
 export const updateMilestone = async (req, res) => {
   try {
@@ -187,6 +191,7 @@ export const updateMilestone = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 // Get project activity/updates
 export const getProjectActivity = async (req, res) => {
   try {

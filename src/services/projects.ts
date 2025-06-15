@@ -3,23 +3,31 @@ import axios from 'axios';
 import { setAuthToken } from './auth';
 import { Project, ProjectUpdate } from '@/types/marketplace';
 
-
 const API_URL = 'http://localhost:8080/api';
 
 export const createProjectFromApplication = async (applicationId: number): Promise<Project> => {
   try {
-    console.log('[project.ts] application with ID:', applicationId); 
+    console.log('[projects.ts] Creating project from application with ID:', applicationId); 
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.post(`${API_URL}/projects/${applicationId}/from-application`);
+    console.log('[projects.ts] Project created successfully:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error creating project from application:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+    }
     throw error;
-  }2
+  }
 };
 
 export const createProjectFromContact = async (contactId: number, contactType: string, projectData: any): Promise<Project> => {
   try {
+    console.log('[projects.ts] Creating project from contact:', { contactId, contactType, projectData });
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.post(`${API_URL}/projects/from-contact`, {
       contactId,
@@ -30,6 +38,13 @@ export const createProjectFromContact = async (contactId: number, contactType: s
     return response.data;
   } catch (error) {
     console.error('Error creating project from contact:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      });
+    }
     throw error;
   }
 };
