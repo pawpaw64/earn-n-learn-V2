@@ -192,8 +192,10 @@ static async getById(id) {
   // Delete skill
   static async deleteSkill(id) {
     try {
-      const [result] = await execute('DELETE FROM skill_marketplace WHERE id = ?', [id]);
-      return result.affectedRows > 0;
+      const result = await execute('DELETE FROM skill_marketplace WHERE id = ?', [id]);
+      if (result.affectedRows === 0) {
+        throw new Error('Skill not found or already deleted');
+      }
     } catch (error) {
       throw new Error(error.message);
     }

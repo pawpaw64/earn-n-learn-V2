@@ -193,8 +193,11 @@ class JobModel {
   // Delete job
   static async delete(id) {
     try {
-      const [result] = await execute('DELETE FROM jobs WHERE id = ?', [id]);
-      return result.affectedRows > 0;
+      const result= await execute('DELETE FROM jobs WHERE id = ?', [id]);
+      if (result.affectedRows === 0) {
+        throw new Error('Job not found or already deleted');
+      }
+      
     } catch (error) {
       throw new Error(error.message);
     }
