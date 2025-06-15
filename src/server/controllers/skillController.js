@@ -77,7 +77,8 @@ export async function updateSkill(req, res) {
 // Delete skill
 export async function deleteSkill(req, res) {
   try {
-    const skill = await SkillModel.getSkillById(req.params.id);
+    console.log('Deleting skill with ID:', req.params.id);
+    const skill = await SkillModel.getById(req.params.id);
     if (!skill) return res.status(404).json({ message: 'Skill not found' });
     if (skill.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
     

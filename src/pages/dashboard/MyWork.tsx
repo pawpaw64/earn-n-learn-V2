@@ -39,7 +39,7 @@ export default function MyWork() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">My Work</h1>
-      <Tabs defaultValue="projects" className="w-full">
+      <Tabs defaultValue="applications" className="w-full">
         <TabsList className="mb-6 w-full flex gap-2">
           <TabsTrigger 
             value="applications" 

@@ -45,7 +45,7 @@ export function ApplicationsTab({
   onDelete,
 }: ApplicationsTabProps) {
   const [applicationsTab, setApplicationsTab] = useState("job");
-  const [activeContactsTab, setActiveContactsTab] = useState("received");
+  const [activeContactsTab, setActiveContactsTab] = useState("myposts");
   const [myPostsTab, setMyPostsTab] = useState("jobs");
   const queryClient = useQueryClient();
 
