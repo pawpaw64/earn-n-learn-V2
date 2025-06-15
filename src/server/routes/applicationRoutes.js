@@ -20,7 +20,7 @@ router.get('/:id', getApplicationById);
 // Submit application
 router.post('/', submitApplication);
 
-// Update application status
+// Update application status - make sure this route is correctly defined
 router.put('/:id/status', updateApplicationStatus);
 
 // Get user's applications

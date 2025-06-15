@@ -1,3 +1,4 @@
+
 // src/api/applications.ts
 import axios from 'axios';
 import { ApplicationType } from '@/types/marketplace';
@@ -17,6 +18,7 @@ export const submitJobApplication = async (applicationData: { job_id: number, co
     toast.success("Application submitted successfully");
     return response.data;
   } catch (error: any) {
+    console.error("Submit application error:", error);
     toast.error(error.response?.data?.message || "Failed to submit application");
     throw error;
   }
@@ -30,6 +32,7 @@ export const submitJobApplication = async (applicationData: { job_id: number, co
 export const updateApplicationStatus = async (id: number, status: string): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
   try {
+    console.log(`Updating application ${id} status to ${status}`);
     const response = await axios.put(`${API_URL}/applications/${id}/status`, { status });
     
     // Show appropriate toast based on status
@@ -41,6 +44,7 @@ export const updateApplicationStatus = async (id: number, status: string): Promi
     
     return response.data;
   } catch (error: any) {
+    console.error("Update application status error:", error);
     toast.error(error.response?.data?.message || "Failed to update application status");
     throw error;
   }
@@ -57,16 +61,19 @@ export const getApplicationDetails = async (id: number): Promise<ApplicationType
     const response = await axios.get(`${API_URL}/jobs/${id}`);
     return response.data;
   } catch (error: any) {
+    console.error("Get application details error:", error);
     toast.error(error.response?.data?.message || "Failed to fetch application details");
     throw error;
   }
 };
+
 export const getmyApplicationDetails = async (id: number): Promise<ApplicationType> => {
   setAuthToken(localStorage.getItem('token')); 
   try {
     const response = await axios.get(`${API_URL}/applications/${id}`);
     return response.data;
   } catch (error: any) {
+    console.error("Get my application details error:", error);
     toast.error(error.response?.data?.message || "Failed to fetch application details");
     throw error;
   }
@@ -80,7 +87,6 @@ export const getJobApplicants = async (jobId: number): Promise<any[]> => {
   setAuthToken(localStorage.getItem('token'));
   
   try {
-   
     const response = await axios.get(`${API_URL}/applications/job/${jobId}`);
     return response.data;
   } catch (error: any) {

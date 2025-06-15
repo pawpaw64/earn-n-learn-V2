@@ -108,14 +108,16 @@ export const useWorkDetails = ({
   const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
     try {
       setIsProcessing(true);
+      console.log(`[handleStatusChange] Updating ${type} ${id} to ${newStatus}`);
       
       if (type === 'job_application') {
         await updateApplicationStatus(id, newStatus);
-        console.log(`[handle status chnage] Application ${id}`);
+        console.log(`[handleStatusChange] Application ${id} status updated to ${newStatus}`);
+        
         // Create project when status is accepted
         if (newStatus === 'Accepted') {
           try {
-            
+            console.log(`[handleStatusChange] Creating project from application ${id}`);
             await createProjectFromApplication(id);
             toast.success('Work assignment accepted and project created successfully');
           } catch (error) {
@@ -129,7 +131,6 @@ export const useWorkDetails = ({
         // Create project when status is accepted
         if (newStatus === 'Accepted') {
           try {
-           
             await createProjectFromContact(id, 'skill', {});
             toast.success('Skill contact accepted and project created successfully');
           } catch (error) {
@@ -143,7 +144,6 @@ export const useWorkDetails = ({
         // Create project when status is accepted
         if (newStatus === 'Accepted') {
           try {
-          
             await createProjectFromContact(id, 'material', {});
             toast.success('Material contact accepted and project created successfully');
           } catch (error) {
@@ -152,8 +152,9 @@ export const useWorkDetails = ({
           }
         }
       }
+      
       if (newStatus !== 'Accepted') {
-        toast.success(`Only Status updated to ${newStatus}`);
+        toast.success(`Status updated to ${newStatus}`);
       }
       
       if (isDetailsOpen && detailsItem?.id === id) {

@@ -166,16 +166,15 @@ export const updateApplicationStatus = async (req, res) => {
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
-    console.log("application user id", application.user_id);
+
     // Check if job exists and get job details
     const job = await JobModel.getById(application.job_id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
-    console.log("job user i`d", job.user_id);
-    console.log("application user id", application.user_id);
-    console.log("req user id", req.user.id);
+
     // Check if user is authorized to update status
+    // Either the job poster or the applicant can update status
     if (job.user_id !== req.user.id && application.user_id !== req.user.id) {
       return res
         .status(403)
@@ -208,41 +207,46 @@ export const updateApplicationStatus = async (req, res) => {
         .json({ message: "Failed to update application status" });
     }
 
-    // Get job poster and applicant details
+    // Get job poster and applicant details for notifications
     const jobPoster = await UserModel.getById(job.user_id);
     const applicant = await UserModel.getById(application.user_id);
 
     // Create notifications based on status change
-    if (status === "Accepted") {
-      // Notify applicant
-      await NotificationModel.create({
-        user_id: application.user_id,
-        title: "Application Accepted",
-        message: `Your application for "${job.title}" has been accepted by ${jobPoster.name}`,
-        type: "application_status",
-        reference_id: parseInt(id),
-        reference_type: "job_application",
-      });
-    } else if (status === "Rejected") {
-      // Notify applicant
-      await NotificationModel.create({
-        user_id: application.user_id,
-        title: "Application Not Selected",
-        message: `Your application for "${job.title}" was not selected by ${jobPoster.name}`,
-        type: "application_status",
-        reference_id: parseInt(id),
-        reference_type: "job_application",
-      });
-    } else if (status === "Withdrawn") {
-      // Notify job poster
-      await NotificationModel.create({
-        user_id: job.user_id,
-        title: "Application Withdrawn",
-        message: `${applicant.name} has withdrawn their application for "${job.title}"`,
-        type: "application_status",
-        reference_id: parseInt(id),
-        reference_type: "job_application",
-      });
+    try {
+      if (status === "Accepted") {
+        // Notify applicant
+        await NotificationModel.create({
+          user_id: application.user_id,
+          title: "Application Accepted",
+          message: `Your application for "${job.title}" has been accepted by ${jobPoster.name}`,
+          type: "application_status",
+          reference_id: parseInt(id),
+          reference_type: "job_application",
+        });
+      } else if (status === "Rejected") {
+        // Notify applicant
+        await NotificationModel.create({
+          user_id: application.user_id,
+          title: "Application Not Selected",
+          message: `Your application for "${job.title}" was not selected by ${jobPoster.name}`,
+          type: "application_status",
+          reference_id: parseInt(id),
+          reference_type: "job_application",
+        });
+      } else if (status === "Withdrawn") {
+        // Notify job poster
+        await NotificationModel.create({
+          user_id: job.user_id,
+          title: "Application Withdrawn",
+          message: `${applicant.name} has withdrawn their application for "${job.title}"`,
+          type: "application_status",
+          reference_id: parseInt(id),
+          reference_type: "job_application",
+        });
+      }
+    } catch (notificationError) {
+      console.error("Error creating notification:", notificationError);
+      // Don't fail the whole request if notification fails
     }
 
     res.json({

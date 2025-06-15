@@ -35,6 +35,7 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
   const navigate = useNavigate();
   const [showEscrowDialog, setShowEscrowDialog] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -42,6 +43,8 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
 
   const handleAcceptApplication = async (appId: number, app: any) => {
     try {
+      setProcessingId(appId);
+      console.log(`[ReceivedApplicationsTable] Accepting application ${appId}`);
       const success = await onStatusChange(appId, 'job_application', 'Accepted');
       if (success) {
         setSelectedApplication(app);
@@ -49,14 +52,20 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
       }
     } catch (error) {
       console.error("Error accepting application:", error);
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const handleRejectApplication = async (appId: number) => {
     try {
+      setProcessingId(appId);
+      console.log(`[ReceivedApplicationsTable] Rejecting application ${appId}`);
       await onStatusChange(appId, 'job_application', 'Rejected');
     } catch (error) {
       console.error("Error rejecting application:", error);
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -177,23 +186,22 @@ export const ReceivedApplicationsTable: React.FC<ReceivedApplicationsTableProps>
                           {app.status === 'Applied' && (
                             <>
                               <Button 
-                               
                                 variant="outline" 
                                 size="sm"
-                               className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-
+                                className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                                 onClick={() => handleAcceptApplication(app.id, app)}
+                                disabled={processingId === app.id}
                               >
-                                <Check className="w-4 h-4 mr-1"/> Accept
+                                <Check className="w-4 h-4 mr-1"/> {processingId === app.id ? 'Processing...' : 'Accept'}
                               </Button>
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                               className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-
+                                className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                                 onClick={() => handleRejectApplication(app.id)}
+                                disabled={processingId === app.id}
                               >
-                                <X className="w-4 h-4 mr-1" /> Reject
+                                <X className="w-4 h-4 mr-1" /> {processingId === app.id ? 'Processing...' : 'Reject'}
                               </Button>
                             </>
                           )}
