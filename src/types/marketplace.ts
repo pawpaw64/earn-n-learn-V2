@@ -1,3 +1,4 @@
+
 // Job types
 export interface JobType {
   id: number;
@@ -96,15 +97,6 @@ export interface ContactType {
   contact_avatar?: string;
 }
 
-// Work types
-export interface WorkType {
-  id: number;
-  title: string;
-  description: string;
-  status: string;
-  created_at: string;
-  user_id: number;
-}
 
 // Invoice types
 export interface InvoiceType {

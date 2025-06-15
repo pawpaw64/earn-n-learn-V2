@@ -1,252 +1,287 @@
 
 import React, { useState } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { Project } from "@/types/marketplace";
+import { Plus, Clock, CheckCircle, AlertCircle, User } from "lucide-react";
 
 interface Task {
   id: number;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'review' | 'completed';
   priority: 'low' | 'medium' | 'high';
-  assigned_to?: number;
-  due_date?: string;
-  created_at: string;
+  assignee: string;
+  estimatedHours: number;
+  actualHours?: number;
+  dueDate: string;
+  createdBy: string;
+  createdAt: string;
 }
 
 interface TaskManagerProps {
-  project: Project;
-  isProvider: boolean;
-  onTaskUpdate?: () => void;
+  projectId: number;
+  userRole: 'provider' | 'client';
 }
 
-export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+export function TaskManager({ projectId, userRole }: TaskManagerProps) {
+  const [tasks, setTasks] = useState<Task[]>([
+    {
+      id: 1,
+      title: "Setup project environment",
+      description: "Initialize development environment and dependencies",
+      status: 'completed',
+      priority: 'high',
+      assignee: 'John Provider',
+      estimatedHours: 4,
+      actualHours: 3.5,
+      dueDate: '2024-06-20',
+      createdBy: 'Client Name',
+      createdAt: '2024-06-15'
+    },
+    {
+      id: 2,
+      title: "Design database schema",
+      description: "Create comprehensive database design for the application",
+      status: 'in_progress',
+      priority: 'high',
+      assignee: 'John Provider',
+      estimatedHours: 8,
+      actualHours: 5,
+      dueDate: '2024-06-25',
+      createdBy: 'Client Name',
+      createdAt: '2024-06-16'
+    },
+    {
+      id: 3,
+      title: "Implement user authentication",
+      description: "Build secure login and registration system",
+      status: 'pending',
+      priority: 'medium',
+      assignee: 'John Provider',
+      estimatedHours: 12,
+      dueDate: '2024-07-01',
+      createdBy: 'John Provider',
+      createdAt: '2024-06-17'
+    }
+  ]);
+
+  const [showAddTask, setShowAddTask] = useState(false);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
-    due_date: ''
+    priority: 'medium' as const,
+    estimatedHours: 1,
+    dueDate: '',
+    assignee: 'John Provider'
   });
 
-  const handleCreateTask = async () => {
-    try {
-      // API call would go here
-      console.log('Creating task:', newTask);
-      setIsCreateDialogOpen(false);
-      setNewTask({ title: '', description: '', priority: 'medium', due_date: '' });
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error('Error creating task:', error);
-    }
-  };
-
-  const handleUpdateTaskStatus = async (taskId: number, status: string) => {
-    try {
-      // API call would go here
-      console.log('Updating task status:', taskId, status);
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
-  };
-
-  const handleDeleteTask = async (taskId: number) => {
-    try {
-      // API call would go here
-      console.log('Deleting task:', taskId);
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
-  };
-
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'secondary';
-      case 'in_progress':
-        return 'default';
-      case 'pending':
-        return 'outline';
-      default:
-        return 'outline';
+      case 'completed': return 'default';
+      case 'in_progress': return 'secondary';
+      case 'review': return 'outline';
+      case 'pending': return 'destructive';
+      default: return 'outline';
     }
   };
 
-  const getPriorityBadgeVariant = (priority: string) => {
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'destructive';
-      case 'medium':
-        return 'default';
-      case 'low':
-        return 'outline';
-      default:
-        return 'outline';
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'in_progress':
-        return <Clock className="w-4 h-4" />;
-      case 'pending':
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4" />;
-    }
+  const handleAddTask = () => {
+    const task: Task = {
+      id: Date.now(),
+      ...newTask,
+      status: 'pending',
+      createdBy: userRole === 'client' ? 'Client Name' : 'John Provider',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
+    setTasks([...tasks, task]);
+    setNewTask({
+      title: '',
+      description: '',
+      priority: 'medium',
+      estimatedHours: 1,
+      dueDate: '',
+      assignee: 'John Provider'
+    });
+    setShowAddTask(false);
   };
+
+  const updateTaskStatus = (taskId: number, newStatus: Task['status']) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ));
+  };
+
+  const totalEstimated = tasks.reduce((sum, task) => sum + task.estimatedHours, 0);
+  const totalActual = tasks.reduce((sum, task) => sum + (task.actualHours || 0), 0);
+  const completedTasks = tasks.filter(task => task.status === 'completed').length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Tasks</h3>
-        {isProvider && (
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-1" />
-                Add Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Task</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Title</label>
-                  <Input
-                    value={newTask.title}
-                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                    placeholder="Task title"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Description</label>
-                  <Textarea
-                    value={newTask.description}
-                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                    placeholder="Task description"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Priority</label>
-                    <Select value={newTask.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setNewTask({ ...newTask, priority: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Due Date</label>
-                    <Input
-                      type="date"
-                      value={newTask.due_date}
-                      onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleCreateTask}>
-                    Create Task
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        <div>
+          <h3 className="text-lg font-semibold">Task Management</h3>
+          <p className="text-sm text-muted-foreground">
+            {completedTasks}/{tasks.length} tasks completed • {totalActual}h/{totalEstimated}h logged
+          </p>
+        </div>
+        <Button onClick={() => setShowAddTask(true)} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Task
+        </Button>
       </div>
 
-      {tasks.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          <div className="space-y-2">
-            <div className="text-4xl">📋</div>
-            <p>No tasks yet</p>
-            {isProvider && <p className="text-sm">Create tasks to organize your project work</p>}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {tasks.map((task) => (
-            <Card key={task.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-base">{task.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{task.description}</p>
-                  </div>
-                  {isProvider && (
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => setEditingTask(task)}>
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteTask(task.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <Badge variant={getStatusBadgeVariant(task.status)} className="flex items-center gap-1">
-                      {getStatusIcon(task.status)}
-                      {task.status.replace('_', ' ')}
-                    </Badge>
-                    <Badge variant={getPriorityBadgeVariant(task.priority)}>
+      {showAddTask && (
+        <Card>
+          <CardHeader>
+            <h4 className="font-medium">Create New Task</h4>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  value={newTask.title}
+                  onChange={(e) => setNewTask({...newTask, title: e.target.value})}
+                  placeholder="Task title"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Due Date</label>
+                <Input
+                  type="date"
+                  value={newTask.dueDate}
+                  onChange={(e) => setNewTask({...newTask, dueDate: e.target.value})}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={newTask.description}
+                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                placeholder="Task description"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium">Priority</label>
+                <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({...newTask, priority: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Estimated Hours</label>
+                <Input
+                  type="number"
+                  value={newTask.estimatedHours}
+                  onChange={(e) => setNewTask({...newTask, estimatedHours: parseInt(e.target.value)})}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Assignee</label>
+                <Select value={newTask.assignee} onValueChange={(value) => setNewTask({...newTask, assignee: value})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="John Provider">John Provider</SelectItem>
+                    <SelectItem value="Client Name">Client Name</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddTask} size="sm">Create Task</Button>
+              <Button onClick={() => setShowAddTask(false)} variant="outline" size="sm">Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-3">
+        {tasks.map((task) => (
+          <Card key={task.id}>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium">{task.title}</h4>
+                    <Badge variant={getStatusColor(task.status)}>{task.status.replace('_', ' ')}</Badge>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(task.priority)}`}>
                       {task.priority}
-                    </Badge>
-                  </div>
-                  {task.due_date && (
-                    <span className="text-sm text-muted-foreground">
-                      Due: {new Date(task.due_date).toLocaleDateString()}
                     </span>
-                  )}
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      {task.assignee}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {task.actualHours || 0}h / {task.estimatedHours}h
+                    </span>
+                    <span>Due: {task.dueDate}</span>
+                  </div>
                 </div>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-1">
                   {task.status !== 'completed' && (
                     <>
                       {task.status === 'pending' && (
-                        <Button size="sm" variant="outline" onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateTaskStatus(task.id, 'in_progress')}
+                        >
                           Start
                         </Button>
                       )}
                       {task.status === 'in_progress' && (
-                        <Button size="sm" onClick={() => handleUpdateTaskStatus(task.id, 'completed')}>
-                          Complete
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateTaskStatus(task.id, 'review')}
+                        >
+                          Submit for Review
+                        </Button>
+                      )}
+                      {task.status === 'review' && userRole === 'client' && (
+                        <Button
+                          size="sm"
+                          onClick={() => updateTaskStatus(task.id, 'completed')}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Approve
                         </Button>
                       )}
                     </>
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

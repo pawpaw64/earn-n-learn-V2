@@ -1,22 +1,22 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Edit, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { MessageSquare, Reply, Pin } from "lucide-react";
 
-interface ProjectComment {
+interface Comment {
   id: number;
-  project_id: number;
-  user_id: number;
-  message: string;
-  type: 'general' | 'milestone' | 'task';
-  user_name: string;
-  user_avatar?: string;
-  created_at: string;
-  updated_at: string;
+  author: string;
+  authorRole: 'provider' | 'client';
+  content: string;
+  timestamp: string;
+  pinned?: boolean;
+  replies?: Comment[];
+  taskId?: number;
+  taskName?: string;
 }
 
 interface ProjectCommentsProps {
@@ -25,210 +25,277 @@ interface ProjectCommentsProps {
 }
 
 export function ProjectComments({ projectId, userRole }: ProjectCommentsProps) {
-  const [comments, setComments] = useState<ProjectComment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [newMessage, setNewMessage] = useState("");
-  const [editingComment, setEditingComment] = useState<number | null>(null);
-  const [editMessage, setEditMessage] = useState("");
-
-  const loadComments = async () => {
-    try {
-      setIsLoading(true);
-      // TODO: Replace with actual API call
-      // const data = await getProjectComments(projectId);
-      setComments([]);
-    } catch (error) {
-      console.error("Error loading comments:", error);
-      toast.error("Failed to load comments");
-    } finally {
-      setIsLoading(false);
+  const [comments, setComments] = useState<Comment[]>([
+    {
+      id: 1,
+      author: "Client Name",
+      authorRole: "client",
+      content: "Great progress on the setup! The development environment looks good. Can we discuss the database structure in our next call?",
+      timestamp: "2024-06-18T10:30:00Z",
+      pinned: true,
+      taskId: 1,
+      taskName: "Setup project environment"
+    },
+    {
+      id: 2,
+      author: "John Provider",
+      authorRole: "provider",
+      content: "Thanks! I've completed the initial setup and started working on the database design. I'll have the schema ready by tomorrow for your review.",
+      timestamp: "2024-06-18T11:15:00Z",
+      replies: [
+        {
+          id: 3,
+          author: "Client Name",
+          authorRole: "client",
+          content: "Perfect! Looking forward to seeing it. Make sure to include the user roles table we discussed.",
+          timestamp: "2024-06-18T11:45:00Z"
+        }
+      ]
+    },
+    {
+      id: 4,
+      author: "John Provider",
+      authorRole: "provider",
+      content: "I've uploaded the database schema file to the resources section. Please review and let me know if any changes are needed.",
+      timestamp: "2024-06-19T09:00:00Z",
+      taskId: 2,
+      taskName: "Database design"
     }
+  ]);
+
+  const [newComment, setNewComment] = useState('');
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+
+  const addComment = () => {
+    const comment: Comment = {
+      id: Date.now(),
+      author: userRole === 'client' ? 'Client Name' : 'John Provider',
+      authorRole: userRole,
+      content: newComment,
+      timestamp: new Date().toISOString()
+    };
+    setComments([...comments, comment]);
+    setNewComment('');
   };
 
-  useEffect(() => {
-    loadComments();
-  }, [projectId]);
+  const addReply = (commentId: number) => {
+    const reply: Comment = {
+      id: Date.now(),
+      author: userRole === 'client' ? 'Client Name' : 'John Provider',
+      authorRole: userRole,
+      content: replyContent,
+      timestamp: new Date().toISOString()
+    };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) {
-      toast.error("Message cannot be empty");
-      return;
-    }
-
-    try {
-      // TODO: Replace with actual API call
-      // await createProjectComment(projectId, { message: newMessage, type: 'general' });
-      toast.success("Message sent successfully");
-      setNewMessage("");
-      loadComments();
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
-    }
+    setComments(comments.map(comment => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          replies: [...(comment.replies || []), reply]
+        };
+      }
+      return comment;
+    }));
+    setReplyContent('');
+    setReplyTo(null);
   };
 
-  const handleEditComment = async (commentId: number) => {
-    if (!editMessage.trim()) {
-      toast.error("Message cannot be empty");
-      return;
-    }
-
-    try {
-      // TODO: Replace with actual API call
-      // await updateProjectComment(commentId, { message: editMessage });
-      toast.success("Message updated successfully");
-      setEditingComment(null);
-      setEditMessage("");
-      loadComments();
-    } catch (error) {
-      console.error("Error updating message:", error);
-      toast.error("Failed to update message");
-    }
+  const togglePin = (commentId: number) => {
+    setComments(comments.map(comment => 
+      comment.id === commentId 
+        ? { ...comment, pinned: !comment.pinned }
+        : comment
+    ));
   };
 
-  const handleDeleteComment = async (commentId: number) => {
-    try {
-      // TODO: Replace with actual API call
-      // await deleteProjectComment(commentId);
-      toast.success("Message deleted successfully");
-      loadComments();
-    } catch (error) {
-      console.error("Error deleting message:", error);
-      toast.error("Failed to delete message");
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
     const now = new Date();
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-
-    if (diffInHours < 1) {
-      return 'Just now';
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
+    
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } else {
       return date.toLocaleDateString();
     }
   };
 
-  const currentUserId = parseInt(localStorage.getItem('userId') || '0');
-
-  if (isLoading) {
-    return <div className="p-4">Loading messages...</div>;
-  }
+  const pinnedComments = comments.filter(comment => comment.pinned);
+  const regularComments = comments.filter(comment => !comment.pinned);
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Project Communication</h3>
-
-      {/* Messages List */}
-      <div className="space-y-4 max-h-96 overflow-y-auto">
-        {comments.length === 0 ? (
-          <Card>
-            <CardContent className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
-            </CardContent>
-          </Card>
-        ) : (
-          comments.map((comment) => (
-            <Card key={comment.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={comment.user_avatar} />
-                    <AvatarFallback>
-                      {comment.user_name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{comment.user_name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(comment.created_at)}
-                        </span>
-                      </div>
-                      {comment.user_id === currentUserId && (
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setEditingComment(comment.id);
-                              setEditMessage(comment.message);
-                            }}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDeleteComment(comment.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                    {editingComment === comment.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editMessage}
-                          onChange={(e) => setEditMessage(e.target.value)}
-                          placeholder="Edit your message..."
-                        />
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handleEditComment(comment.id)}>
-                            Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setEditingComment(null);
-                              setEditMessage("");
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm">{comment.message}</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold">Project Communication</h3>
+          <p className="text-sm text-muted-foreground">
+            {comments.length} comments • {pinnedComments.length} pinned
+          </p>
+        </div>
       </div>
 
-      {/* New Message Input */}
+      {/* Add Comment */}
       <Card>
         <CardContent className="p-4">
           <div className="space-y-3">
             <Textarea
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              rows={3}
             />
-            <div className="flex justify-end">
-              <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </div>
+            <Button onClick={addComment} size="sm" disabled={!newComment.trim()}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Add Comment
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Pinned Comments */}
+      {pinnedComments.length > 0 && (
+        <div className="space-y-3">
+          <h4 className="font-medium flex items-center gap-2">
+            <Pin className="h-4 w-4" />
+            Pinned Comments
+          </h4>
+          {pinnedComments.map((comment) => (
+            <Card key={comment.id} className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>{comment.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{comment.author}</span>
+                        <Badge variant={comment.authorRole === 'client' ? 'default' : 'secondary'}>
+                          {comment.authorRole}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTimestamp(comment.timestamp)}
+                        </span>
+                        {comment.taskName && (
+                          <Badge variant="outline" className="text-xs">
+                            {comment.taskName}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm">{comment.content}</p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => togglePin(comment.id)}
+                  >
+                    <Pin className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Regular Comments */}
+      <div className="space-y-3">
+        {regularComments.map((comment) => (
+          <Card key={comment.id}>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback>{comment.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">{comment.author}</span>
+                      <Badge variant={comment.authorRole === 'client' ? 'default' : 'secondary'}>
+                        {comment.authorRole}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {formatTimestamp(comment.timestamp)}
+                      </span>
+                      {comment.taskName && (
+                        <Badge variant="outline" className="text-xs">
+                          {comment.taskName}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm mb-2">{comment.content}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setReplyTo(comment.id)}
+                      >
+                        <Reply className="h-3 w-3 mr-1" />
+                        Reply
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => togglePin(comment.id)}
+                      >
+                        <Pin className="h-3 w-3 mr-1" />
+                        Pin
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Replies */}
+              {comment.replies && comment.replies.length > 0 && (
+                <div className="ml-11 space-y-2 border-l-2 border-gray-100 pl-4">
+                  {comment.replies.map((reply) => (
+                    <div key={reply.id} className="flex items-start gap-3">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-xs">{reply.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium">{reply.author}</span>
+                          <Badge variant={reply.authorRole === 'client' ? 'default' : 'secondary'} className="text-xs">
+                            {reply.authorRole}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {formatTimestamp(reply.timestamp)}
+                          </span>
+                        </div>
+                        <p className="text-sm">{reply.content}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Reply Form */}
+              {replyTo === comment.id && (
+                <div className="ml-11 mt-3 space-y-2">
+                  <Textarea
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    placeholder="Write a reply..."
+                    rows={2}
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={() => addReply(comment.id)} size="sm" disabled={!replyContent.trim()}>
+                      Reply
+                    </Button>
+                    <Button onClick={() => setReplyTo(null)} variant="outline" size="sm">
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }

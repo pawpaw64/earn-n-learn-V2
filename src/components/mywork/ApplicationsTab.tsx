@@ -1,111 +1,298 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ApplicationList } from "./applications/ApplicationList";
+import { Button } from "@/components/ui/button";
+import { Filter } from "lucide-react";
+import { LoadingSkeleton } from "./LoadingSkeleton";
+import { JobApplicationCard } from "./applications/JobApplicationCard";
+import { ContactCard } from "./applications/ContactCard";
 import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTable";
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
-import { LoadingSkeleton } from "./LoadingSkeleton";
 import { fetchMyApplications, fetchJobApplications } from "@/services/applications";
-import { fetchMyContacts, fetchReceivedContacts } from "@/services/contacts";
-import { toast } from "sonner";
+import { 
+  fetchUserSkillContacts, 
+  fetchUserMaterialContacts,
+  fetchSkillContacts, 
+  fetchMaterialContacts 
+} from "@/services/contacts";
 
 interface ApplicationsTabProps {
-  onViewDetails: (item: any, type: string) => void;
+  onViewDetails: (item: any, type: string) => Promise<void>;
   onStatusChange: (id: number, type: string, status: string) => Promise<void>;
+  
 }
 
-export function ApplicationsTab({ onViewDetails, onStatusChange }: ApplicationsTabProps) {
-  const [myApplications, setMyApplications] = useState<any[]>([]);
-  const [receivedApplications, setReceivedApplications] = useState<any[]>([]);
-  const [myContacts, setMyContacts] = useState<any[]>([]);
-  const [receivedContacts, setReceivedContacts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      
-      const [myApps, receivedApps, myContactsData, receivedContactsData] = await Promise.all([
-        fetchMyApplications(),
-        fetchJobApplications(),
-        fetchMyContacts(),
-        fetchReceivedContacts()
-      ]);
-
-      setMyApplications(myApps || []);
-      setReceivedApplications(receivedApps || []);
-      setMyContacts(myContactsData || []);
-      setReceivedContacts(receivedContactsData || []);
-    } catch (error) {
-      console.error("Error loading applications data:", error);
-      toast.error("Failed to load applications data");
-    } finally {
-      setIsLoading(false);
-    }
+/**
+ * Main component for managing all applications and contacts 
+ * Both sent and received
+ */
+export function ApplicationsTab({ 
+  onViewDetails, 
+  onStatusChange, 
+ 
+}: ApplicationsTabProps)  {
+  const [applicationsTab, setApplicationsTab] = useState("job");
+  const [activeContactsTab, setActiveContactsTab] = useState("received");
+  const queryClient = useQueryClient();
+  
+  // Function to refetch all data
+  const refetchAll = () => {
+    queryClient.invalidateQueries({ queryKey: ['myApplications'] });
+    queryClient.invalidateQueries({ queryKey: ['jobApplications'] });
+    queryClient.invalidateQueries({ queryKey: ['skillContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['materialContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['receivedSkillContacts'] });
+    queryClient.invalidateQueries({ queryKey: ['receivedMaterialContacts'] });
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Fetch all data
+  const { 
+    data: applications = [], 
+    isLoading: isLoadingApps
+  } = useQuery({
+    queryKey: ['myApplications'],
+    queryFn: fetchMyApplications,
+    staleTime: 30000 // 30 seconds
+  });
 
-  const handleStatusChangeWithRefresh = async (id: number, type: string, status: string) => {
-    try {
+  const { 
+    data: jobApplications = [], 
+    isLoading: isLoadingJobApps
+  } = useQuery({
+    queryKey: ['jobApplications'],
+    queryFn: fetchJobApplications,
+    staleTime: 30000
+  });
+
+  const {
+    data: skillContacts = [],
+    isLoading: isLoadingSkillContacts
+  } = useQuery({
+    queryKey: ['skillContacts'],
+    queryFn: fetchUserSkillContacts,
+    staleTime: 30000
+  });
+
+  const {
+    data: materialContacts = [],
+    isLoading: isLoadingMaterialContacts
+  } = useQuery({
+    queryKey: ['materialContacts'],
+    queryFn: fetchUserMaterialContacts,
+    staleTime: 30000
+  });
+
+  const {
+    data: receivedSkillContacts = [],
+    isLoading: isLoadingReceivedSkillContacts
+  } = useQuery({
+    queryKey: ['receivedSkillContacts'],
+    queryFn: fetchSkillContacts,
+    staleTime: 30000
+  });
+
+  const {
+    data: receivedMaterialContacts = [],
+    isLoading: isLoadingReceivedMaterialContacts
+  } = useQuery({
+    queryKey: ['receivedMaterialContacts'],
+    queryFn: fetchMaterialContacts,
+    staleTime: 30000
+  });
+
+  // Handle status changes with automatic refetch
+  const handleStatusChange = async (id: number, type: string, status: string): Promise<boolean> => {
+    if (onStatusChange) {
       await onStatusChange(id, type, status);
-      await loadData();
-    } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
+      return true;
     }
+    return false;
   };
 
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  // Handle work creation
+  const handleCreateWork = async (id: number, type: string): Promise<boolean> => {
+    console.log('Creating work from:', { id, type });
+    
+    try {
+      if (type === 'job_application') {
+        await createProjectFromApplication(id);
+        toast.success('Project created successfully!');
+        refetch();
+        return true;
+      } else if (type === 'skill_contact') {
+        // Handle skill contact work creation
+        console.log('Creating work from skill contact:', id);
+        return true;
+      } else if (type === 'material_contact') {
+        // Handle material contact work creation
+        console.log('Creating work from material contact:', id);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error creating work:', error);
+      toast.error('Failed to create project');
+      return false;
+    }
+    return false;
+  };
+
+  // Ensure all data arrays are valid arrays
+  const applicationsArray = Array.isArray(applications) ? applications : [];
+  const jobApplicationsArray = Array.isArray(jobApplications) ? jobApplications : [];
+  const skillContactsArray = Array.isArray(skillContacts) ? skillContacts : [];
+  const materialContactsArray = Array.isArray(materialContacts) ? materialContacts : [];
+  const receivedSkillContactsArray = Array.isArray(receivedSkillContacts) ? receivedSkillContacts : [];
+  const receivedMaterialContactsArray = Array.isArray(receivedMaterialContacts) ? receivedMaterialContacts : [];
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="submitted" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="submitted">My Applications</TabsTrigger>
-          <TabsTrigger value="received">Received Applications</TabsTrigger>
-          <TabsTrigger value="my-contacts">My Contacts</TabsTrigger>
-          <TabsTrigger value="received-contacts">Received Contacts</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="submitted">
-          <ApplicationList 
-            applications={myApplications}
-            onViewDetails={onViewDetails}
-            type="my_application"
-          />
-        </TabsContent>
-
-        <TabsContent value="received">
-          <ReceivedApplicationsTable
-            applications={receivedApplications}
-            onViewDetails={onViewDetails}
-            onStatusChange={handleStatusChangeWithRefresh}
-          />
-        </TabsContent>
-
-        <TabsContent value="my-contacts">
-          <ApplicationList 
-            applications={myContacts}
-            onViewDetails={onViewDetails}
-            type="my_contact"
-          />
-        </TabsContent>
-
-        <TabsContent value="received-contacts">
-          <ReceivedContactsTable
-            contacts={receivedContacts}
-            onViewDetails={onViewDetails}
-            onStatusChange={handleStatusChangeWithRefresh}
-            type="contact"
-            isLoading={false}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
+      <TabsList className="mb-4">
+        <TabsTrigger value="job">Job Applications</TabsTrigger>
+        <TabsTrigger value="skill">Skill Inquiries</TabsTrigger>
+        <TabsTrigger value="material">Material Inquiries</TabsTrigger>
+        <TabsTrigger value="received">Received Inquiries</TabsTrigger>
+      </TabsList>
+      
+      {/* Job Applications Subtab */}
+      <TabsContent value="job">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Job Applications</h2>
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
+            <Filter className="w-4 h-4" /> Filter
+          </Button>
+        </div>
+        
+        {isLoadingApps ? <LoadingSkeleton /> : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {applicationsArray.length > 0 ? 
+              applicationsArray.map((app) => (
+                <JobApplicationCard 
+                  key={app.id}
+                  app={app}
+                  onViewDetails={onViewDetails}
+                  onStatusChange={handleStatusChange}
+                />
+              )) 
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No job applications found
+                </div>
+              )
+            }
+          </div>
+        )}
+      </TabsContent>
+      
+      {/* Skill Inquiries Subtab */}
+      <TabsContent value="skill">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Skill Inquiries</h2>
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
+          { /* <Filter className="w-4 h-4" /> Filter*/}
+          </Button>
+        </div>
+        
+        {isLoadingSkillContacts ? <LoadingSkeleton /> : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {skillContactsArray.length > 0 ? 
+              skillContactsArray.map((contact) => (
+                <ContactCard 
+                  key={contact.id}
+                  contact={contact}
+                  type="skill"
+                  onViewDetails={onViewDetails}
+                  
+                />
+              ))
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No skill inquiries found
+                </div>
+              )
+            }
+          </div>
+        )}
+      </TabsContent>
+      
+      {/* Material Inquiries Subtab */}
+      <TabsContent value="material">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Material Inquiries</h2>
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
+            <Filter className="w-4 h-4" /> Filter
+          </Button>
+        </div>
+        
+        {isLoadingMaterialContacts ? <LoadingSkeleton /> : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {materialContactsArray.length > 0 ? 
+              materialContactsArray.map((contact) => (
+                <ContactCard 
+                  key={contact.id}
+                  contact={contact}
+                  type="material"
+                  onViewDetails={onViewDetails}
+                />
+              ))
+              : (
+                <div className="col-span-2 text-center py-10 text-muted-foreground">
+                  No material inquiries found
+                </div>
+              )
+            }
+          </div>
+        )}
+      </TabsContent>
+      
+      {/* Received Applications Subtab */}
+      <TabsContent value="received">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Received Inquiries</h2>
+          <Button variant="outline" className="flex items-center gap-2" onClick={() => refetchAll()}>
+            <Filter className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+        
+        <Tabs value={activeContactsTab} onValueChange={setActiveContactsTab} className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="received">Job Applications</TabsTrigger>
+            <TabsTrigger value="skills">Skill Inquiries</TabsTrigger>
+            <TabsTrigger value="materials">Material Inquiries</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="received">
+            <ReceivedApplicationsTable 
+              applications={jobApplicationsArray}
+              isLoading={isLoadingJobApps}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+              
+            />
+          </TabsContent>
+          
+          <TabsContent value="skills">
+            <ReceivedContactsTable 
+              contacts={receivedSkillContactsArray}
+              type="skill"
+              isLoading={isLoadingReceivedSkillContacts}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+             
+            />
+          </TabsContent>
+          
+          <TabsContent value="materials">
+            <ReceivedContactsTable 
+              contacts={receivedMaterialContactsArray}
+              type="material"
+              isLoading={isLoadingReceivedMaterialContacts}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+              
+            />
+          </TabsContent>
+        </Tabs>
+      </TabsContent>
+    </Tabs>
   );
 }

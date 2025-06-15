@@ -1,27 +1,22 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Download, FileText, Image, Video, Archive, Trash2, ExternalLink } from "lucide-react";
-import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Upload, File, Link, Download, Share, Plus } from "lucide-react";
 
-interface ProjectResource {
+interface Resource {
   id: number;
-  project_id: number;
   name: string;
-  type: string;
+  type: 'file' | 'link' | 'document';
   url: string;
-  description?: string;
+  description: string;
+  uploadedBy: string;
+  uploadedAt: string;
+  size?: string;
   category: string;
-  size: number;
-  uploaded_by: number;
-  uploaded_by_name: string;
-  created_at: string;
 }
 
 interface ResourceSharingProps {
@@ -30,203 +25,246 @@ interface ResourceSharingProps {
 }
 
 export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
-  const [resources, setResources] = useState<ProjectResource[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [resources, setResources] = useState<Resource[]>([
+    {
+      id: 1,
+      name: "Project Requirements.pdf",
+      type: 'file',
+      url: "/mock-file.pdf",
+      description: "Detailed project requirements and specifications",
+      uploadedBy: 'Client Name',
+      uploadedAt: '2024-06-15',
+      size: '2.4 MB',
+      category: 'requirements'
+    },
+    {
+      id: 2,
+      name: "Design Mockups",
+      type: 'link',
+      url: "https://figma.com/mock-design",
+      description: "UI/UX design mockups and prototypes",
+      uploadedBy: 'Client Name',
+      uploadedAt: '2024-06-16',
+      category: 'design'
+    },
+    {
+      id: 3,
+      name: "Database Schema.sql",
+      type: 'file',
+      url: "/mock-schema.sql",
+      description: "Initial database schema and structure",
+      uploadedBy: 'John Provider',
+      uploadedAt: '2024-06-18',
+      size: '15 KB',
+      category: 'development'
+    },
+    {
+      id: 4,
+      name: "API Documentation",
+      type: 'document',
+      url: "/api-docs",
+      description: "REST API endpoints and documentation",
+      uploadedBy: 'John Provider',
+      uploadedAt: '2024-06-19',
+      category: 'documentation'
+    }
+  ]);
+
+  const [showAddResource, setShowAddResource] = useState(false);
   const [newResource, setNewResource] = useState({
-    name: "",
-    type: "",
-    url: "",
-    description: "",
-    category: "document",
-    size: 0
+    name: '',
+    type: 'file' as const,
+    url: '',
+    description: '',
+    category: 'general'
   });
 
-  const loadResources = async () => {
-    try {
-      setIsLoading(true);
-      // TODO: Replace with actual API call
-      // const data = await getProjectResources(projectId);
-      setResources([]);
-    } catch (error) {
-      console.error("Error loading resources:", error);
-      toast.error("Failed to load resources");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadResources();
-  }, [projectId]);
-
-  const handleUploadResource = async () => {
-    if (!newResource.name.trim() || !newResource.url.trim()) {
-      toast.error("Resource name and URL are required");
-      return;
-    }
-
-    try {
-      // TODO: Replace with actual API call
-      // await uploadProjectResource(projectId, newResource);
-      toast.success("Resource uploaded successfully");
-      setNewResource({ name: "", type: "", url: "", description: "", category: "document", size: 0 });
-      setIsUploadDialogOpen(false);
-      loadResources();
-    } catch (error) {
-      console.error("Error uploading resource:", error);
-      toast.error("Failed to upload resource");
-    }
-  };
-
-  const handleDeleteResource = async (resourceId: number) => {
-    try {
-      // TODO: Replace with actual API call
-      // await deleteProjectResource(resourceId);
-      toast.success("Resource deleted successfully");
-      loadResources();
-    } catch (error) {
-      console.error("Error deleting resource:", error);
-      toast.error("Failed to delete resource");
-    }
-  };
+  const categories = [
+    'requirements',
+    'design',
+    'development',
+    'documentation',
+    'testing',
+    'general'
+  ];
 
   const getResourceIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
-    if (type.includes('pdf') || type.includes('doc')) return <FileText className="h-4 w-4" />;
-    if (type.includes('zip') || type.includes('rar')) return <Archive className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+    switch (type) {
+      case 'file': return <File className="h-4 w-4" />;
+      case 'link': return <Link className="h-4 w-4" />;
+      case 'document': return <File className="h-4 w-4" />;
+      default: return <File className="h-4 w-4" />;
+    }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      'requirements': 'bg-blue-100 text-blue-800',
+      'design': 'bg-purple-100 text-purple-800',
+      'development': 'bg-green-100 text-green-800',
+      'documentation': 'bg-yellow-100 text-yellow-800',
+      'testing': 'bg-red-100 text-red-800',
+      'general': 'bg-gray-100 text-gray-800'
+    };
+    return colors[category] || colors.general;
   };
 
-  if (isLoading) {
-    return <div className="p-4">Loading resources...</div>;
-  }
+  const handleAddResource = () => {
+    const resource: Resource = {
+      id: Date.now(),
+      ...newResource,
+      uploadedBy: userRole === 'client' ? 'Client Name' : 'John Provider',
+      uploadedAt: new Date().toISOString().split('T')[0],
+      ...(newResource.type === 'file' && { size: '1.2 MB' })
+    };
+    setResources([...resources, resource]);
+    setNewResource({
+      name: '',
+      type: 'file',
+      url: '',
+      description: '',
+      category: 'general'
+    });
+    setShowAddResource(false);
+  };
+
+  const groupedResources = resources.reduce((groups, resource) => {
+    const category = resource.category;
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(resource);
+    return groups;
+  }, {} as Record<string, Resource[]>);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Shared Resources</h3>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Resource
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Upload New Resource</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Input
-                placeholder="Resource name"
-                value={newResource.name}
-                onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
-              />
-              <Input
-                placeholder="File URL or path"
-                value={newResource.url}
-                onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-              />
-              <Input
-                placeholder="File type (e.g., application/pdf)"
-                value={newResource.type}
-                onChange={(e) => setNewResource({ ...newResource, type: e.target.value })}
-              />
-              <Textarea
-                placeholder="Description (optional)"
-                value={newResource.description}
-                onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
-              />
-              <Select value={newResource.category} onValueChange={(value) => setNewResource({ ...newResource, category: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="document">Document</SelectItem>
-                  <SelectItem value="image">Image</SelectItem>
-                  <SelectItem value="video">Video</SelectItem>
-                  <SelectItem value="code">Code</SelectItem>
-                  <SelectItem value="design">Design</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="number"
-                placeholder="File size (bytes)"
-                value={newResource.size}
-                onChange={(e) => setNewResource({ ...newResource, size: parseInt(e.target.value) || 0 })}
-              />
-              <div className="flex gap-2">
-                <Button onClick={handleUploadResource}>Upload</Button>
-                <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-lg font-semibold">Resource Sharing</h3>
+          <p className="text-sm text-muted-foreground">
+            {resources.length} resources shared
+          </p>
+        </div>
+        <Button onClick={() => setShowAddResource(true)} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Resource
+        </Button>
       </div>
 
-      <div className="space-y-3">
-        {resources.length === 0 ? (
-          <Card>
-            <CardContent className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">No resources shared yet. Upload your first resource to get started.</p>
-            </CardContent>
-          </Card>
-        ) : (
-          resources.map((resource) => (
-            <Card key={resource.id}>
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1">
-                      {getResourceIcon(resource.type)}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium">{resource.name}</h4>
-                      {resource.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-                        <Badge variant="outline">{resource.category}</Badge>
-                        <span>{formatFileSize(resource.size)}</span>
-                        <span>By {resource.uploaded_by_name}</span>
-                        <span>{new Date(resource.created_at).toLocaleDateString()}</span>
+      {showAddResource && (
+        <Card>
+          <CardHeader>
+            <h4 className="font-medium">Share New Resource</h4>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Name</label>
+                <Input
+                  value={newResource.name}
+                  onChange={(e) => setNewResource({...newResource, name: e.target.value})}
+                  placeholder="Resource name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Type</label>
+                <select
+                  value={newResource.type}
+                  onChange={(e) => setNewResource({...newResource, type: e.target.value as any})}
+                  className="w-full p-2 border rounded"
+                >
+                  <option value="file">File Upload</option>
+                  <option value="link">External Link</option>
+                  <option value="document">Document</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                {newResource.type === 'file' ? 'File' : 'URL'}
+              </label>
+              {newResource.type === 'file' ? (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                  <Input type="file" className="hidden" />
+                </div>
+              ) : (
+                <Input
+                  value={newResource.url}
+                  onChange={(e) => setNewResource({...newResource, url: e.target.value})}
+                  placeholder="https://..."
+                />
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Category</label>
+                <select
+                  value={newResource.category}
+                  onChange={(e) => setNewResource({...newResource, category: e.target.value})}
+                  className="w-full p-2 border rounded"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={newResource.description}
+                onChange={(e) => setNewResource({...newResource, description: e.target.value})}
+                placeholder="Resource description"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleAddResource} size="sm">Share Resource</Button>
+              <Button onClick={() => setShowAddResource(false)} variant="outline" size="sm">Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="space-y-4">
+        {Object.entries(groupedResources).map(([category, categoryResources]) => (
+          <div key={category}>
+            <h4 className="font-medium mb-2 capitalize">{category}</h4>
+            <div className="space-y-2">
+              {categoryResources.map((resource) => (
+                <Card key={resource.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {getResourceIcon(resource.type)}
+                          <h5 className="font-medium">{resource.name}</h5>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(resource.category)}`}>
+                            {resource.category}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{resource.description}</p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>Shared by {resource.uploadedBy}</span>
+                          <span>{resource.uploadedAt}</span>
+                          {resource.size && <span>{resource.size}</span>}
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Share className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => window.open(resource.url, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDeleteResource(resource.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
-        )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

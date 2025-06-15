@@ -28,6 +28,12 @@ export default function MyWork() {
     detailsItem,
   });
 
+  // Wrapper to align status change to return Promise<boolean>
+  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<boolean> => {
+    await handleStatusChange(id, type, status);
+    return true;
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">My Work</h1>
@@ -73,7 +79,7 @@ export default function MyWork() {
         <TabsContent value="projects">
           <ProjectsTab   
             onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChange} 
+            onStatusChange={handleStatusChangeWrapper} 
           />
         </TabsContent>
 
@@ -81,7 +87,7 @@ export default function MyWork() {
         <TabsContent value="applications">
           <ApplicationsTab 
             onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChange}
+            onStatusChange={handleStatusChangeWrapper}
           />
         </TabsContent>
 
@@ -97,7 +103,7 @@ export default function MyWork() {
         onOpenChange={setIsDetailsOpen}
         detailsItem={detailsItem}
         detailsType={detailsType}
-        onStatusChange={handleStatusChange}
+        onStatusChange={handleStatusChangeWrapper}
       />
     </div>
   );
