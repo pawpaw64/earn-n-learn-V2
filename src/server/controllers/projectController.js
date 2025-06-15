@@ -10,7 +10,9 @@ export const createProjectFromApplication = async (req, res) => {
     console.log('Creating project from application:', applicationId);
     console.log('User ID:', userId);
 
+
     // Get the application details
+    const applicationResult = await execute(
     const applicationResult = await execute(
       `SELECT a.*, j.title as job_title, j.payment as job_payment, 
               j.description as job_description, j.user_id as client_id,
@@ -19,12 +21,17 @@ export const createProjectFromApplication = async (req, res) => {
        JOIN jobs j ON a.job_id = j.id
        JOIN users u ON a.user_id = u.id
        WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) AND a.status = 'Accepted'`,
+       WHERE a.id = ? AND (a.user_id = ? OR j.user_id = ?) AND a.status = 'Accepted'`,
       [applicationId, userId, userId]
     );
 
     if (!applicationResult || applicationResult.length === 0) {
       return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
+    if (!applicationResult || applicationResult.length === 0) {
+      return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
     }
+
+    const application = applicationResult[0];
 
     const application = applicationResult[0];
 
