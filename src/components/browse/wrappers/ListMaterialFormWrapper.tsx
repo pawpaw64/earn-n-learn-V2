@@ -16,17 +16,20 @@ export const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = (
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: any, imageFile?: File) => {
     try {
       setIsLoading(true);
       
+      console.log("Form data received:", formData);
+      console.log("Image file received:", imageFile);
+      
       if (initialData?.id) {
         // Update existing material
-        await updateMaterial(initialData.id, formData);
+        await updateMaterial({ ...formData, id: initialData.id }, imageFile);
         toast.success("Material updated successfully");
       } else {
         // Create new material
-        await createMaterial(formData);
+        await createMaterial(formData, imageFile);
         toast.success("Material listed successfully");
       }
       

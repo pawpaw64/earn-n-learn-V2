@@ -1,3 +1,4 @@
+
 // src/api/materials.ts
 import axios from "axios";
 import { MaterialType } from "@/types/marketplace";
@@ -21,6 +22,7 @@ export const fetchMaterials = async (
     return [];
   }
 };
+
 export const createMaterial = async (
   materialData: any,
   imageFile?: File
@@ -36,7 +38,10 @@ export const createMaterial = async (
 
   if (imageFile) {
     formData.append("image", imageFile);
+    console.log("Appending image file to form data:", imageFile.name);
   }
+
+  console.log("Sending material data:", Object.fromEntries(formData.entries()));
 
   const response = await axios.post(`${API_URL}/materials`, formData, {
     headers: {
@@ -58,8 +63,10 @@ export const updateMaterial = async (
   formData.append("price", materialData.price || "");
   formData.append("availability", materialData.availability || "");
   const materialId = materialData.id;
+  
   if (imageFile) {
     formData.append("image", imageFile);
+    console.log("Appending image file to form data:", imageFile.name);
   }
 
   const response = await axios.put(`${API_URL}/materials/${materialId}`, formData, {

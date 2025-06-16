@@ -24,12 +24,13 @@ const formSchema = z.object({
 type ListMaterialFormValues = z.infer<typeof formSchema>;
 
 interface ListMaterialFormProps {
-  onSubmit?: (formData: any) => Promise<void>;
+  onSubmit?: (formData: any, imageFile?: File) => Promise<void>;
   isLoading?: boolean;
 }
 
 export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMaterialFormProps) {
   const [imagePreview, setImagePreview] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | undefined>();
 
   const form = useForm<ListMaterialFormValues>({
     resolver: zodResolver(formSchema),
@@ -57,17 +58,21 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
         availability: values.availability,
       };
 
+      console.log("Submitting material with data:", materialData);
+      console.log("Selected image file:", selectedImageFile);
+
       if (onSubmit) {
-        await onSubmit(materialData);
+        await onSubmit(materialData, selectedImageFile);
       } else {
         // Fallback - call createMaterial directly if no onSubmit provided
         const { createMaterial } = await import("@/services/materials");
-        await createMaterial(materialData);
+        await createMaterial(materialData, selectedImageFile);
         toast.success("Material listed successfully!");
       }
 
       form.reset();
       setImagePreview("");
+      setSelectedImageFile(undefined);
     } catch (error) {
       console.error("Error listing material:", error);
       toast.error("Failed to list material. Please try again.");
@@ -77,6 +82,9 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      console.log("Image file selected:", file.name, file.size);
+      setSelectedImageFile(file);
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -193,7 +201,10 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
                   type="button"
                   variant="outline" 
                   size="sm"
-                  onClick={() => setImagePreview("")}
+                  onClick={() => {
+                    setImagePreview("");
+                    setSelectedImageFile(undefined);
+                  }}
                   className="absolute top-0 right-0"
                 >
                   Remove

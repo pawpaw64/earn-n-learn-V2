@@ -3,7 +3,6 @@ import MaterialModel from '../models/materialModel.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { Result } from 'postcss';
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -76,10 +75,12 @@ export async function createMaterial(req, res) {
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
   }
+  
   try {
     let imageUrl = null;
     if (req.file) {
       imageUrl = `/uploads/materials/${req.file.filename}`;
+      console.log('Image uploaded:', imageUrl);
     }
 
     const materialData = {
@@ -92,13 +93,17 @@ export async function createMaterial(req, res) {
       image_url: imageUrl
     };
 
+    console.log('Creating material with data:', materialData);
     const result = await MaterialModel.create(materialData);
+    
     res.status(201).json({ 
-      materialId,
+      materialId: result.id,
       message: 'Material posted successfully',
       image_url: result.image_url
     });
-  } catch (error) { if (req.file) {
+  } catch (error) {
+    // Clean up uploaded file if material creation failed
+    if (req.file) {
       fs.unlinkSync(req.file.path);
     }
     console.error('Create material error:', error);
@@ -162,7 +167,7 @@ export async function deleteMaterial(req, res) {
     
     // Delete associated image file
     if (material.image_url) {
-      const imagePath = path.join(process.cwd(), 'src/server', material.image_url);
+      const imagePath = path.join(process.cwd(), 'uploads', 'materials', path.basename(material.image_url));
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
