@@ -3,6 +3,7 @@ import MaterialModel from '../models/materialModel.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { Result } from 'postcss';
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -75,8 +76,12 @@ export async function createMaterial(req, res) {
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
   }
-  
   try {
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = `/uploads/materials/${req.file.filename}`;
+    }
+
     const materialData = {
       user_id: req.user.id,
       title,
@@ -84,17 +89,18 @@ export async function createMaterial(req, res) {
       conditions,
       price,
       availability,
-      image_url: req.file ? `/uploads/materials/${req.file.filename}` : null
+      image_url: imageUrl
     };
 
-    const materialId = await MaterialModel.create(materialData);
-    
+    const result = await MaterialModel.create(materialData);
     res.status(201).json({ 
       materialId,
       message: 'Material posted successfully',
-      image_url: materialData.image_url
+      image_url: result.image_url
     });
-  } catch (error) {
+  } catch (error) { if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
     console.error('Create material error:', error);
     res.status(500).json({ message: 'Server error' });
   }
@@ -108,23 +114,40 @@ export async function updateMaterial(req, res) {
     if (material.user_id !== req.user.id) return res.status(403).json({ message: 'Not authorized' });
     
     const updateData = { ...req.body };
+    let newImageUrl = null;
     
-    // If new image is uploaded, update the image_url
     if (req.file) {
-      updateData.image_url = `/uploads/materials/${req.file.filename}`;
+      newImageUrl = `/uploads/materials/${req.file.filename}`;
+      updateData.image_url = newImageUrl;
       
       // Delete old image if it exists
       if (material.image_url) {
-        const oldImagePath = path.join(process.cwd(), 'src/server', material.image_url);
+        const oldImagePath = path.join(process.cwd(), 'public', material.image_url);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
     }
     
-    const updated = await MaterialModel.update(req.params.id, updateData);
-    res.json(updated ? { message: 'Material updated' } : { message: 'Update failed' });
+    const result = await MaterialModel.update(req.params.id, updateData);
+    
+    if (!result.success) {
+      // Clean up new image if update failed
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(400).json({ message: 'Update failed' });
+    }
+    
+    res.json({ 
+      message: 'Material updated',
+      image_url: result.image_url || material.image_url
+    });
   } catch (error) {
+    // Clean up new image if error occurred
+    if (req.file) {
+      fs.unlinkSync(req.file.path);
+    }
     console.error('Update material error:', error);
     res.status(500).json({ message: 'Server error' });
   }
