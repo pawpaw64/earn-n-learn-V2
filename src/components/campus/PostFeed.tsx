@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PostCard } from './PostCard';
 import { PostEditor } from './PostEditor';
 import { SearchFilters } from './SearchFilters';
+import { PostDetailModal } from './PostDetailModal';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PostType } from '@/types/campus';
@@ -17,6 +18,8 @@ export const PostFeed = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('recent');
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
+  const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
 
   useEffect(() => {
     loadPosts();
@@ -57,6 +60,16 @@ export const PostFeed = () => {
   const handleLike = async (postId: number) => {
     try {
       await togglePostLike(postId);
+      // Update the post in the list
+      setPosts(prev => prev.map(post => 
+        post.id === postId 
+          ? { 
+              ...post, 
+              is_liked: !post.is_liked,
+              likes_count: post.is_liked ? post.likes_count - 1 : post.likes_count + 1
+            }
+          : post
+      ));
     } catch (error) {
       console.error('Error toggling like:', error);
       toast.error('Failed to update like');
@@ -64,13 +77,13 @@ export const PostFeed = () => {
   };
 
   const handleComment = (postId: number) => {
-    // Navigate to post detail or open comment modal
-    console.log('Comment on post:', postId);
+    setSelectedPostId(postId);
+    setIsPostDetailOpen(true);
   };
 
   const handleView = (postId: number) => {
-    // Navigate to post detail
-    console.log('View post:', postId);
+    setSelectedPostId(postId);
+    setIsPostDetailOpen(true);
   };
 
   return (
@@ -131,6 +144,14 @@ export const PostFeed = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Post Detail Modal */}
+      <PostDetailModal
+        isOpen={isPostDetailOpen}
+        onOpenChange={setIsPostDetailOpen}
+        postId={selectedPostId}
+        onLike={handleLike}
+      />
     </div>
   );
 };
