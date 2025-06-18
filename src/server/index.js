@@ -16,6 +16,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import walletRoutes from './routes/walletRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import campusRoutes from './routes/campusRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -84,6 +85,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Static file serving
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -97,6 +101,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/campus', campusRoutes);
+
 // Root route
 app.get('/', (req, res) => {
   res.send('Earn-n-Learn API is running');

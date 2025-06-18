@@ -28,14 +28,17 @@ async function initDatabase() {
     const schemaPath = join(__dirname, 'schema.sql');
     const walletSchemaPath = join(__dirname, 'wallet_schema.sql');
     const messageSchemaPath = join(__dirname, 'message_schema.sql');
-    const projectSchemaPath = join(__dirname, 'project_schema.sql'); 
+    const projectSchemaPath = join(__dirname, 'project_schema.sql');
+    const campusSchemaPath = join(__dirname, 'campus_schema.sql');
+    
     const schema = readFileSync(schemaPath, 'utf8');
     const walletSchema = readFileSync(walletSchemaPath, 'utf8');
     const messageSchema = readFileSync(messageSchemaPath, 'utf8');
     const projectSchema = readFileSync(projectSchemaPath, 'utf8');
+    const campusSchema = readFileSync(campusSchemaPath, 'utf8');
 
     // Combine schemas
-    const fullSchema = schema + walletSchema + messageSchema+projectSchema;
+    const fullSchema = schema + walletSchema + messageSchema + projectSchema + campusSchema;
 
     // Split schema into separate SQL statements
     const statements = fullSchema
@@ -45,7 +48,7 @@ async function initDatabase() {
     // Execute each statement
     for (const statement of statements) {
       try {
-        await connection.query(statement + ';'); // Using query() instead of execute()
+        await connection.query(statement + ';');
       } catch (error) {
         console.error('Error executing statement:', statement);
         throw error;
@@ -55,7 +58,7 @@ async function initDatabase() {
     console.log('Database initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
-    throw error; // Re-throw to handle in calling code
+    throw error;
   } finally {
     if (connection) {
       await connection.end();
