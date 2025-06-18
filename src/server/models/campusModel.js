@@ -3,27 +3,39 @@ import db from '../config/db.js';
 
 class CampusModel {
   // Create a new post
-  static async createPost(postData) {
-    try {
-      const { user_id, type, title, content, tags, privacy, attachment_url, attachment_type } = postData;
-      
-      const [result] = await db.query(
-        `INSERT INTO campus_posts (user_id, type, title, content, tags, privacy, attachment_url, attachment_type) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [user_id, type, title, content, JSON.stringify(tags || []), privacy || 'public', attachment_url, attachment_type]
-      );
-      
-      // Update tag counts
-      if (tags && tags.length > 0) {
-        await this.updateTagCounts(tags);
+ static async createPost(postData) {
+  try {
+    const { user_id, type, title, content, tags, privacy, attachment_url, attachment_type } = postData;
+    
+    // Ensure tags is always a valid JSON array
+ let tagsJson = '[]';
+    if (postData.tags) {
+      if (Array.isArray(postData.tags)) {
+        tagsJson = JSON.stringify(postData.tags);
+      } else if (typeof postData.tags === 'string') {
+        try {
+          // If it's a JSON string, parse and re-stringify
+          const parsed = JSON.parse(postData.tags);
+          tagsJson = JSON.stringify(Array.isArray(parsed) ? parsed : [parsed]);
+        } catch {
+          // If not JSON, treat as single tag
+          tagsJson = JSON.stringify([postData.tags]);
+        }
       }
-      
-      return result.insertId;
-    } catch (error) {
-      console.error('Error in createPost:', error);
-      throw error;
     }
+    
+    const [result] = await db.query(
+      `INSERT INTO campus_posts (user_id, type, title, content, tags, privacy, attachment_url, attachment_type) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, type, title, content, tagsJson, privacy || 'public', attachment_url, attachment_type]
+    );
+    
+    // ... rest of the method ...
+  } catch (error) {
+    console.error('Error in createPost:', error);
+    throw error;
   }
+}
 
   // Get posts with filters
   static async getPosts(filters = {}) {
@@ -68,18 +80,37 @@ class CampusModel {
       params.push(limit, offset);
       
       const [rows] = await db.query(query, params);
+         return rows.map(post => {
+      let parsedTags = [];
       
-      // Parse tags JSON
-      return rows.map(post => ({
+      // Handle different cases of tags data
+      if (post.tags) {
+        if (Array.isArray(post.tags)) {
+          // Tags is already an array (shouldn't happen with current schema)
+          parsedTags = post.tags;
+        } else if (typeof post.tags === 'string') {
+          try {
+            // Try to parse as JSON
+            const parsed = JSON.parse(post.tags);
+            parsedTags = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            // If not valid JSON, treat as single tag
+            parsedTags = [post.tags];
+          }
+        }
+      }
+
+      return {
         ...post,
-        tags: JSON.parse(post.tags || '[]'),
+        tags: parsedTags,
         is_liked: post.is_liked > 0
-      }));
-    } catch (error) {
-      console.error('Error in getPosts:', error);
-      throw error;
-    }
+      };
+    });
+  } catch (error) {
+    console.error('Error in getPosts:', error);
+    throw error;
   }
+}
 
   // Get post by ID
   static async getPostById(postId, userId) {

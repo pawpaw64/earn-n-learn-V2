@@ -126,3 +126,4 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
     </div>
   );
 };
+export default ApplicantsList;
