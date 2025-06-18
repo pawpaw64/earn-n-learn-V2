@@ -118,7 +118,10 @@ class MaterialModel {
         [id]
       );
       const rows = await this.#handleQueryResult(result);
-      return rows[0];
+      return rows.map((row) => ({
+        ...row,
+        deadline: formatDate(row.deadline),
+      }));
     } catch (error) {
       console.error("Error in getById:", error);
       throw new Error(error.message);
