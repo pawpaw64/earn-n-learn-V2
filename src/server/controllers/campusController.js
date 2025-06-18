@@ -1,4 +1,3 @@
-
 import CampusModel from '../models/campusModel.js';
 import multer from 'multer';
 import path from 'path';
@@ -33,6 +32,7 @@ const upload = multer({
 // Create a new post
 export const createPost = async (req, res) => {
   try {
+    console.log('Creating post with data:', req.body);
     const { type, title, content, tags, privacy } = req.body;
     
     const postData = {
@@ -46,6 +46,8 @@ export const createPost = async (req, res) => {
       attachment_type: req.file ? req.file.mimetype : null
     };
     
+    console.log('Processed post data:', postData);
+    
     const postId = await CampusModel.createPost(postData);
     
     res.status(201).json({
@@ -54,13 +56,16 @@ export const createPost = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in createPost controller:', error);
-    res.status(500).json({ message: 'Failed to create post' });
+    res.status(500).json({ message: 'Failed to create post', error: error.message });
   }
 };
 
 // Get posts
 export const getPosts = async (req, res) => {
   try {
+    console.log('Fetching posts with query:', req.query);
+    console.log('User ID:', req.user?.id);
+    
     const { type, tags, sortBy, limit, offset } = req.query;
     
     const filters = {
@@ -72,11 +77,15 @@ export const getPosts = async (req, res) => {
       userId: req.user.id
     };
     
+    console.log('Processed filters:', filters);
+    
     const posts = await CampusModel.getPosts(filters);
+    console.log('Fetched posts count:', posts.length);
+    
     res.json(posts);
   } catch (error) {
     console.error('Error in getPosts controller:', error);
-    res.status(500).json({ message: 'Failed to fetch posts' });
+    res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
   }
 };
 
