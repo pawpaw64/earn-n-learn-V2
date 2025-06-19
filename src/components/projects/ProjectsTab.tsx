@@ -5,7 +5,6 @@ import { getUserProjects} from "@/services/projects";
 import { Project } from "@/types/marketplace";
 import { LoadingSkeleton } from "../mywork/LoadingSkeleton";
 import { ProjectsGrid } from "./ProjectsGrid";
-import { ProjectDetailsDialog } from "./ProjectDetailsDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProjectsTabProps {
@@ -14,9 +13,6 @@ interface ProjectsTabProps {
 }
 
 export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps) {
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
   const { 
     data: allProjects = [], 
     isLoading,
@@ -30,8 +26,6 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
 
   const handleViewDetails = async (project: Project) => {
     console.log('Viewing project details:', project);
-    setSelectedProject(project);
-    setIsDetailsOpen(true);
     if (onViewDetails) {
       await onViewDetails(project, 'project');
     }
@@ -40,10 +34,6 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
   const handleOpenChat = (project: Project) => {
     console.log('Opening chat for project:', project.id);
     // This could open a dedicated chat interface or redirect to messages
-  };
-
-  const handleProjectUpdate = () => {
-    refetch();
   };
 
   const activeProjects = allProjects.filter(p => p.status === 'active');
@@ -78,73 +68,63 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
   }
 
   return (
-    <>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">My Works</h2>
-          <div className="text-sm text-muted-foreground">
-            {allProjects.length} total projects
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">My Works</h2>
+        <div className="text-sm text-muted-foreground">
+          {allProjects.length} total projects
         </div>
-
-        {allProjects.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground">
-            <div className="space-y-4">
-              <div className="text-6xl">📋</div>
-              <div>
-                <h3 className="text-lg font-medium">No Projects Yet</h3>
-                <p className="text-sm">Your accepted work assignments will appear here as projects.</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="active">
-                Active ({activeProjects.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Completed ({completedProjects.length})
-              </TabsTrigger>
-              <TabsTrigger value="other">
-                Other ({otherProjects.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="active" className="mt-6">
-              <ProjectsGrid 
-                projects={activeProjects}
-                onViewDetails={handleViewDetails}
-                onOpenChat={handleOpenChat}
-              />
-            </TabsContent>
-
-            <TabsContent value="completed" className="mt-6">
-              <ProjectsGrid 
-                projects={completedProjects}
-                onViewDetails={handleViewDetails}
-                onOpenChat={handleOpenChat}
-              />
-            </TabsContent>
-
-            <TabsContent value="other" className="mt-6">
-              <ProjectsGrid 
-                projects={otherProjects}
-                onViewDetails={handleViewDetails}
-                onOpenChat={handleOpenChat}
-              />
-            </TabsContent>
-          </Tabs>
-        )}
       </div>
 
-      {/* Project Details Dialog */}
-      <ProjectDetailsDialog
-        project={selectedProject}
-        isOpen={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
-        onProjectUpdate={handleProjectUpdate}
-      />
-    </>
+      {allProjects.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground">
+          <div className="space-y-4">
+            <div className="text-6xl">📋</div>
+            <div>
+              <h3 className="text-lg font-medium">No Projects Yet</h3>
+              <p className="text-sm">Your accepted work assignments will appear here as projects.</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Tabs defaultValue="active" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="active">
+              Active ({activeProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Completed ({completedProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="other">
+              Other ({otherProjects.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="active" className="mt-6">
+            <ProjectsGrid 
+              projects={activeProjects}
+              onViewDetails={handleViewDetails}
+              onOpenChat={handleOpenChat}
+            />
+          </TabsContent>
+
+          <TabsContent value="completed" className="mt-6">
+            <ProjectsGrid 
+              projects={completedProjects}
+              onViewDetails={handleViewDetails}
+              onOpenChat={handleOpenChat}
+            />
+          </TabsContent>
+
+          <TabsContent value="other" className="mt-6">
+            <ProjectsGrid 
+              projects={otherProjects}
+              onViewDetails={handleViewDetails}
+              onOpenChat={handleOpenChat}
+            />
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
   );
 }

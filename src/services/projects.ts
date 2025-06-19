@@ -24,25 +24,6 @@ export const createProjectFromApplication = async (applicationId: number): Promi
   }
 };
 
-// export const createProjectFromContact = async (contactId: number, contactType: string): Promise<Project> => {
-//   try {
-//     setAuthToken(localStorage.getItem('token'));
-//     const response = await axios.post(`${API_URL}/projects/${contactId}from-contact/contactType`);
-//     console.log('Created project from contact:', response.data);
-//     return response.data;
-//   } catch (error) {
-//     console.error('Error creating project from contact:', error);
-//     if (axios.isAxiosError(error)) {
-//       console.error('Axios error details:', {
-//         status: error.response?.status,
-//         statusText: error.response?.statusText,
-//         data: error.response?.data
-//       });
-//     }
-//     throw error;
-//   }
-// };
-
 export const getUserProjects = async (): Promise<Project[]> => {
   try {
     setAuthToken(localStorage.getItem('token'));
@@ -87,7 +68,7 @@ export const updateProjectStatus = async (id: number, status: string): Promise<P
   }
 };
 
-export const updateMilestone = async (milestoneId: number, status: string, notes?: string): Promise<Project> => {
+export const updateMilestone = async (milestoneId: number, status: string, notes?: string): Promise<any> => {
   try {
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.put(`${API_URL}/projects/milestone/${milestoneId}`, { 

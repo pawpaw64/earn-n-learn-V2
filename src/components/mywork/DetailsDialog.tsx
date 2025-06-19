@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -10,13 +9,15 @@ import { DetailsHeader } from "./details/DetailsHeader";
 import { DetailContent } from "./details/DetailContent";
 import { ActionButtons } from "./details/ActionButtons";
 import { ProjectActions } from "./details/ProjectActions";
+import { updateProjectStatus } from "@/services/projects";
+import { toast } from "sonner";
 
 interface DetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   detailsItem: any;
   detailsType: string;
-  onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<void>;
 }
 
 /**
@@ -46,6 +47,21 @@ export function DetailsDialog({
            "Details";
   };
 
+  const handleProjectStatusUpdate = async (newStatus: string) => {
+    if (!detailsItem?.id) return;
+    
+    try {
+      await updateProjectStatus(detailsItem.id, newStatus);
+      toast.success(`Project status updated to ${newStatus}`);
+      onOpenChange(false);
+      // Refresh the page or trigger a refetch
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      toast.error('Failed to update project status');
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
@@ -70,11 +86,42 @@ export function DetailsDialog({
             Close
           </Button>
           
-          <ActionButtons 
-            type={detailsType} 
-            item={detailsItem} 
-            onStatusChange={onStatusChange}
-          />
+          {/* Project specific actions */}
+          {detailsType === 'project' && detailsItem && (
+            <div className="flex gap-2">
+              {detailsItem.status === 'active' && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleProjectStatusUpdate('paused')}
+                  >
+                    Pause
+                  </Button>
+                  <Button
+                    onClick={() => handleProjectStatusUpdate('completed')}
+                  >
+                    Complete
+                  </Button>
+                </>
+              )}
+              {detailsItem.status === 'paused' && (
+                <Button
+                  onClick={() => handleProjectStatusUpdate('active')}
+                >
+                  Resume
+                </Button>
+              )}
+            </div>
+          )}
+          
+          {/* Other action buttons for non-project types */}
+          {detailsType !== 'project' && (
+            <ActionButtons 
+              type={detailsType} 
+              item={detailsItem} 
+              onStatusChange={onStatusChange}
+            />
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
