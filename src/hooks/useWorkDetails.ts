@@ -99,7 +99,7 @@ export const useWorkDetails = ({
       return true;
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
-      toast.error(`Failed to delete ${type}`);
+      toast.error(` Cannot delete ${type} with accepted applications until project is completed `);
       setIsProcessing(false);
       return false;
     }
