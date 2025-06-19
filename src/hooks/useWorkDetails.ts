@@ -103,75 +103,61 @@ export const useWorkDetails = ({
       setIsProcessing(false);
       return false;
     }
-  };
-
-  const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
-    try {
-      setIsProcessing(true);
-      
-      if (type === 'job_application') {
-        await updateApplicationStatus(id, newStatus);
-       
-        // Create project when status is accepted
-        if (newStatus === 'Accepted') {
-          try {
-            await createProjectFromApplication(id);
-            toast.success('Work assignment accepted and project created successfully');
-          } catch (error) {
-            console.error('Error creating project from application:', error);
-            toast.error('Work assignment accepted but failed to create project');
-          }
+  };const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
+  try {
+    setIsProcessing(true);
+    
+    if (type === 'job_application') {
+    
+     await updateApplicationStatus(id, newStatus);
+      // Create project when status is accepted
+      if (newStatus === 'Accepted') {
+        try {
+          const project = await createProjectFromApplication(id);
+          toast.success('Project created successfully', {
+            description: `Project #${project.id} has been created`,
+            action: {
+              label: 'View',
+              onClick: () => navigate(`/projects/${project.id}`)
+            }
+         
+          });
+        
+        } catch (projectError) {
+          console.error('Project creation failed:', projectError);
+          toast.error('Project creation failed', {
+            description: 'The application was accepted but project creation failed',
+            action: {
+              label: 'Retry',
+              onClick: () => handleStatusChange(id, type, newStatus)
+            }
+          });
         }
       }
-      // else if (type === 'skill_contact') {
-      //   await updateSkillContactStatus(id, newStatus);
-      //  console.log('Skill contact status updated:', newStatus);
-      //   if (newStatus === 'Accepted') {
-      //     try {
-      //       await createProjectFromContact(id, 'skill');
-      //       toast.success('Skill contact accepted and project created successfully');
-      //     } catch (error) {
-      //       console.error('Error creating project from skill contact:', error);
-      //       toast.error('Skill contact accepted but failed to create project');
-      //     }
-      //   }
-      // }
-      // else if (type === 'material_contact') {
-      //   await updateMaterialContactStatus(id, newStatus);
-      //   // Create project when status is accepted
-      //   if (newStatus === 'Accepted') {
-      //     try {
-      //       await createProjectFromContact(id, 'material');
-      //       toast.success('Material contact accepted and project created successfully');
-      //     } catch (error) {
-      //       console.error('Error creating project from material contact:', error);
-      //       toast.error('Material contact accepted but failed to create project');
-      //     }
-      //   }
-      // }
-      
-      if (newStatus !== 'Accepted') {
-        toast.success(`Status updated to ${newStatus}`);
-      }
-      
-      if (isDetailsOpen && detailsItem?.id === id) {
-        setIsDetailsOpen(false);
-      }
-      
-      setIsProcessing(false);
-    } catch (error) {
-      console.error(`Error updating ${type} status:`, error);
-      toast.error('Failed to update status');
-      setIsProcessing(false);
-      throw error; // Re-throw to maintain error handling
     }
-  };
 
-  return {
-    handleViewDetails,
-    handleEdit,
-    handleDelete,
-    handleStatusChange,
-    isProcessing
-  };
+    if (newStatus !== 'Accepted') {
+      toast.success(`Status updated to ${newStatus}`);
+    }
+    
+    if (isDetailsOpen && detailsItem?.id === id) {
+      setIsDetailsOpen(false);
+    }
+    
+    setIsProcessing(false);
+  } catch (error) {
+    console.error(`Error updating ${type} status:`, error);
+    toast.error('Failed to update status');
+    setIsProcessing(false);
+    throw error; // Re-throw to maintain error handling
+  }
+};
+
+return {
+  handleViewDetails,
+  handleEdit,
+  handleDelete,
+  handleStatusChange,
+  isProcessing
+};
 };

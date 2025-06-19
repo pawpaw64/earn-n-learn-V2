@@ -1,4 +1,4 @@
-
+// Updated ListingsSection with colored sections
 import React, { useState } from "react";
 import JobCard from "@/components/JobCard";
 import SkillCard from "@/components/SkillCard";
@@ -19,9 +19,6 @@ interface ListingsSectionProps {
   filteredMaterials: MaterialType[];
 }
 
-/**
- * Component for displaying filtered listings in the browse page
- */
 const ListingsSection: React.FC<ListingsSectionProps> = ({
   jobs = [],
   skills = [],
@@ -44,6 +41,25 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
   const [skillContactOpen, setSkillContactOpen] = useState(false);
   const [materialContactOpen, setMaterialContactOpen] = useState(false);
 
+  // Section color classes
+  const sectionClasses = {
+    jobs: {
+      bg: 'bg-blue-50/30',
+      border: 'border-blue-200',
+      text: 'text-blue-800'
+    },
+    skills: {
+      bg: 'bg-green-50/30',
+      border: 'border-green-200',
+      text: 'text-green-800'
+    },
+    materials: {
+      bg: 'bg-purple-50/30',
+      border: 'border-purple-200',
+      text: 'text-purple-800'
+    }
+  };
+
   // Job handlers
   const handleViewJobDetails = (jobId: number) => {
     const job = jobs.find(j => j.id === jobId) || null;
@@ -53,8 +69,6 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const handleApplyJob = (jobId: number) => {
     setJobDetailsOpen(false);
-    // If coming from details modal, we already have the job selected
-    // Otherwise, find the job
     if (!selectedJob || selectedJob.id !== jobId) {
       const job = jobs.find(j => j.id === jobId) || null;
       setSelectedJob(job);
@@ -71,8 +85,6 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const handleContactSkill = (skillId: number) => {
     setSkillDetailsOpen(false);
-    // If coming from details modal, we already have the skill selected
-    // Otherwise, find the skill
     if (!selectedSkill || selectedSkill.id !== skillId) {
       const skill = skills.find(s => s.id === skillId) || null;
       setSelectedSkill(skill);
@@ -89,8 +101,6 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   const handleContactMaterial = (materialId: number) => {
     setMaterialDetailsOpen(false);
-    // If coming from details modal, we already have the material selected
-    // Otherwise, find the material
     if (!selectedMaterial || selectedMaterial.id !== materialId) {
       const material = materials.find(m => m.id === materialId) || null;
       setSelectedMaterial(material);
@@ -105,71 +115,76 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   return (
     <>
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Jobs</h2>
-        {safeFilteredJobs.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safeFilteredJobs.map(job => (
-              <JobCard 
-                key={job.id}
-                title={job.title || 'Untitled'}
-                type={job.type || 'General'}
-                description={job.description || ''}
-                payment={job.payment || 'Not specified'}
-                onApply={() => handleApplyJob(job.id)}
-                onViewDetails={() => handleViewJobDetails(job.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-10">No jobs found matching your criteria.</p>
-        )}
-      </div>
-      
-      <div className="space-y-4 mt-8">
-        <h2 className="text-xl font-semibold">Skills</h2>
-        {safeFilteredSkills.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safeFilteredSkills.map(skill => (
-              <SkillCard 
-                key={skill.id}
-                name={skill.name || ''}
-                skill={skill.skill || skill.skill_name || ''}
-                description={skill.description || ''}
-                pricing={skill.pricing || 'Not specified'}
-                experienceLevel={skill.experienceLevel || 'Beginner'}
-                onContact={() => handleContactSkill(skill.id)}
-                onViewDetails={() => handleViewSkillDetails(skill.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-10">No skills found matching your criteria.</p>
-        )}
-      </div>
-      
-      <div className="space-y-4 mt-8">
-        <h2 className="text-xl font-semibold">Materials</h2>
-        {safeFilteredMaterials.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {safeFilteredMaterials.map(material => (
-              <MaterialCard 
-                key={material.id}
-                name={material.name || ''}
-                material={material.material || material.title || ''}
-                condition={material.condition || material.conditions || 'Unknown'}
-                price={material.price || 'Not specified'}
-                availability={material.availability || 'Unknown'}
-                description={material.description || ''}
-                imageUrl={material.imageUrl}
-                onContact={() => handleContactMaterial(material.id)}
-                onViewDetails={() => handleViewMaterialDetails(material.id)}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground text-center py-10">No materials found matching your criteria.</p>
-        )}
+      <div className="space-y-6">
+        {/* Jobs Section */}
+        <div className={`rounded-lg p-4 ${sectionClasses.jobs.bg} ${sectionClasses.jobs.border} border`}>
+          <h2 className={`text-xl font-semibold mb-4 ${sectionClasses.jobs.text}`}>Jobs</h2>
+          {safeFilteredJobs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {safeFilteredJobs.map(job => (
+                <JobCard 
+                  key={job.id}
+                  title={job.title || 'Untitled'}
+                  type={job.type || 'General'}
+                  description={job.description || ''}
+                  payment={job.payment || 'Not specified'}
+                  onApply={() => handleApplyJob(job.id)}
+                  onViewDetails={() => handleViewJobDetails(job.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-10">No jobs found matching your criteria.</p>
+          )}
+        </div>
+        
+        {/* Skills Section */}
+        <div className={`rounded-lg p-4 ${sectionClasses.skills.bg} ${sectionClasses.skills.border} border`}>
+          <h2 className={`text-xl font-semibold mb-4 ${sectionClasses.skills.text}`}>Skills</h2>
+          {safeFilteredSkills.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {safeFilteredSkills.map(skill => (
+                <SkillCard 
+                  key={skill.id}
+                  name={skill.name || ''}
+                  skill={skill.skill || skill.skill_name || ''}
+                  description={skill.description || ''}
+                  pricing={skill.pricing || 'Not specified'}
+                  experienceLevel={skill.experienceLevel || 'Beginner'}
+                  onContact={() => handleContactSkill(skill.id)}
+                  onViewDetails={() => handleViewSkillDetails(skill.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-10">No skills found matching your criteria.</p>
+          )}
+        </div>
+        
+        {/* Materials Section */}
+        <div className={`rounded-lg p-4 ${sectionClasses.materials.bg} ${sectionClasses.materials.border} border`}>
+          <h2 className={`text-xl font-semibold mb-4 ${sectionClasses.materials.text}`}>Materials</h2>
+          {safeFilteredMaterials.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {safeFilteredMaterials.map(material => (
+                <MaterialCard 
+                  key={material.id}
+                  name={material.name || ''}
+                  material={material.material || material.title || ''}
+                  condition={material.condition || material.conditions || 'Unknown'}
+                  price={material.price || 'Not specified'}
+                  availability={material.availability || 'Unknown'}
+                  description={material.description || ''}
+                  imageUrl={material.imageUrl}
+                  onContact={() => handleContactMaterial(material.id)}
+                  onViewDetails={() => handleViewMaterialDetails(material.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-10">No materials found matching your criteria.</p>
+          )}
+        </div>
       </div>
 
       {/* Details Modals */}
