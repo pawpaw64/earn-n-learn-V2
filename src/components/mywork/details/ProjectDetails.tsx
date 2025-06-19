@@ -37,15 +37,20 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const formatAmount = (amount?: number, hourlyRate?: number) => {
-    if (item.project_type === 'hourly' && hourlyRate) {
-      return `$${hourlyRate}/hr`;
+ const formatAmount = (amount?: number | string, hourlyRate?: number | string) => {
+    // Convert string numbers to numbers if needed
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    const numHourlyRate = typeof hourlyRate === 'string' ? parseFloat(hourlyRate) : hourlyRate;
+
+    if (item.project_type === 'hourly' && numHourlyRate) {
+      return `$${numHourlyRate.toFixed(2)}/hr`;
     }
-    if (amount) {
-      return `$${amount.toFixed(2)}`;
+    if (numAmount) {
+      return `$${numAmount.toFixed(2)}`;
     }
     return 'Not specified';
   };
+
 
   const collaboratorName = item.provider_id === parseInt(localStorage.getItem('userId') || '0') 
     ? item.client_name 
