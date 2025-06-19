@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -5,25 +6,36 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Project } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OverviewTab } from './OverviewTab';
 import { BudgetTab } from './BudgetTab';
 import { TeamTab } from './TeamTab';
 import { TaskManager } from './TaskManager';
 
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  deadline?: string;
+  budget?: string;
+  provider_name?: string;
+  client_name?: string;
+  provider_avatar?: string;
+  client_avatar?: string;
+}
+
 interface EnhancedProjectDetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   project: Project;
-  userRole: string;
 }
 
 export const EnhancedProjectDetailsDialog: React.FC<EnhancedProjectDetailsDialogProps> = ({
   isOpen,
   onOpenChange,
   project,
-  userRole,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -52,9 +64,9 @@ export const EnhancedProjectDetailsDialog: React.FC<EnhancedProjectDetailsDialog
             <TeamTab project={project} />
           </TabsContent>
 
-        <TabsContent value="tasks" className="space-y-4">
-          <TaskManager project={project} userRole={userRole} />
-        </TabsContent>
+          <TabsContent value="tasks" className="space-y-4">
+            <TaskManager project={project} />
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>

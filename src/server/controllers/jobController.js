@@ -1,4 +1,7 @@
+
 import JobModel from '../models/jobModel.js';
+import ApplicationModel from '../models/applicationModel.js';
+
 // Get all jobs
 export const getAllJobs = async (req, res) => {
   try {
@@ -48,6 +51,38 @@ export const getJobsByUserId = async (req, res) => {
   } catch (error) {
     console.error('Get user materials error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Check delete permission
+export const checkJobDeletePermission = async (req, res) => {
+  try {
+    const job = await JobModel.getById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+    
+    if (job.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'Not authorized to delete this job' });
+    }
+    
+    // Check if there are any accepted applications
+    const acceptedApplications = await ApplicationModel.getAcceptedByJobId(req.params.id);
+    
+    if (acceptedApplications.length > 0) {
+      return res.json({ 
+        canDelete: false, 
+        reason: 'Cannot delete job with accepted applications until project is completed' 
+      });
+    }
+    
+    res.json({ canDelete: true });
+  } catch (error) {
+    console.error('Check delete permission error:', error);
+    res.status(500).json({ 
+      message: 'Failed to check delete permission',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -115,6 +150,15 @@ export const deleteJob = async (req, res) => {
     
     if (job.user_id !== req.user.id) {
       return res.status(403).json({ message: 'Not authorized to delete this job' });
+    }
+    
+    // Check if there are any accepted applications
+    const acceptedApplications = await ApplicationModel.getAcceptedByJobId(req.params.id);
+    
+    if (acceptedApplications.length > 0) {
+      return res.status(400).json({ 
+        message: 'Cannot delete job with accepted applications until project is completed' 
+      });
     }
     
     const deleted = await JobModel.delete(req.params.id);

@@ -7,7 +7,8 @@ import {
   createJob,
   updateJob,
   deleteJob,
-  getJobsByUserId
+  getJobsByUserId,
+  checkJobDeletePermission
 } from '../controllers/jobController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -19,6 +20,7 @@ router.get('/:id', getJobById);
 router.post('/', auth, createJob);
 router.put('/:id', auth, updateJob);
 router.delete('/:id', auth, deleteJob);
+router.get('/:id/delete-permission', auth, checkJobDeletePermission);
 
 // User-specific job routes
 router.get('/user/:userId', auth, getJobsByUserId);

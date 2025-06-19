@@ -1,19 +1,25 @@
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { JobApplicationTable } from './JobApplicationTable';
 import { ContactTable } from './ContactTable';
-import { fetchJobApplications, updateApplicationStatus, fetchContacts, updateContactStatus } from '@/services/mywork';
+import { fetchJobApplications, fetchContacts } from '@/services/mywork';
 import { toast } from 'sonner';
 
-const ApplicationsTab = () => {
+interface ApplicationsTabProps {
+  onStatusUpdate: (id: number, type: string, status: string) => Promise<void>;
+  refreshTrigger: number;
+}
+
+const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ onStatusUpdate, refreshTrigger }) => {
   const [applications, setApplications] = useState([]);
   const [contacts, setContacts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([loadApplications(), loadContacts()]);
-  }, []);
+  }, [refreshTrigger]);
 
   const loadApplications = async () => {
     setIsLoading(true);
@@ -41,28 +47,6 @@ const ApplicationsTab = () => {
     }
   };
 
-  const handleStatusUpdate = async (id: number, type: string, status: string): Promise<void> => {
-    try {
-      let success = false;
-      
-      if (type === 'job_application') {
-        success = await updateApplicationStatus(id, status);
-      } else if (type === 'contact') {
-        success = await updateContactStatus(id, status);
-      }
-      
-      if (success) {
-        toast.success('Status updated successfully');
-        await Promise.all([loadApplications(), loadContacts()]);
-      } else {
-        toast.error('Failed to update status');
-      }
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update status');
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -78,14 +62,14 @@ const ApplicationsTab = () => {
             <JobApplicationTable
               applications={applications}
               isLoading={isLoading}
-              onStatusUpdate={handleStatusUpdate}
+              onStatusUpdate={onStatusUpdate}
             />
           </TabsContent>
           <TabsContent value="contacts">
             <ContactTable
               contacts={contacts}
               isLoading={isLoading}
-              onStatusUpdate={handleStatusUpdate}
+              onStatusUpdate={onStatusUpdate}
             />
           </TabsContent>
         </Tabs>
