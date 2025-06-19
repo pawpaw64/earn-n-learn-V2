@@ -1,3 +1,4 @@
+
 import db from '../config/db.js';
 
 class CampusModel {
@@ -131,9 +132,27 @@ class CampusModel {
       
       if (rows.length === 0) return null;
       
+      let parsedTags = [];
+      
+      // Safely parse tags with proper error handling
+      if (rows[0].tags) {
+        if (typeof rows[0].tags === 'string' && rows[0].tags.trim() !== '') {
+          try {
+            const parsed = JSON.parse(rows[0].tags);
+            parsedTags = Array.isArray(parsed) ? parsed : [];
+          } catch (parseError) {
+            console.error('Error parsing tags for post', postId, ':', parseError);
+            // If JSON parsing fails, treat as empty array
+            parsedTags = [];
+          }
+        } else if (Array.isArray(rows[0].tags)) {
+          parsedTags = rows[0].tags;
+        }
+      }
+      
       const post = {
         ...rows[0],
-        tags: JSON.parse(rows[0].tags || '[]'),
+        tags: parsedTags,
         is_liked: rows[0].is_liked > 0
       };
       
