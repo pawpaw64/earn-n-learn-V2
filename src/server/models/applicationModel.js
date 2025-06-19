@@ -25,6 +25,21 @@ class ApplicationModel {
     console.error("Unexpected query result format:", result);
     return [];
   }
+
+  // Get accepted applications by job ID
+  static async getAcceptedByJobId(jobId) {
+    try {
+      const result = await execute(
+        "SELECT * FROM applications WHERE job_id = ? AND status = 'Accepted'",
+        [jobId]
+      );
+      return this.#handleQueryResult(result);
+    } catch (error) {
+      console.error("ApplicationModel.getAcceptedByJobId() - Error:", error);
+      throw error;
+    }
+  }
+
   // Get all applications (admin only)
   static async getAll() {
     const [rows] = await execute(`

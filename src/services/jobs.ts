@@ -1,3 +1,4 @@
+
 // src/api/jobs.ts
 import axios from 'axios';
 import { JobType } from '@/types/marketplace';
@@ -34,6 +35,13 @@ export const updateJob = async (id: number, jobData: Partial<JobType>): Promise<
 
 export const deleteJob = async (id: number): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
+  
+  // Check if job can be deleted
+  const checkResponse = await axios.get(`${API_URL}/jobs/${id}/delete-permission`);
+  if (!checkResponse.data.canDelete) {
+    throw new Error(checkResponse.data.reason || 'Cannot delete this job');
+  }
+  
   const response = await axios.delete(`${API_URL}/jobs/${id}`);
   return response.data;
 };

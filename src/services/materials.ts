@@ -79,6 +79,13 @@ export const updateMaterial = async (
 
 export const deleteMaterial = async (id: number): Promise<any> => {
   setAuthToken(localStorage.getItem("token"));
+  
+  // Check if material can be deleted
+  const checkResponse = await axios.get(`${API_URL}/materials/${id}/delete-permission`);
+  if (!checkResponse.data.canDelete) {
+    throw new Error(checkResponse.data.reason || 'Cannot delete this material');
+  }
+  
   const response = await axios.delete(`${API_URL}/materials/${id}`);
   return response.data;
 };
