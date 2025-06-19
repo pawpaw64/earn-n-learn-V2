@@ -157,10 +157,11 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
                 key={material.id}
                 name={material.name || ''}
                 material={material.material || material.title || ''}
-                condition={material.condition || 'Unknown'}
+                condition={material.condition || material.conditions || 'Unknown'}
                 price={material.price || 'Not specified'}
                 availability={material.availability || 'Unknown'}
                 description={material.description || ''}
+                imageUrl={material.imageUrl}
                 onContact={() => handleContactMaterial(material.id)}
                 onViewDetails={() => handleViewMaterialDetails(material.id)}
               />
