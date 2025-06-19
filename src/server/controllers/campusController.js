@@ -83,7 +83,8 @@ export const getPosts = async (req, res) => {
     console.log('Fetched posts count:', posts.length);
     
     res.json(posts);
-  } catch (error) {
+  } catch (error)
+   {
     console.error('Error in getPosts controller:', error);
     res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
   }
