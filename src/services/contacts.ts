@@ -1,50 +1,73 @@
-
 // src/api/contacts.ts
-import axios from 'axios';
-import { ContactType } from '@/types/marketplace';
-import { setAuthToken } from './auth';
-import { toast } from 'sonner';
+import axios from "axios";
+import { ContactType } from "@/types/marketplace";
+import { setAuthToken } from "./auth";
+import { toast } from "sonner";
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = "http://localhost:8080/api";
 
-export const submitSkillContact = async (contactData: { skill_id: number, message: string }): Promise<any> => {
-  setAuthToken(localStorage.getItem('token'));
-  try{
-  const response = await axios.post(`${API_URL}/contacts/skill`, contactData);
-  toast.success("Contact request sent successfully");
-  return response.data;}
-  catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to send contact request");
+export const submitSkillContact = async (contactData: {
+  skill_id: number;
+  message: string;
+}): Promise<any> => {
+  setAuthToken(localStorage.getItem("token"));
+  try {
+    const response = await axios.post(`${API_URL}/contacts/skill`, contactData);
+    toast.success("Contact request sent successfully");
+    return response.data;
+  } catch (error: any) {
+    toast.error(
+      error.response?.data?.message || "Failed to send contact request"
+    );
     throw error;
   }
 };
 
-export const submitMaterialContact = async (contactData: { material_id: number, message: string }): Promise<any> => {
-  setAuthToken(localStorage.getItem('token'));
-  try{
-  const response = await axios.post(`${API_URL}/contacts/material`, contactData);
-  toast.success("Contact request sent successfully");
-  return response.data;}
-  catch (error: any) {
-    toast.error(error.response?.data?.message || "Failed to send contact request");
+export const submitMaterialContact = async (contactData: {
+  material_id: number;
+  message: string;
+}): Promise<any> => {
+  setAuthToken(localStorage.getItem("token"));
+  try {
+    const response = await axios.post(
+      `${API_URL}/contacts/material`,
+      contactData
+    );
+    toast.success("Contact request sent successfully");
+    return response.data;
+  } catch (error: any) {
+    toast.error(
+      error.response?.data?.message || "Failed to send contact request"
+    );
     throw error;
   }
 };
 
-export const updateSkillContactStatus = async (id: number, status: string): Promise<any> => {
-  setAuthToken(localStorage.getItem('token'));
-  const response = await axios.put(`${API_URL}/contacts/skill/${id}/status`, { status });
-  return response.data;
+export const updateSkillContactStatus = async (
+  id: number,
+  status: string
+): Promise<void> => {
+  setAuthToken(localStorage.getItem("token"));
+  const response = await axios.put(`${API_URL}/contacts/skill/${id}/status`, {
+    status,
+  });
+  return;
 };
 
-export const updateMaterialContactStatus = async (id: number, status: string): Promise<any> => {
-  setAuthToken(localStorage.getItem('token'));
-  const response = await axios.put(`${API_URL}/contacts/material/${id}/status`, { status });
-  return response.data;
+export const updateMaterialContactStatus = async (
+  id: number,
+  status: string
+): Promise<void> => {
+  setAuthToken(localStorage.getItem("token"));
+  const response = await axios.put(
+    `${API_URL}/contacts/material/${id}/status`,
+    { status }
+  );
+  return;
 };
 
 export const fetchUserSkillContacts = async (): Promise<ContactType[]> => {
-  setAuthToken(localStorage.getItem('token'));
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/contacts/user/skill`);
     console.log("User Skill Contacts:", response.data);
@@ -56,7 +79,7 @@ export const fetchUserSkillContacts = async (): Promise<ContactType[]> => {
 };
 
 export const fetchUserMaterialContacts = async (): Promise<ContactType[]> => {
-  setAuthToken(localStorage.getItem('token'));
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/contacts/user/material`);
     return response.data;
@@ -67,7 +90,7 @@ export const fetchUserMaterialContacts = async (): Promise<ContactType[]> => {
 };
 
 export const fetchSkillContacts = async (): Promise<ContactType[]> => {
-  setAuthToken(localStorage.getItem('token'));
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/contacts/received/skill`);
     return response.data;
@@ -78,7 +101,7 @@ export const fetchSkillContacts = async (): Promise<ContactType[]> => {
 };
 
 export const fetchMaterialContacts = async (): Promise<ContactType[]> => {
-  setAuthToken(localStorage.getItem('token'));
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/contacts/received/material`);
     return response.data;
@@ -88,8 +111,10 @@ export const fetchMaterialContacts = async (): Promise<ContactType[]> => {
   }
 };
 
-export const getSkillContactDetails = async (id: number): Promise<ContactType> => {
-  setAuthToken(localStorage.getItem('token'));
+export const getSkillContactDetails = async (
+  id: number
+): Promise<ContactType> => {
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/skills/${id}`);
     return response.data;
@@ -99,8 +124,10 @@ export const getSkillContactDetails = async (id: number): Promise<ContactType> =
   }
 };
 
-export const getMaterialContactDetails = async (id: number): Promise<ContactType> => {
-  setAuthToken(localStorage.getItem('token'));
+export const getMaterialContactDetails = async (
+  id: number
+): Promise<ContactType> => {
+  setAuthToken(localStorage.getItem("token"));
   try {
     const response = await axios.get(`${API_URL}/materials/${id}`);
     return response.data;

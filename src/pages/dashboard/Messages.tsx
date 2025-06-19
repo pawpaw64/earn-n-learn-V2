@@ -5,7 +5,7 @@ import { getRecentChats, getUserGroups } from '@/services/messages';
 import { ChatType, GroupType } from '@/types/messages';
 import { ChatSidebar } from '@/components/messages/ChatSidebar';
 import { ChatWindow } from '@/components/messages/ChatWindow';
-
+import { useSearchParams } from 'react-router-dom';
 export default function Messages() {
   const [activeChat, setActiveChat] = useState<{ 
     id: number; 
@@ -13,7 +13,7 @@ export default function Messages() {
     name?: string;
     avatar?: string;
   } | null>(null);
-  
+    const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   
   // Fetch user's recent chats
@@ -49,6 +49,36 @@ export default function Messages() {
     
     setActiveChat({ id, type, name, avatar });
   };
+  
+  // Handle opening specific chat from URL params or localStorage
+  useEffect(() => {
+    const userIdFromUrl = searchParams.get('userId');
+    const openChatWith = localStorage.getItem('openChatWith');
+    const openChatType = localStorage.getItem('openChatType') as 'direct' | 'group';
+    
+    const userIdToOpen = userIdFromUrl || openChatWith;
+    
+    if (userIdToOpen && chats.length > 0) {
+      const userId = parseInt(userIdToOpen);
+      const existingChat = chats.find((chat: ChatType) => chat.id === userId);
+      
+      if (existingChat) {
+        handleSelectChat(userId, openChatType || 'direct');
+      } else {
+        // Create a temporary chat entry for the user
+        setActiveChat({ 
+          id: userId, 
+          type: openChatType || 'direct',
+          name: 'New Chat',
+          avatar: ''
+        });
+      }
+      
+      // Clean up localStorage
+      localStorage.removeItem('openChatWith');
+      localStorage.removeItem('openChatType');
+    }
+  }, [chats, searchParams]);
   
   // Set up interval to refresh chats
   useEffect(() => {

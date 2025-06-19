@@ -13,14 +13,17 @@ import { Check, X, Eye, UserCheck, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
+import { sendMessage } from "@/services/messages";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 interface ReceivedContactsTableProps {
   contacts: any[];
   type: 'skill' | 'material';
   isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => void;
-  onCreateWork?: (id: number, type: string) => void;
+  onStatusChange: (id: number, type: string, status: string) => Promise<void>;  onCreateWork?: (id: number, type: string) => void;
 }
 
 /**
@@ -35,6 +38,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -87,6 +91,43 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
     navigate(`/dashboard/profile/${userId}`);
   };
 
+
+  const handleAcceptContact = async (contact: any, contactType: string) => {
+    try {
+      // Update contact status
+      await onStatusChange(
+        contact.id, 
+        contactType === 'skill' ? 'skill_contact' : 'material_contact', 
+        'Responded'
+      );
+
+      // Send a message to start the conversation
+      const itemName = type === 'skill' ? contact.skill_name : contact.title;
+      const responseMessage = `Hi! I've accepted your inquiry about "${itemName}". Let's discuss further!
+
+Original message from ${type} contact:
+${contact.message}
+
+---
+This conversation started from a ${type} contact inquiry.`;
+
+      await sendMessage(contact.user_id, responseMessage);
+      
+      // Refresh message queries
+      queryClient.invalidateQueries({ queryKey: ['recentChats'] });
+      
+      toast.success('Contact accepted and message sent!');
+      
+      // Navigate to messages and open the chat
+      navigate('/dashboard/messages');
+      localStorage.setItem('openChatWith', String(contact.user_id));
+      localStorage.setItem('openChatType', 'direct');
+      
+    } catch (error) {
+      console.error('Error accepting contact:', error);
+      toast.error('Failed to accept contact. Please try again.');
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -175,11 +216,7 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
                               variant="outline" 
                               size="sm"
                               className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                              onClick={() => onStatusChange(
-                                contact.id, 
-                                type === 'skill' ? 'skill_contact' : 'material_contact', 
-                                'Responded'
-                              )}
+                               onClick={() => handleAcceptContact(contact, type)}
                             >
                               <Check className="w-4 h-4 mr-2" />
                               Accept
