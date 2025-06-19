@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { DetailsHeader } from "./details/DetailsHeader";
 import { DetailContent } from "./details/DetailContent";
 import { ActionButtons } from "./details/ActionButtons";
+import { ProjectActions } from "./details/ProjectActions";
 
 interface DetailsDialogProps {
   isOpen: boolean;
@@ -16,8 +17,8 @@ interface DetailsDialogProps {
   detailsItem: any;
   detailsType: string;
   onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
- 
 }
+
 /**
  * Main details dialog component that displays information about various items
  * Uses smaller components for different sections and item types
@@ -28,7 +29,6 @@ export function DetailsDialog({
   detailsItem,
   detailsType,
   onStatusChange,
-
 }: DetailsDialogProps) {
   // Get appropriate title for the dialog
   const getDialogTitle = () => {
@@ -53,6 +53,13 @@ export function DetailsDialog({
         
         <div className="py-4 flex-grow overflow-y-auto">
           <DetailContent detailsItem={detailsItem} detailsType={detailsType} />
+          
+          {/* Add Project Actions for project type */}
+          {detailsType === 'project' && (
+            <div className="mt-6 border-t pt-4">
+              <ProjectActions project={detailsItem} />
+            </div>
+          )}
         </div>
         
         <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
@@ -67,7 +74,6 @@ export function DetailsDialog({
             type={detailsType} 
             item={detailsItem} 
             onStatusChange={onStatusChange}
-          
           />
         </DialogFooter>
       </DialogContent>

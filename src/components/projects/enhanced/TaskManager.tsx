@@ -9,17 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { Project } from "@/types/marketplace";
-
-interface Task {
-  id: number;
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed';
-  priority: 'low' | 'medium' | 'high';
-  assigned_to?: number;
-  due_date?: string;
-  created_at: string;
-}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  getProjectTasks, 
+  createProjectTask, 
+  updateProjectTask,
+  updateTaskStatus,
+  deleteProjectTask,
+  assignTask 
+} from "@/services/projectTasks";
+import { toast } from "sonner";
 
 interface TaskManagerProps {
   project: Project;
@@ -28,9 +27,9 @@ interface TaskManagerProps {
 }
 
 export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<any>(null);
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -38,46 +37,108 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
     due_date: ''
   });
 
-  const handleCreateTask = async () => {
-    try {
-      // API call would go here
-      console.log('Creating task:', newTask);
+  // Fetch project tasks
+  const { data: tasks = [], isLoading } = useQuery({
+    queryKey: ['projectTasks', project.id],
+    queryFn: () => getProjectTasks(project.id),
+    enabled: !!project.id
+  });
+
+  // Create task mutation
+  const createTaskMutation = useMutation({
+    mutationFn: (taskData: any) => createProjectTask(project.id, taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks', project.id] });
+      toast.success('Task created successfully');
       setIsCreateDialogOpen(false);
       setNewTask({ title: '', description: '', priority: 'medium', due_date: '' });
       onTaskUpdate?.();
-    } catch (error) {
+    },
+    onError: (error) => {
       console.error('Error creating task:', error);
+      toast.error('Failed to create task');
     }
+  });
+
+  // Update task mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ taskId, taskData }: { taskId: number; taskData: any }) => 
+      updateProjectTask(taskId, taskData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks', project.id] });
+      toast.success('Task updated successfully');
+      setEditingTask(null);
+      onTaskUpdate?.();
+    },
+    onError: (error) => {
+      console.error('Error updating task:', error);
+      toast.error('Failed to update task');
+    }
+  });
+
+  // Update task status mutation
+  const updateTaskStatusMutation = useMutation({
+    mutationFn: ({ taskId, status, notes }: { taskId: number; status: string; notes?: string }) => 
+      updateTaskStatus(taskId, status, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks', project.id] });
+      toast.success('Task status updated');
+      onTaskUpdate?.();
+    },
+    onError: (error) => {
+      console.error('Error updating task status:', error);
+      toast.error('Failed to update task status');
+    }
+  });
+
+  // Delete task mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: (taskId: number) => deleteProjectTask(taskId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks', project.id] });
+      toast.success('Task deleted successfully');
+      onTaskUpdate?.();
+    },
+    onError: (error) => {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
+    }
+  });
+
+  const handleCreateTask = async () => {
+    if (!newTask.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
+    createTaskMutation.mutate(newTask);
+  };
+
+  const handleUpdateTask = async (taskData: any) => {
+    if (!editingTask) return;
+    updateTaskMutation.mutate({ taskId: editingTask.id, taskData });
   };
 
   const handleUpdateTaskStatus = async (taskId: number, status: string) => {
-    try {
-      // API call would go here
-      console.log('Updating task status:', taskId, status);
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error('Error updating task status:', error);
-    }
+    updateTaskStatusMutation.mutate({ taskId, status });
   };
 
   const handleDeleteTask = async (taskId: number) => {
-    try {
-      // API call would go here
-      console.log('Deleting task:', taskId);
-      onTaskUpdate?.();
-    } catch (error) {
-      console.error('Error deleting task:', error);
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteTaskMutation.mutate(taskId);
     }
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'verified':
         return 'secondary';
       case 'in_progress':
         return 'default';
       case 'pending':
         return 'outline';
+      case 'rejected':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -85,6 +146,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
 
   const getPriorityBadgeVariant = (priority: string) => {
     switch (priority) {
+      case 'urgent':
       case 'high':
         return 'destructive';
       case 'medium':
@@ -99,15 +161,21 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
+      case 'verified':
         return <CheckCircle className="w-4 h-4" />;
       case 'in_progress':
         return <Clock className="w-4 h-4" />;
       case 'pending':
+      case 'rejected':
         return <AlertCircle className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
     }
   };
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading tasks...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -145,7 +213,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium">Priority</label>
-                    <Select value={newTask.priority} onValueChange={(value: 'low' | 'medium' | 'high') => setNewTask({ ...newTask, priority: value })}>
+                    <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -153,6 +221,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -189,13 +258,15 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
         </div>
       ) : (
         <div className="space-y-3">
-          {tasks.map((task) => (
+          {tasks.map((task: any) => (
             <Card key={task.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-base">{task.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                    {task.description && (
+                      <p className="text-sm text-muted-foreground">{task.description}</p>
+                    )}
                   </div>
                   {isProvider && (
                     <div className="flex gap-1">
@@ -210,7 +281,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex gap-2">
                     <Badge variant={getStatusBadgeVariant(task.status)} className="flex items-center gap-1">
                       {getStatusIcon(task.status)}
@@ -226,8 +297,15 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
                     </span>
                   )}
                 </div>
-                <div className="flex gap-2 mt-3">
-                  {task.status !== 'completed' && (
+                
+                {task.creator_name && (
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Created by: {task.creator_name}
+                  </p>
+                )}
+                
+                <div className="flex gap-2">
+                  {task.status !== 'completed' && task.status !== 'verified' && (
                     <>
                       {task.status === 'pending' && (
                         <Button size="sm" variant="outline" onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}>
@@ -246,6 +324,65 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Edit Task Dialog */}
+      {editingTask && (
+        <Dialog open={!!editingTask} onOpenChange={() => setEditingTask(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <Input
+                  value={editingTask.title}
+                  onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={editingTask.description || ''}
+                  onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Priority</label>
+                  <Select value={editingTask.priority} onValueChange={(value) => setEditingTask({ ...editingTask, priority: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Due Date</label>
+                  <Input
+                    type="date"
+                    value={editingTask.due_date || ''}
+                    onChange={(e) => setEditingTask({ ...editingTask, due_date: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setEditingTask(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => handleUpdateTask(editingTask)}>
+                  Update Task
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

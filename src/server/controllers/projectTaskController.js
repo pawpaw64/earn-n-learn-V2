@@ -7,7 +7,7 @@ export const getProjectTasks = async (req, res) => {
     const { projectId } = req.params;
     const userId = req.user.id;
 
-    // Check if user has access to this project
+    // Check project access
     const projectAccess = await execute(
       'SELECT id FROM projects WHERE id = ? AND (provider_id = ? OR client_id = ?)',
       [projectId, userId, userId]
@@ -40,25 +40,23 @@ export const getProjectTasks = async (req, res) => {
 export const createTask = async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { title, description, priority, dueDate, assignedTo } = req.body;
+    const { title, description, priority, due_date, assigned_to } = req.body;
     const userId = req.user.id;
 
-    // Check project access and get user role
-    const project = await execute(
+    // Check project access
+    const projectAccess = await execute(
       'SELECT provider_id, client_id FROM projects WHERE id = ? AND (provider_id = ? OR client_id = ?)',
       [projectId, userId, userId]
     );
 
-    if (!project || project.length === 0) {
+    if (!projectAccess || projectAccess.length === 0) {
       return res.status(403).json({ message: 'Access denied to this project' });
     }
 
-    const userRole = project[0].provider_id === userId ? 'provider' : 'client';
-
     const result = await execute(
-      `INSERT INTO project_tasks (project_id, title, description, priority, due_date, 
-       assigned_to, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')`,
-      [projectId, title, description, priority, dueDate, assignedTo, userId]
+      `INSERT INTO project_tasks (project_id, title, description, priority, 
+       due_date, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [projectId, title, description, priority, due_date, assigned_to, userId]
     );
 
     const task = await execute(
@@ -72,6 +70,13 @@ export const createTask = async (req, res) => {
       [result.insertId]
     );
 
+    // Log the activity
+    await execute(
+      `INSERT INTO project_activity (project_id, user_id, activity_type, description, task_id)
+       VALUES (?, ?, 'task_update', ?, ?)`,
+      [projectId, userId, `Created task: ${title}`, result.insertId]
+    );
+
     res.status(201).json(task[0]);
   } catch (error) {
     console.error('Error creating task:', error);
@@ -79,11 +84,11 @@ export const createTask = async (req, res) => {
   }
 };
 
-// Update task
+// Update a task
 export const updateTask = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const { title, description, priority, dueDate } = req.body;
+    const { title, description, priority, due_date, assigned_to } = req.body;
     const userId = req.user.id;
 
     // Check if user can update this task
@@ -100,11 +105,13 @@ export const updateTask = async (req, res) => {
     }
 
     await execute(
-      'UPDATE project_tasks SET title = ?, description = ?, priority = ?, due_date = ? WHERE id = ?',
-      [title, description, priority, dueDate, taskId]
+      `UPDATE project_tasks SET title = ?, description = ?, priority = ?, 
+       due_date = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
+      [title, description, priority, due_date, assigned_to, taskId]
     );
 
-    const updatedTask = await execute(
+    const task = await execute(
       `SELECT pt.*, 
               creator.name as creator_name,
               assignee.name as assignee_name
@@ -115,7 +122,14 @@ export const updateTask = async (req, res) => {
       [taskId]
     );
 
-    res.json(updatedTask[0]);
+    // Log the activity
+    await execute(
+      `INSERT INTO project_activity (project_id, user_id, activity_type, description, task_id)
+       VALUES (?, ?, 'task_update', ?, ?)`,
+      [taskAccess[0].project_id, userId, `Updated task: ${title}`, taskId]
+    );
+
+    res.json(task[0]);
   } catch (error) {
     console.error('Error updating task:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -129,44 +143,26 @@ export const updateTaskStatus = async (req, res) => {
     const { status, notes } = req.body;
     const userId = req.user.id;
 
-    // Check task access and get user role
-    const taskInfo = await execute(
-      `SELECT pt.*, p.provider_id, p.client_id 
+    // Check if user can update this task
+    const taskAccess = await execute(
+      `SELECT pt.project_id, pt.title, p.provider_id, p.client_id 
        FROM project_tasks pt
        JOIN projects p ON pt.project_id = p.id
        WHERE pt.id = ? AND (p.provider_id = ? OR p.client_id = ? OR pt.assigned_to = ?)`,
       [taskId, userId, userId, userId]
     );
 
-    if (!taskInfo || taskInfo.length === 0) {
+    if (!taskAccess || taskAccess.length === 0) {
       return res.status(403).json({ message: 'Access denied to update this task' });
     }
 
-    const task = taskInfo[0];
-    const userRole = task.provider_id === userId ? 'provider' : 'client';
-
-    // Business logic for task status updates
-    if (status === 'completed' && task.assigned_to !== userId && userRole !== 'provider') {
-      return res.status(403).json({ message: 'Only assigned user or provider can mark task as completed' });
-    }
-
-    if (status === 'verified' && userRole !== 'client') {
-      return res.status(403).json({ message: 'Only client can verify completed tasks' });
-    }
-
     await execute(
-      'UPDATE project_tasks SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      `UPDATE project_tasks SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
       [status, notes, taskId]
     );
 
-    // Log the status change
-    await execute(
-      `INSERT INTO project_activity (project_id, user_id, activity_type, description, task_id)
-       VALUES (?, ?, 'task_update', ?, ?)`,
-      [task.project_id, userId, `Task marked as ${status}${notes ? ': ' + notes : ''}`, taskId]
-    );
-
-    const updatedTask = await execute(
+    const task = await execute(
       `SELECT pt.*, 
               creator.name as creator_name,
               assignee.name as assignee_name
@@ -177,22 +173,29 @@ export const updateTaskStatus = async (req, res) => {
       [taskId]
     );
 
-    res.json(updatedTask[0]);
+    // Log the activity
+    await execute(
+      `INSERT INTO project_activity (project_id, user_id, activity_type, description, task_id)
+       VALUES (?, ?, 'task_update', ?, ?)`,
+      [taskAccess[0].project_id, userId, `Changed task status to ${status}: ${taskAccess[0].title}`, taskId]
+    );
+
+    res.json(task[0]);
   } catch (error) {
     console.error('Error updating task status:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// Delete task
+// Delete a task
 export const deleteTask = async (req, res) => {
   try {
     const { taskId } = req.params;
     const userId = req.user.id;
 
-    // Check if user can delete this task (only creator or project participants)
+    // Check if user can delete this task
     const taskAccess = await execute(
-      `SELECT pt.project_id, p.provider_id, p.client_id 
+      `SELECT pt.project_id, pt.title, p.provider_id, p.client_id 
        FROM project_tasks pt
        JOIN projects p ON pt.project_id = p.id
        WHERE pt.id = ? AND (p.provider_id = ? OR p.client_id = ? OR pt.created_by = ?)`,
@@ -204,6 +207,14 @@ export const deleteTask = async (req, res) => {
     }
 
     await execute('DELETE FROM project_tasks WHERE id = ?', [taskId]);
+
+    // Log the activity
+    await execute(
+      `INSERT INTO project_activity (project_id, user_id, activity_type, description)
+       VALUES (?, ?, 'task_update', ?)`,
+      [taskAccess[0].project_id, userId, `Deleted task: ${taskAccess[0].title}`]
+    );
+
     res.json({ message: 'Task deleted successfully' });
   } catch (error) {
     console.error('Error deleting task:', error);
@@ -211,16 +222,16 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// Assign task
+// Assign task to user
 export const assignTask = async (req, res) => {
   try {
     const { taskId } = req.params;
     const { assignedTo } = req.body;
     const userId = req.user.id;
 
-    // Check if user can assign this task (project participants only)
+    // Check if user can assign this task
     const taskAccess = await execute(
-      `SELECT pt.project_id, p.provider_id, p.client_id 
+      `SELECT pt.project_id, pt.title, p.provider_id, p.client_id 
        FROM project_tasks pt
        JOIN projects p ON pt.project_id = p.id
        WHERE pt.id = ? AND (p.provider_id = ? OR p.client_id = ?)`,
@@ -232,11 +243,12 @@ export const assignTask = async (req, res) => {
     }
 
     await execute(
-      'UPDATE project_tasks SET assigned_to = ? WHERE id = ?',
+      `UPDATE project_tasks SET assigned_to = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
       [assignedTo, taskId]
     );
 
-    const updatedTask = await execute(
+    const task = await execute(
       `SELECT pt.*, 
               creator.name as creator_name,
               assignee.name as assignee_name
@@ -247,7 +259,15 @@ export const assignTask = async (req, res) => {
       [taskId]
     );
 
-    res.json(updatedTask[0]);
+    // Log the activity
+    const assigneeName = task[0].assignee_name || 'Unknown';
+    await execute(
+      `INSERT INTO project_activity (project_id, user_id, activity_type, description, task_id)
+       VALUES (?, ?, 'task_update', ?, ?)`,
+      [taskAccess[0].project_id, userId, `Assigned task "${taskAccess[0].title}" to ${assigneeName}`, taskId]
+    );
+
+    res.json(task[0]);
   } catch (error) {
     console.error('Error assigning task:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

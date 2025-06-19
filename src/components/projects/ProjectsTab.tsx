@@ -5,7 +5,7 @@ import { getUserProjects} from "@/services/projects";
 import { Project } from "@/types/marketplace";
 import { LoadingSkeleton } from "../mywork/LoadingSkeleton";
 import { ProjectsGrid } from "./ProjectsGrid";
-
+import { ProjectDetailsDialog } from "./ProjectDetailsDialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProjectsTabProps {
@@ -39,6 +39,11 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
 
   const handleOpenChat = (project: Project) => {
     console.log('Opening chat for project:', project.id);
+    // This could open a dedicated chat interface or redirect to messages
+  };
+
+  const handleProjectUpdate = () => {
+    refetch();
   };
 
   const activeProjects = allProjects.filter(p => p.status === 'active');
@@ -133,7 +138,13 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
         )}
       </div>
 
-     
+      {/* Project Details Dialog */}
+      <ProjectDetailsDialog
+        project={selectedProject}
+        isOpen={isDetailsOpen}
+        onOpenChange={setIsDetailsOpen}
+        onProjectUpdate={handleProjectUpdate}
+      />
     </>
   );
 }
