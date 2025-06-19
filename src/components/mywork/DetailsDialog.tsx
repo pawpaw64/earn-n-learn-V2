@@ -16,9 +16,8 @@ interface DetailsDialogProps {
   detailsItem: any;
   detailsType: string;
   onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
-  onCreateWork?: (id: number, type: string) => Promise<boolean>;
+ 
 }
-
 /**
  * Main details dialog component that displays information about various items
  * Uses smaller components for different sections and item types
@@ -29,7 +28,7 @@ export function DetailsDialog({
   detailsItem,
   detailsType,
   onStatusChange,
-  onCreateWork
+
 }: DetailsDialogProps) {
   // Get appropriate title for the dialog
   const getDialogTitle = () => {
@@ -68,7 +67,7 @@ export function DetailsDialog({
             type={detailsType} 
             item={detailsItem} 
             onStatusChange={onStatusChange}
-            onCreateWork={onCreateWork}
+          
           />
         </DialogFooter>
       </DialogContent>

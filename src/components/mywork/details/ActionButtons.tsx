@@ -8,13 +8,13 @@ interface ActionButtonsProps {
   type: string;
   item: any;
   onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
-  onCreateWork?: (id: number, type: string) => Promise<boolean>;
+ 
 }
 
 /**
  * Renders appropriate action buttons based on item type and status
  */
-export function ActionButtons({ type, item, onStatusChange, onCreateWork }: ActionButtonsProps) {
+export function ActionButtons({ type, item, onStatusChange}: ActionButtonsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showEscrowDialog, setShowEscrowDialog] = useState(false);
   const [acceptedApplication, setAcceptedApplication] = useState<any>(null);
@@ -38,19 +38,7 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
     }
   };
 
-  const handleCreateWork = async (id: number, itemType: string) => {
-    if (!onCreateWork) return;
-    
-    try {
-      setIsLoading(true);
-      await onCreateWork(id, itemType);
-    } catch (error) {
-      console.error("Create work error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+ 
   const handleEscrowCreated = () => {
     setAcceptedApplication(null);
     // Optionally trigger a refresh of the applications list
@@ -112,13 +100,13 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
           >
             <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
           </Button>
-          <Button 
+          {/* <Button 
             variant="default" 
             disabled={isLoading}
             onClick={() => handleCreateWork(item.id, 'job_application')}
           >
             <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-          </Button>
+          </Button> */}
         </div>
       );
     }
@@ -180,7 +168,7 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
           >
             <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
           </Button>
-          <Button 
+          {/* <Button 
             variant="default"
             disabled={isLoading}
             onClick={() => {
@@ -189,7 +177,7 @@ export function ActionButtons({ type, item, onStatusChange, onCreateWork }: Acti
             }}
           >
             <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-          </Button>
+          </Button> */}
         </div>
       );
     }

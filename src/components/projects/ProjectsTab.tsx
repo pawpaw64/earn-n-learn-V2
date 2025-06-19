@@ -5,7 +5,7 @@ import { getUserProjects} from "@/services/projects";
 import { Project } from "@/types/marketplace";
 import { LoadingSkeleton } from "../mywork/LoadingSkeleton";
 import { ProjectsGrid } from "./ProjectsGrid";
-import { EnhancedProjectDetailsDialog } from "./enhanced/EnhancedProjectDetailsDialog";
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface ProjectsTabProps {
@@ -27,10 +27,6 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
     queryFn: getUserProjects,
     retry: 1
   });
-
-  console.log('ProjectsTab - Projects data:', allProjects);
-  console.log('ProjectsTab - Loading:', isLoading);
-  console.log('ProjectsTab - Error:', error);
 
   const handleViewDetails = async (project: Project) => {
     console.log('Viewing project details:', project);
@@ -137,12 +133,7 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
         )}
       </div>
 
-      <EnhancedProjectDetailsDialog
-        project={selectedProject}
-        isOpen={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
-        onProjectUpdate={refetch}
-      />
+     
     </>
   );
 }
