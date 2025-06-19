@@ -5,6 +5,12 @@ import MessageModel from '../models/messageModel.js';
 export const getDirectMessages = async (req, res) => {
   try {
     const { contactId } = req.params;
+      console.log('getDirectMessages controller - user:', req.user, 'contactId:', contactId);
+    
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     const messages = await MessageModel.getDirectMessages(req.user.id, contactId);
     
     // Mark messages as read
@@ -32,7 +38,11 @@ export const getRecentChats = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { receiverId, content, hasAttachment, attachmentUrl } = req.body;
+       console.log('sendMessage controller - user:', req.user, 'receiverId:', receiverId);
     
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
     const message = await MessageModel.sendMessage(
       req.user.id,
       receiverId,
@@ -82,6 +92,11 @@ export const getUserGroups = async (req, res) => {
 export const getGroupMessages = async (req, res) => {
   try {
     const { groupId } = req.params;
+     console.log('getGroupMessages controller - user:', req.user, 'groupId:', groupId);
+    
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
     const messages = await MessageModel.getGroupMessages(groupId);
     res.json(messages);
   } catch (error) {
@@ -94,7 +109,11 @@ export const getGroupMessages = async (req, res) => {
 export const sendGroupMessage = async (req, res) => {
   try {
     const { groupId, content, hasAttachment, attachmentUrl } = req.body;
+     console.log('sendGroupMessage controller - user:', req.user, 'groupId:', groupId);
     
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
     const message = await MessageModel.sendGroupMessage(
       req.user.id,
       groupId,

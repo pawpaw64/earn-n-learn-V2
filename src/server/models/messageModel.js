@@ -5,6 +5,7 @@ class MessageModel {
   // Get direct messages between two users
   static async getDirectMessages(userId, contactId) {
     try {
+        console.log('getDirectMessages - userId:', userId, 'contactId:', contactId);
       const [rows] = await db.query(
         `SELECT m.*, 
           u1.name as sender_name, 
@@ -16,7 +17,16 @@ class MessageModel {
         ORDER BY m.created_at ASC`,
         [userId, contactId, contactId, userId]
       );
-      return rows;
+    // Ensure sender_id is returned as a number
+      const processedRows = rows.map(row => ({
+        ...row,
+        sender_id: Number(row.sender_id),
+        receiver_id: row.receiver_id ? Number(row.receiver_id) : null,
+        group_id: row.group_id ? Number(row.group_id) : null
+      }));
+      
+      console.log('getDirectMessages - returning rows:', processedRows.length, 'first row:', processedRows[0]);
+      return processedRows;
     } catch (error) {
       console.error('Error in getDirectMessages:', error);
       throw error;
@@ -61,6 +71,7 @@ class MessageModel {
   // Send a message
   static async sendMessage(senderId, receiverId, content, hasAttachment = false, attachmentUrl = null) {
     try {
+         console.log('sendMessage - senderId:', senderId, 'receiverId:', receiverId);
       const [result] = await db.query(
         'INSERT INTO messages (sender_id, receiver_id, content, has_attachment, attachment_url) VALUES (?, ?, ?, ?, ?)',
         [senderId, receiverId, content, hasAttachment, attachmentUrl]
@@ -74,7 +85,16 @@ class MessageModel {
         [result.insertId]
       );
       
-      return newMessage[0];
+     // Ensure proper number formatting
+      const processedMessage = {
+        ...newMessage[0],
+        sender_id: Number(newMessage[0].sender_id),
+        receiver_id: newMessage[0].receiver_id ? Number(newMessage[0].receiver_id) : null,
+        group_id: newMessage[0].group_id ? Number(newMessage[0].group_id) : null
+      };
+      
+      console.log('sendMessage - returning message:', processedMessage);
+      return processedMessage;
     } catch (error) {
       console.error('Error in sendMessage:', error);
       throw error;
@@ -145,6 +165,7 @@ class MessageModel {
   // Get group messages
   static async getGroupMessages(groupId) {
     try {
+           console.log('getGroupMessages - groupId:', groupId);
       const [rows] = await db.query(
         `SELECT m.*, u.name as sender_name, u.avatar as sender_avatar
          FROM messages m
@@ -153,7 +174,17 @@ class MessageModel {
          ORDER BY m.created_at ASC`,
         [groupId]
       );
-      return rows;
+ 
+      // Ensure sender_id is returned as a number
+      const processedRows = rows.map(row => ({
+        ...row,
+        sender_id: Number(row.sender_id),
+        receiver_id: row.receiver_id ? Number(row.receiver_id) : null,
+        group_id: row.group_id ? Number(row.group_id) : null
+      }));
+      
+      console.log('getGroupMessages - returning rows:', processedRows.length);
+      return processedRows;
     } catch (error) {
       console.error('Error in getGroupMessages:', error);
       throw error;
@@ -162,7 +193,7 @@ class MessageModel {
 
   // Send group message
   static async sendGroupMessage(senderId, groupId, content, hasAttachment = false, attachmentUrl = null) {
-    try {
+    try {   console.log('sendGroupMessage - senderId:', senderId, 'groupId:', groupId);
       const [result] = await db.query(
         'INSERT INTO messages (sender_id, group_id, content, has_attachment, attachment_url) VALUES (?, ?, ?, ?, ?)',
         [senderId, groupId, content, hasAttachment, attachmentUrl]
@@ -176,7 +207,16 @@ class MessageModel {
         [result.insertId]
       );
       
-      return newMessage[0];
+     // Ensure proper number formatting
+      const processedMessage = {
+        ...newMessage[0],
+        sender_id: Number(newMessage[0].sender_id),
+        receiver_id: newMessage[0].receiver_id ? Number(newMessage[0].receiver_id) : null,
+        group_id: newMessage[0].group_id ? Number(newMessage[0].group_id) : null
+      };
+      
+      console.log('sendGroupMessage - returning message:', processedMessage);
+      return processedMessage;
     } catch (error) {
       console.error('Error in sendGroupMessage:', error);
       throw error;

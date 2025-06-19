@@ -12,7 +12,7 @@ import { MessageBubble } from './MessageBubble';
 import { MessageHeader } from './MessageHeader';
 import { Send, Paperclip } from 'lucide-react';
 import { toast } from 'sonner';
-
+import { getUserIdFromToken } from '@/services/auth';
 interface ChatWindowProps {
   chatId: number;
   chatType: 'direct' | 'group';
@@ -27,7 +27,57 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const { socket, joinRoom, leaveRoom } = useSocket();
   const queryClient = useQueryClient();
-  const userId = Number(localStorage.getItem('userId'));
+  
+  // Get current user ID with multiple fallback methods
+  const getValidUserId = () => {
+    // Try localStorage first
+    let userId = localStorage.getItem('userId');
+    console.log('localStorage userId:', userId);
+    
+    // If not in localStorage, try to get from token
+    if (!userId) {
+      const token = localStorage.getItem('token');
+      console.log('token:', token);
+      if (token) {
+        const tokenUserId = getUserIdFromToken(token);
+        console.log('userId from token:', tokenUserId);
+        if (tokenUserId) {
+          userId = tokenUserId.toString();
+          // Store it back in localStorage for future use
+          localStorage.setItem('userId', userId);
+        }
+      }
+    }
+    
+    const numericUserId = Number(userId);
+    console.log('Final userId:', numericUserId, 'isValid:', !isNaN(numericUserId) && numericUserId > 0);
+    return !isNaN(numericUserId) && numericUserId > 0 ? numericUserId : null;
+  };
+  
+  const userId = getValidUserId();
+  console.log('ChatWindow - Current userId:', userId);
+  
+  // If no valid userId, show error
+  if (!userId) {
+    console.error('No valid user ID found. User may not be properly authenticated.');
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="font-medium text-lg text-red-600">Authentication Error</h3>
+          <p className="text-muted-foreground mt-1">Please log in again to access messages</p>
+          <Button 
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="mt-4"
+          >
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
   
   // Fetch messages based on chat type
   const { 
@@ -207,15 +257,21 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar }: ChatWindo
           </div>
         ) : (
           <>
-            {messages.map((message: MessageType, index: number) => (
-              <MessageBubble
-                key={message.id || index}
-                message={message}
-                isOwnMessage={message.sender_id === userId}
-              />
-            ))}
+           {messages.map((message: MessageType, index: number) => {
+              // Ensure proper comparison for isOwnMessage
+              const isOwnMessage = Number(message.sender_id) === userId;
+              console.log('Message', index, '- sender_id:', message.sender_id, 'userId:', userId, 'isOwnMessage:', isOwnMessage);
+              
+              return (
+                <MessageBubble
+                  key={message.id || index}
+                  message={message}
+                  isOwnMessage={isOwnMessage}
+                />
+              );
+            })}
             {isTyping && (
-              <div className="text-sm text-muted-foreground italic">
+              <div className="text-sm text-muted-foreground italic pl-12">
                 {typingUser || 'Someone'} is typing...
               </div>
             )}
