@@ -1,3 +1,4 @@
+
 import React from "react";
 import { 
   Table, 
@@ -13,17 +14,18 @@ import { Check, X, Eye, UserCheck, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
-import { sendMessage } from "@/services/messages";
+import { createOrFindContactGroup } from "@/services/contacts";
+import { createGroup, addToGroup, sendGroupMessage } from "@/services/messages";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-
 
 interface ReceivedContactsTableProps {
   contacts: any[];
   type: 'skill' | 'material';
   isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => Promise<void>;  onCreateWork?: (id: number, type: string) => void;
+  onStatusChange: (id: number, type: string, status: string) => Promise<void>;
+  onCreateWork?: (id: number, type: string) => void;
 }
 
 /**
@@ -35,7 +37,6 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   isLoading,
   onViewDetails,
   onStatusChange,
-  
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -83,14 +84,43 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
     }
   };
 
-  const handleContactUser = (userId: number) => {
-    navigate(`/dashboard/messages?userId=${userId}`);
+  const handleContactUser = async (contact: any) => {
+    try {
+      const itemName = type === 'skill' ? contact.skill_name : contact.title;
+      const itemId = type === 'skill' ? contact.skill_id : contact.material_id;
+      
+      // Create group name
+      const groupName = `${itemName} - Contact Discussion`;
+      
+      // Create the group
+      const group = await createGroup(groupName, `Discussion about ${itemName}`);
+      
+      // Add the contact initiator to the group
+      await addToGroup(group.id, contact.user_id);
+      
+      // Send the original message to the group
+      await sendGroupMessage(group.id, `Original contact message: ${contact.message}`);
+      
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+      queryClient.invalidateQueries({ queryKey: ['recentChats'] });
+      
+      toast.success('Group chat created successfully!');
+      
+      // Navigate to messages and open the group
+      navigate('/dashboard/messages');
+      localStorage.setItem('openChatWith', String(group.id));
+      localStorage.setItem('openChatType', 'group');
+      
+    } catch (error) {
+      console.error('Error creating group chat:', error);
+      toast.error('Failed to create group chat. Please try again.');
+    }
   };
 
   const handleViewProfile = (userId: number) => {
     navigate(`/dashboard/profile/${userId}`);
   };
-
 
   const handleAcceptContact = async (contact: any, contactType: string) => {
     try {
@@ -101,8 +131,18 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
         'Responded'
       );
 
-      // Send a message to start the conversation
       const itemName = type === 'skill' ? contact.skill_name : contact.title;
+      
+      // Create group name
+      const groupName = `${itemName} - Contact Discussion`;
+      
+      // Create the group
+      const group = await createGroup(groupName, `Discussion about ${itemName}`);
+      
+      // Add the contact initiator to the group
+      await addToGroup(group.id, contact.user_id);
+      
+      // Send acceptance message to the group
       const responseMessage = `Hi! I've accepted your inquiry about "${itemName}". Let's discuss further!
 
 Original message from ${type} contact:
@@ -111,17 +151,18 @@ ${contact.message}
 ---
 This conversation started from a ${type} contact inquiry.`;
 
-      await sendMessage(contact.user_id, responseMessage);
+      await sendGroupMessage(group.id, responseMessage);
       
       // Refresh message queries
       queryClient.invalidateQueries({ queryKey: ['recentChats'] });
+      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
       
-      toast.success('Contact accepted and message sent!');
+      toast.success('Contact accepted and group chat created!');
       
-      // Navigate to messages and open the chat
+      // Navigate to messages and open the group chat
       navigate('/dashboard/messages');
-      localStorage.setItem('openChatWith', String(contact.user_id));
-      localStorage.setItem('openChatType', 'direct');
+      localStorage.setItem('openChatWith', String(group.id));
+      localStorage.setItem('openChatType', 'group');
       
     } catch (error) {
       console.error('Error accepting contact:', error);
@@ -203,7 +244,7 @@ This conversation started from a ${type} contact inquiry.`;
                         className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                           variant="outline" 
                           size="sm"
-                          onClick={() => handleContactUser(contact.user_id)}
+                          onClick={() => handleContactUser(contact)}
                         >
                           <MessageSquare className="w-4 h-4 mr-2" />
                           Contact

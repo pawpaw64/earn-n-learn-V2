@@ -1,3 +1,4 @@
+
 // src/api/contacts.ts
 import axios from "axios";
 import { ContactType } from "@/types/marketplace";
@@ -133,6 +134,28 @@ export const getMaterialContactDetails = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching material contact details:", error);
+    throw error;
+  }
+};
+
+// New function to create or find group for contact
+export const createOrFindContactGroup = async (
+  contactType: 'skill' | 'material' | 'job',
+  itemId: number,
+  itemName: string,
+  participantId: number
+): Promise<{ groupId: number; isNew: boolean }> => {
+  setAuthToken(localStorage.getItem("token"));
+  try {
+    const response = await axios.post(`${API_URL}/contacts/group`, {
+      contactType,
+      itemId,
+      itemName,
+      participantId
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error creating/finding contact group:", error);
     throw error;
   }
 };

@@ -1,4 +1,3 @@
-
 import MessageModel from '../models/messageModel.js';
 
 // Get direct messages between two users
@@ -182,5 +181,30 @@ export const searchUsers = async (req, res) => {
   } catch (error) {
     console.error('Error in searchUsers controller:', error);
     res.status(500).json({ message: 'Failed to search users' });
+  }
+};
+
+// Find group by name pattern
+export const findGroupByName = async (req, res) => {
+  try {
+    const { namePattern } = req.params;
+    
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
+    const groups = await MessageModel.getUserGroups(req.user.id);
+    const matchingGroup = groups.find(group => 
+      group.name.includes(decodeURIComponent(namePattern))
+    );
+    
+    if (matchingGroup) {
+      res.json(matchingGroup);
+    } else {
+      res.status(404).json({ message: 'Group not found' });
+    }
+  } catch (error) {
+    console.error('Error in findGroupByName controller:', error);
+    res.status(500).json({ message: 'Failed to find group' });
   }
 };

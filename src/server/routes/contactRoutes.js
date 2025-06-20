@@ -11,7 +11,8 @@ import {
   getSkillContacts,
   getMaterialContacts,
   getSkillContactById,
-  getMaterialContactById
+  getMaterialContactById,
+  createOrFindContactGroup
 } from '../controllers/contactController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -21,6 +22,9 @@ router.use(auth);
 // Submit contacts
 router.post('/skill', submitSkillContact);
 router.post('/material', submitMaterialContact);
+
+// Create or find contact group
+router.post('/group', createOrFindContactGroup);
 
 // Update contact status
 router.put('/skill/:id/status', updateSkillContactStatus);

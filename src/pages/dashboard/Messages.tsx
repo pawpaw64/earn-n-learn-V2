@@ -6,6 +6,7 @@ import { ChatType, GroupType } from '@/types/messages';
 import { ChatSidebar } from '@/components/messages/ChatSidebar';
 import { ChatWindow } from '@/components/messages/ChatWindow';
 import { useSearchParams } from 'react-router-dom';
+
 export default function Messages() {
   const [activeChat, setActiveChat] = useState<{ 
     id: number; 
@@ -13,7 +14,7 @@ export default function Messages() {
     name?: string;
     avatar?: string;
   } | null>(null);
-    const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
   
   // Fetch user's recent chats
@@ -56,29 +57,39 @@ export default function Messages() {
     const openChatWith = localStorage.getItem('openChatWith');
     const openChatType = localStorage.getItem('openChatType') as 'direct' | 'group';
     
-    const userIdToOpen = userIdFromUrl || openChatWith;
+    const chatIdToOpen = userIdFromUrl || openChatWith;
     
-    if (userIdToOpen && chats.length > 0) {
-      const userId = parseInt(userIdToOpen);
-      const existingChat = chats.find((chat: ChatType) => chat.id === userId);
+    if (chatIdToOpen && (chats.length > 0 || groups.length > 0)) {
+      const chatId = parseInt(chatIdToOpen);
       
-      if (existingChat) {
-        handleSelectChat(userId, openChatType || 'direct');
+      if (openChatType === 'group') {
+        // Look for group
+        const existingGroup = groups.find((group: GroupType) => group.id === chatId);
+        if (existingGroup) {
+          handleSelectChat(chatId, 'group');
+        }
       } else {
-        // Create a temporary chat entry for the user
-        setActiveChat({ 
-          id: userId, 
-          type: openChatType || 'direct',
-          name: 'New Chat',
-          avatar: ''
-        });
+        // Look for direct chat or create temporary
+        const existingChat = chats.find((chat: ChatType) => chat.id === chatId);
+        
+        if (existingChat) {
+          handleSelectChat(chatId, 'direct');
+        } else {
+          // Create a temporary chat entry for the user
+          setActiveChat({ 
+            id: chatId, 
+            type: 'direct',
+            name: 'New Chat',
+            avatar: ''
+          });
+        }
       }
       
       // Clean up localStorage
       localStorage.removeItem('openChatWith');
       localStorage.removeItem('openChatType');
     }
-  }, [chats, searchParams]);
+  }, [chats, groups, searchParams]);
   
   // Set up interval to refresh chats
   useEffect(() => {
