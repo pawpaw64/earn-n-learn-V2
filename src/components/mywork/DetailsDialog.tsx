@@ -1,128 +1,181 @@
+
 import React from "react";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { DetailsHeader } from "./details/DetailsHeader";
-import { DetailContent } from "./details/DetailContent";
+import { Badge } from "@/components/ui/badge";
 import { ActionButtons } from "./details/ActionButtons";
-import { ProjectActions } from "./details/ProjectActions";
-import { updateProjectStatus } from "@/services/projects";
-import { toast } from "sonner";
 
 interface DetailsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  detailsItem: any;
-  detailsType: string;
-  onStatusChange?: (id: number, type: string, status: string) => Promise<void>;
+  item: any;
+  type: string;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
 }
 
-/**
- * Main details dialog component that displays information about various items
- * Uses smaller components for different sections and item types
- */
 export function DetailsDialog({
   isOpen,
   onOpenChange,
-  detailsItem,
-  detailsType,
+  item,
+  type,
   onStatusChange,
 }: DetailsDialogProps) {
-  // Get appropriate title for the dialog
-  const getDialogTitle = () => {
-    if (!detailsItem) return "Details";
-    
-    if (detailsType === 'contact') {
-      return detailsItem.skill_name 
-        ? `Skill Inquiry: ${detailsItem.skill_name}`
-        : `Material Inquiry: ${detailsItem.title}`;
+  if (!item) return null;
+
+  const getTypeLabel = () => {
+    switch (type) {
+      case 'job':
+        return 'Job Details';
+      case 'application':
+        return 'Application Details';
+      case 'my_application':
+        return 'My Application Details';
+      case 'contact':
+        return 'Contact Details';
+      case 'skill_contact':
+        return 'Skill Contact Details';
+      case 'material_contact':
+        return 'Material Contact Details';
+      case 'work':
+        return 'Work Details';
+      default:
+        return 'Details';
     }
-    
-    return detailsItem?.title || 
-           detailsItem?.skill_name || 
-           detailsItem?.invoiceNumber || 
-           "Details";
   };
 
-  const handleProjectStatusUpdate = async (newStatus: string) => {
-    if (!detailsItem?.id) return;
-    
-    try {
-      await updateProjectStatus(detailsItem.id, newStatus);
-      toast.success(`Project status updated to ${newStatus}`);
-      onOpenChange(false);
-      // Refresh the page or trigger a refetch
-      window.location.reload();
-    } catch (error) {
-      console.error('Error updating project status:', error);
-      toast.error('Failed to update project status');
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'applied':
+      case 'pending':
+      case 'contact initiated':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'accepted':
+      case 'responded':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+      case 'declined':
+        return 'bg-red-100 text-red-800';
+      case 'completed':
+      case 'agreement reached':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DetailsHeader title={getDialogTitle()} />
+      <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{getTypeLabel()}</span>
+            <Badge className={getStatusColor(item.status)}>
+              {item.status || 'N/A'}
+            </Badge>
+          </DialogTitle>
+        </DialogHeader>
         
-        <div className="py-4 flex-grow overflow-y-auto">
-          <DetailContent detailsItem={detailsItem} detailsType={detailsType} />
-          
-          {/* Add Project Actions for project type */}
-          {detailsType === 'project' && (
-            <div className="mt-6 border-t pt-4">
-              <ProjectActions project={detailsItem} />
+        <div className="space-y-6 py-4">
+          {/* Title/Name */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">
+              {item.title || item.skill_name || item.name || 'N/A'}
+            </h3>
+            {item.subtitle && (
+              <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+            )}
+          </div>
+
+          {/* Description/Message */}
+          {(item.description || item.message) && (
+            <div>
+              <h4 className="font-medium mb-2">Description</h4>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                {item.description || item.message}
+              </p>
             </div>
           )}
+
+          {/* Contact Information */}
+          {(item.applicant_name || item.contact_name || item.provider_name || item.seller_name) && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-medium mb-2">Contact Person</h4>
+                <p className="text-sm">
+                  {item.applicant_name || item.contact_name || item.provider_name || item.seller_name}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {item.applicant_email || item.contact_email || item.provider_email || item.seller_email}
+                </p>
+              </div>
+              
+              {item.created_at && (
+                <div>
+                  <h4 className="font-medium mb-2">Date</h4>
+                  <p className="text-sm">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Additional Information */}
+          <div className="grid grid-cols-2 gap-4">
+            {item.payment && (
+              <div>
+                <h4 className="font-medium mb-2">Payment</h4>
+                <p className="text-sm">{item.payment}</p>
+              </div>
+            )}
+            
+            {item.pricing && (
+              <div>
+                <h4 className="font-medium mb-2">Pricing</h4>
+                <p className="text-sm">{item.pricing}</p>
+              </div>
+            )}
+            
+            {item.price && (
+              <div>
+                <h4 className="font-medium mb-2">Price</h4>
+                <p className="text-sm">{item.price}</p>
+              </div>
+            )}
+            
+            {item.location && (
+              <div>
+                <h4 className="font-medium mb-2">Location</h4>
+                <p className="text-sm">{item.location}</p>
+              </div>
+            )}
+            
+            {item.availability && (
+              <div>
+                <h4 className="font-medium mb-2">Availability</h4>
+                <p className="text-sm">{item.availability}</p>
+              </div>
+            )}
+            
+            {item.conditions && (
+              <div>
+                <h4 className="font-medium mb-2">Conditions</h4>
+                <p className="text-sm">{item.conditions}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <ActionButtons
+            type={type}
+            item={item}
+            onStatusChange={onStatusChange}
+          />
         </div>
-        
-        <DialogFooter className="flex items-center justify-between sm:justify-between border-t pt-4">
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-          >
-            Close
-          </Button>
-          
-          {/* Project specific actions */}
-          {detailsType === 'project' && detailsItem && (
-            <div className="flex gap-2">
-              {detailsItem.status === 'active' && (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleProjectStatusUpdate('paused')}
-                  >
-                    Pause
-                  </Button>
-                  <Button
-                    onClick={() => handleProjectStatusUpdate('completed')}
-                  >
-                    Complete
-                  </Button>
-                </>
-              )}
-              {detailsItem.status === 'paused' && (
-                <Button
-                  onClick={() => handleProjectStatusUpdate('active')}
-                >
-                  Resume
-                </Button>
-              )}
-            </div>
-          )}
-          
-          {/* Other action buttons for non-project types */}
-          {detailsType !== 'project' && (
-            <ActionButtons 
-              type={detailsType} 
-              item={detailsItem} 
-              onStatusChange={onStatusChange}
-            />
-          )}
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
