@@ -5,7 +5,7 @@ class CampusModel {
   // Create a new post
   static async createPost(postData) {
     try {
-      const { user_id, type, title, content, tags, privacy, attachment_url, attachment_type } = postData;
+      const { user_id, type, title, content, tags, privacy, attachment_url, attachment_type, pollData } = postData;
       
       // Ensure tags is always a valid JSON array
       let tagsJson = '[]';
@@ -30,13 +30,25 @@ class CampusModel {
         [user_id, type, title, content, tagsJson, privacy || 'public', attachment_url, attachment_type]
       );
       
+      const postId = result.insertId;
+      
+      // If it's a poll, create poll options
+      if (type === 'poll' && pollData && pollData.options) {
+        for (const option of pollData.options) {
+          await db.query(
+            'INSERT INTO campus_poll_options (post_id, option_text) VALUES (?, ?)',
+            [postId, option]
+          );
+        }
+      }
+      
       // Update tag counts if tags were provided
       if (tags && tags.length > 0) {
         const tagArray = Array.isArray(tags) ? tags : (typeof tags === 'string' ? JSON.parse(tags) : [tags]);
         await this.updateTagCounts(tagArray);
       }
       
-      return result.insertId;
+      return postId;
     } catch (error) {
       console.error('Error in createPost:', error);
       throw error;
@@ -86,21 +98,39 @@ class CampusModel {
       params.push(limit, offset);
       
       const [rows] = await db.query(query, params);
+      
+      // Get poll options for poll posts
+      for (const post of rows) {
+        if (post.type === 'poll') {
+          const [pollOptions] = await db.query(
+            `SELECT po.*, 
+                    (SELECT COUNT(*) FROM campus_poll_votes pv WHERE pv.option_id = po.id) as votes,
+                    (SELECT COUNT(*) FROM campus_poll_votes pv WHERE pv.option_id = po.id AND pv.user_id = ?) as user_voted
+             FROM campus_poll_options po 
+             WHERE po.post_id = ? 
+             ORDER BY po.id ASC`,
+            [userId || 0, post.id]
+          );
+          
+          post.poll_options = pollOptions;
+          post.total_votes = pollOptions.reduce((sum, option) => sum + option.votes, 0);
+          post.user_voted = pollOptions.some(option => option.user_voted > 0);
+          post.user_vote = pollOptions.find(option => option.user_voted > 0)?.id;
+        }
+      }
+      
       return rows.map(post => {
         let parsedTags = [];
         
         // Handle different cases of tags data
         if (post.tags) {
           if (Array.isArray(post.tags)) {
-            // Tags is already an array (shouldn't happen with current schema)
             parsedTags = post.tags;
           } else if (typeof post.tags === 'string') {
             try {
-              // Try to parse as JSON
               const parsed = JSON.parse(post.tags);
               parsedTags = Array.isArray(parsed) ? parsed : [];
             } catch {
-              // If not valid JSON, treat as single tag
               parsedTags = [post.tags];
             }
           }
@@ -118,6 +148,40 @@ class CampusModel {
     }
   }
 
+  // Vote on a poll
+  static async votePoll(optionId, userId) {
+    try {
+      // First check if user has already voted on this poll
+      const [pollOption] = await db.query('SELECT post_id FROM campus_poll_options WHERE id = ?', [optionId]);
+      if (pollOption.length === 0) {
+        throw new Error('Poll option not found');
+      }
+      
+      const postId = pollOption[0].post_id;
+      
+      const [existingVote] = await db.query(
+        `SELECT pv.id FROM campus_poll_votes pv 
+         JOIN campus_poll_options po ON pv.option_id = po.id 
+         WHERE po.post_id = ? AND pv.user_id = ?`,
+        [postId, userId]
+      );
+      
+      if (existingVote.length > 0) {
+        throw new Error('User has already voted on this poll');
+      }
+      
+      // Add the vote
+      await db.query('INSERT INTO campus_poll_votes (option_id, user_id) VALUES (?, ?)', [optionId, userId]);
+      
+      return true;
+    } catch (error) {
+      console.error('Error in votePoll:', error);
+      throw error;
+    }
+  }
+
+  // ... keep existing code (all other methods remain the same)
+  
   // Get post by ID
   static async getPostById(postId, userId) {
     try {
@@ -155,6 +219,24 @@ class CampusModel {
         tags: parsedTags,
         is_liked: rows[0].is_liked > 0
       };
+      
+      // Get poll options if it's a poll
+      if (post.type === 'poll') {
+        const [pollOptions] = await db.query(
+          `SELECT po.*, 
+                  (SELECT COUNT(*) FROM campus_poll_votes pv WHERE pv.option_id = po.id) as votes,
+                  (SELECT COUNT(*) FROM campus_poll_votes pv WHERE pv.option_id = po.id AND pv.user_id = ?) as user_voted
+           FROM campus_poll_options po 
+           WHERE po.post_id = ? 
+           ORDER BY po.id ASC`,
+          [userId || 0, postId]
+        );
+        
+        post.poll_options = pollOptions;
+        post.total_votes = pollOptions.reduce((sum, option) => sum + option.votes, 0);
+        post.user_voted = pollOptions.some(option => option.user_voted > 0);
+        post.user_vote = pollOptions.find(option => option.user_voted > 0)?.id;
+      }
       
       // Increment view count
       await db.query('UPDATE campus_posts SET views_count = views_count + 1 WHERE id = ?', [postId]);

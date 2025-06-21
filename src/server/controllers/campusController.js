@@ -1,3 +1,4 @@
+
 import CampusModel from '../models/campusModel.js';
 import multer from 'multer';
 import path from 'path';
@@ -33,7 +34,7 @@ const upload = multer({
 export const createPost = async (req, res) => {
   try {
     console.log('Creating post with data:', req.body);
-    const { type, title, content, tags, privacy } = req.body;
+    const { type, title, content, tags, privacy, pollData } = req.body;
     
     const postData = {
       user_id: req.user.id,
@@ -43,7 +44,8 @@ export const createPost = async (req, res) => {
       tags: tags ? JSON.parse(tags) : [],
       privacy: privacy || 'public',
       attachment_url: req.file ? `/uploads/campus/${req.file.filename}` : null,
-      attachment_type: req.file ? req.file.mimetype : null
+      attachment_type: req.file ? req.file.mimetype : null,
+      pollData: pollData ? JSON.parse(pollData) : null
     };
     
     console.log('Processed post data:', postData);
@@ -59,6 +61,29 @@ export const createPost = async (req, res) => {
     res.status(500).json({ message: 'Failed to create post', error: error.message });
   }
 };
+
+// Vote on a poll
+export const votePoll = async (req, res) => {
+  try {
+    const { optionId } = req.params;
+    const userId = req.user.id;
+    
+    await CampusModel.votePoll(optionId, userId);
+    
+    res.json({
+      message: 'Vote recorded successfully'
+    });
+  } catch (error) {
+    console.error('Error in votePoll controller:', error);
+    if (error.message === 'User has already voted on this poll') {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Failed to record vote', error: error.message });
+    }
+  }
+};
+
+// ... keep existing code (all other controller methods remain the same)
 
 // Get posts
 export const getPosts = async (req, res) => {
@@ -83,8 +108,7 @@ export const getPosts = async (req, res) => {
     console.log('Fetched posts count:', posts.length);
     
     res.json(posts);
-  } catch (error)
-   {
+  } catch (error) {
     console.error('Error in getPosts controller:', error);
     res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
   }

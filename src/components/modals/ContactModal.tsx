@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, MessageCircle, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { submitSkillContact, submitMaterialContact } from "@/services/contacts";
 import { sendMessage } from "@/services/messages";
@@ -43,19 +42,21 @@ const ContactModal = ({
   const [senderName, setSenderName] = useState(""); 
   const [senderEmail, setSenderEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [messageSent, setMessageSent] = useState(false);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   
   useEffect(() => {
     if (isOpen) {
       const defaultSubject = `Interested in your ${itemName}`;
+      const userName = localStorage.getItem('userName') || "";
       const defaultMessage = `Hi ${recipientName},\n\nI'm interested in your ${itemName}. Is this still available? Could we arrange...`;
       
       setSubject(defaultSubject);
       setMessage(defaultMessage);
+      setMessageSent(false);
       
       // Get user info from local storage or state management
-      const userName = localStorage.getItem('userName') || "";
       const userEmail = localStorage.getItem('userEmail') || "";
       
       setSenderName(userName);
@@ -79,32 +80,39 @@ const ContactModal = ({
     try {
       setIsSubmitting(true);
       
-      const contactData = {
-        message: `${subject ? `Subject: ${subject}\n\n` : ''}${message}`,
-        skill_id: itemType === 'skill' ? itemId : undefined,
-        material_id: itemType === 'material' ? itemId : undefined
-      };
+      const fullMessage = `${subject ? `Subject: ${subject}\n\n` : ''}${message}`;
       
       // Submit contact based on type
       if (itemType === 'skill') {
-        await submitSkillContact({ skill_id: itemId, message: contactData.message });
+        await submitSkillContact({ skill_id: itemId, message: fullMessage });
       } else {
-        await submitMaterialContact({ material_id: itemId, message: contactData.message });
+        await submitMaterialContact({ material_id: itemId, message: fullMessage });
       }
       
       // If recipient ID is available, also send a direct message
       if (recipientId) {
         try {
-          await sendMessage(recipientId, contactData.message);
+          await sendMessage(recipientId, fullMessage);
           queryClient.invalidateQueries({ queryKey: ['recentChats'] });
         } catch (error) {
           console.error('Failed to send direct message:', error);
-          // We don't want to show an error here, as the contact was still submitted
         }
       }
       
-      toast.success(`Message sent to ${recipientName}!`);
-      onOpenChange(false);
+      // Show success state
+      setMessageSent(true);
+      toast.success(`Message sent to ${recipientName}!`, {
+        description: "Your message has been delivered successfully.",
+        duration: 3000,
+      });
+      
+      // Auto-open chat after a short delay
+      if (recipientId) {
+        setTimeout(() => {
+          handleOpenMessages();
+        }, 1500);
+      }
+      
     } catch (error: any) {
       console.error(`Error submitting ${itemType} contact:`, error);
       toast.error(error.response?.data?.message || "Failed to send message. Please try again.");
@@ -119,14 +127,63 @@ const ContactModal = ({
       return;
     }
     
+    // Navigate to messages page
     navigate('/dashboard/messages');
-    onOpenChange(false);
     
-    // This sets a temporary localStorage value that the Messages page can use
-    // to open this conversation when loaded (optional)
+    // Set localStorage to auto-open the chat
     localStorage.setItem('openChatWith', String(recipientId));
     localStorage.setItem('openChatType', 'direct');
+    
+    // Close the modal
+    onOpenChange(false);
   };
+
+  const handleClose = () => {
+    setMessageSent(false);
+    onOpenChange(false);
+  };
+
+  if (messageSent) {
+    return (
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader className="text-center">
+            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+            <DialogTitle className="text-xl font-bold text-green-600">
+              Message Sent Successfully!
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="text-center py-4">
+            <p className="text-muted-foreground">
+              Your message about <strong>{itemName}</strong> has been sent to <strong>{recipientName}</strong>.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Opening chat window...
+            </p>
+          </div>
+          
+          <DialogFooter className="flex items-center justify-center gap-3 pt-4">
+            <Button variant="outline" onClick={handleClose}>
+              Close
+            </Button>
+            
+            {recipientId && (
+              <Button
+                onClick={handleOpenMessages}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Open Chat Now
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -178,24 +235,21 @@ const ContactModal = ({
             </DialogClose>
             
             <div className="flex gap-2">
-              {recipientId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="gap-1"
-                  onClick={handleOpenMessages}
-                >
-                  <MessageCircle className="h-4 w-4" /> 
-                  Open Messages
-                </Button>
-              )}
-              
               <Button 
                 type="submit"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
                 disabled={isSubmitting || !itemId}
               >
-                <Send className="h-4 w-4" /> Send Message
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" /> Send Message
+                  </>
+                )}
               </Button>
             </div>
           </DialogFooter>

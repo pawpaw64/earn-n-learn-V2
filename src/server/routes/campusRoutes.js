@@ -9,6 +9,7 @@ import {
   togglePostLike,
   toggleCommentLike,
   searchPosts,
+  votePoll,
   upload
 } from '../controllers/campusController.js';
 import auth from '../middleware/authMiddleware.js';
@@ -31,5 +32,8 @@ router.get('/posts/:postId/comments', getComments);
 // Likes
 router.post('/posts/:postId/like', togglePostLike);
 router.post('/comments/:commentId/like', toggleCommentLike);
+
+// Poll voting
+router.post('/polls/:optionId/vote', votePoll);
 
 export default router;

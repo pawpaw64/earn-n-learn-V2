@@ -1,3 +1,4 @@
+
 -- 1. First ensure users table exists (this should already exist)
 -- If not, you'll need to create it first
 
@@ -24,7 +25,30 @@ CREATE TABLE IF NOT EXISTS campus_posts (
   INDEX idx_privacy (privacy)
 ) ENGINE=InnoDB;
 
--- 3. Create tags table
+-- 3. Create poll options table
+CREATE TABLE IF NOT EXISTS campus_poll_options (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  option_text VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES campus_posts(id) ON DELETE CASCADE,
+  INDEX idx_post_id (post_id)
+) ENGINE=InnoDB;
+
+-- 4. Create poll votes table
+CREATE TABLE IF NOT EXISTS campus_poll_votes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  option_id INT NOT NULL,
+  user_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (option_id) REFERENCES campus_poll_options(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY unique_poll_vote (option_id, user_id),
+  INDEX idx_option_id (option_id),
+  INDEX idx_user_id (user_id)
+) ENGINE=InnoDB;
+
+-- 5. Create tags table
 CREATE TABLE IF NOT EXISTS campus_tags (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL UNIQUE,
@@ -37,7 +61,7 @@ CREATE TABLE IF NOT EXISTS campus_tags (
   INDEX idx_category (category)
 ) ENGINE=InnoDB;
 
--- 4. Create comments table
+-- 6. Create comments table
 CREATE TABLE IF NOT EXISTS campus_comments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   post_id INT NOT NULL,
@@ -54,7 +78,7 @@ CREATE TABLE IF NOT EXISTS campus_comments (
   INDEX idx_parent_id (parent_id)
 ) ENGINE=InnoDB;
 
--- 5. Create post likes table
+-- 7. Create post likes table
 CREATE TABLE IF NOT EXISTS campus_post_likes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   post_id INT NOT NULL,
@@ -65,7 +89,7 @@ CREATE TABLE IF NOT EXISTS campus_post_likes (
   UNIQUE KEY unique_post_like (post_id, user_id)
 ) ENGINE=InnoDB;
 
--- 6. Create comment likes table
+-- 8. Create comment likes table
 CREATE TABLE IF NOT EXISTS campus_comment_likes (
   id INT AUTO_INCREMENT PRIMARY KEY,
   comment_id INT NOT NULL,
@@ -76,7 +100,7 @@ CREATE TABLE IF NOT EXISTS campus_comment_likes (
   UNIQUE KEY unique_comment_like (comment_id, user_id)
 ) ENGINE=InnoDB;
 
--- 7. Create tag followers table
+-- 9. Create tag followers table
 CREATE TABLE IF NOT EXISTS campus_tag_followers (
   id INT AUTO_INCREMENT PRIMARY KEY,
   tag_id INT NOT NULL,

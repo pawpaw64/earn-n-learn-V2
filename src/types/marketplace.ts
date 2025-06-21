@@ -18,6 +18,7 @@ export interface JobType {
 // Skill types
 export interface SkillType {
   id: number;
+  user_id?: number;
   name?: string;
   skill?: string;
   skill_name?: string;
@@ -32,6 +33,7 @@ export interface SkillType {
 // Material types
 export interface MaterialType {
   id: number;
+  user_id?: number;
   name?: string;
   material?: string;
   title?: string;

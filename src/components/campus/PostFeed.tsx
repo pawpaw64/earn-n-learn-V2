@@ -86,6 +86,11 @@ export const PostFeed = () => {
     setIsPostDetailOpen(true);
   };
 
+  const handlePollVote = async (postId: number) => {
+    // Reload posts to get updated poll data
+    await loadPosts();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Actions */}
@@ -104,7 +109,7 @@ export const PostFeed = () => {
 
       {/* Post Editor */}
       {showEditor && (
-        <PostEditor onSubmit={handleCreatePost} isLoading={isLoading} />
+        <PostEditor onSubmit={handleCreatePost} onCancel={() => setShowEditor(false)} />
       )}
 
       {/* Search and Filters */}
@@ -135,10 +140,10 @@ export const PostFeed = () => {
               <PostCard
                 key={post.id}
                 post={post}
-                onLike={handleLike}
-                onComment={handleComment}
-                onView={handleView}
-                compact
+                onLike={() => handleLike(post.id)}
+                onComment={() => handleComment(post.id)}
+                onViewDetails={() => handleView(post.id)}
+                onPollVote={handlePollVote}
               />
             ))
           )}

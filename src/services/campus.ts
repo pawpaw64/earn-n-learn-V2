@@ -48,6 +48,10 @@ export const createPost = async (postData: any): Promise<any> => {
     formData.append('attachment', postData.attachment);
   }
 
+  if (postData.pollData) {
+    formData.append('pollData', JSON.stringify(postData.pollData));
+  }
+
   const response = await axios.post(`${API_URL}/campus/posts`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
@@ -55,6 +59,14 @@ export const createPost = async (postData: any): Promise<any> => {
   });
   return response.data;
 };
+
+export const votePoll = async (optionId: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/campus/polls/${optionId}/vote`);
+  return response.data;
+};
+
+// ... keep existing code (all other functions remain the same)
 
 export const fetchComments = async (postId: number): Promise<CommentType[]> => {
   setAuthToken(localStorage.getItem('token'));

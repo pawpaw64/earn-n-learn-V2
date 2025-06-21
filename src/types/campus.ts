@@ -1,3 +1,8 @@
+export interface PollOption {
+  id: number;
+  option_text: string;
+  votes?: number;
+}
 
 export interface PostType {
   id: number;
@@ -18,6 +23,11 @@ export interface PostType {
   author_name: string;
   author_avatar?: string;
   is_liked?: boolean;
+  // Poll-specific properties
+  poll_options?: PollOption[];
+  total_votes?: number;
+  user_voted?: boolean;
+  user_vote?: number;
 }
 
 export interface CommentType {

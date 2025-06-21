@@ -13,7 +13,7 @@ export function MessageBubble({ message, isOwnMessage }: MessageBubbleProps) {
     ? format(new Date(message.created_at), 'h:mm a')
     : '';
   // Debug logging to help identify the issue
-  console.log('MessageBubble - isOwnMessage:', isOwnMessage, 'sender_id:', message.sender_id, 'current user:', localStorage.getItem('userId'));
+  const messageContent = String(message.content || '').trim();
 
   if (isOwnMessage) {
     // Own messages - right side with blue background

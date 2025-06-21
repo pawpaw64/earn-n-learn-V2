@@ -1,185 +1,201 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Paperclip, X, Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { X, Plus, Paperclip, Vote } from 'lucide-react';
+import { PollCreator } from './PollCreator';
 
 interface PostEditorProps {
   onSubmit: (postData: any) => void;
-  isLoading?: boolean;
+  onCancel: () => void;
 }
 
-export const PostEditor: React.FC<PostEditorProps> = ({ onSubmit, isLoading }) => {
-  const [formData, setFormData] = useState({
-    type: 'discussion',
-    title: '',
-    content: '',
-    tags: [] as string[],
-    privacy: 'public'
-  });
-  const [tagInput, setTagInput] = useState('');
+export function PostEditor({ onSubmit, onCancel }: PostEditorProps) {
+  const [postType, setPostType] = useState<'question' | 'discussion' | 'announcement' | 'poll'>('discussion');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [privacy, setPrivacy] = useState<'public' | 'followers' | 'groups'>('public');
   const [attachment, setAttachment] = useState<File | null>(null);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({
-      ...formData,
-      attachment
-    });
-  };
+  const [showPollCreator, setShowPollCreator] = useState(false);
+  const [pollData, setPollData] = useState<{ question: string; options: string[] } | null>(null);
 
   const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }));
-      setTagInput('');
+    if (newTag.trim() && !tags.includes(newTag.trim()) && tags.length < 5) {
+      setTags([...tags, newTag.trim()]);
+      setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }));
+    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setAttachment(file);
-    }
+  const handleSubmit = () => {
+    if (!title.trim()) return;
+
+    const postData = {
+      type: postType,
+      title: title.trim(),
+      content: content.trim(),
+      tags,
+      privacy,
+      attachment,
+      pollData: postType === 'poll' ? pollData : null
+    };
+
+    onSubmit(postData);
   };
+
+  const handlePollCreation = (data: { question: string; options: string[] }) => {
+    setPollData(data);
+    setShowPollCreator(false);
+    setTitle(data.question); // Use poll question as title
+  };
+
+  const isValid = title.trim() && (postType !== 'poll' || pollData);
+
+  if (showPollCreator) {
+    return (
+      <PollCreator
+        onCreatePoll={handlePollCreation}
+        onCancel={() => setShowPollCreator(false)}
+      />
+    );
+  }
 
   return (
-    <Card>
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Create a Post</CardTitle>
+        <CardTitle>Create New Post</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Post Type */}
-          <div className="space-y-2">
-            <Label>Post Type</Label>
-            <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="question">Question</SelectItem>
-                <SelectItem value="discussion">Discussion</SelectItem>
-                <SelectItem value="announcement">Announcement</SelectItem>
-                <SelectItem value="poll">Poll</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <CardContent className="space-y-4">
+        <div className="flex gap-4">
+          <Select value={postType} onValueChange={(value: any) => {
+            setPostType(value);
+            if (value === 'poll') {
+              setShowPollCreator(true);
+            } else {
+              setPollData(null);
+            }
+          }}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Post Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="discussion">Discussion</SelectItem>
+              <SelectItem value="question">Question</SelectItem>
+              <SelectItem value="announcement">Announcement</SelectItem>
+              <SelectItem value="poll">Poll</SelectItem>
+            </SelectContent>
+          </Select>
 
-          {/* Title */}
-          <div className="space-y-2">
-            <Label>Title</Label>
-            <Input
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter a descriptive title..."
-              required
-            />
-          </div>
+          <Select value={privacy} onValueChange={(value: any) => setPrivacy(value)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="public">Public</SelectItem>
+              <SelectItem value="followers">Followers</SelectItem>
+              <SelectItem value="groups">Groups</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Content */}
-          <div className="space-y-2">
-            <Label>Content</Label>
-            <Textarea
-              value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-              placeholder="Share your thoughts, ask questions, or start a discussion..."
-              rows={6}
-              required
-            />
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-2">
-            <Label>Tags</Label>
-            <div className="flex gap-2">
-              <Input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Add tags..."
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-              />
-              <Button type="button" onClick={addTag} size="sm" variant="outline">
-                <Plus className="h-4 w-4" />
+        {postType === 'poll' && pollData ? (
+          <div className="p-4 bg-gray-100 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold">Poll Preview</h4>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowPollCreator(true)}
+              >
+                Edit Poll
               </Button>
             </div>
+            <p className="font-medium mb-2">{pollData.question}</p>
+            <ul className="space-y-1">
+              {pollData.options.map((option, index) => (
+                <li key={index} className="text-sm text-gray-600">• {option}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <>
+            <Input
+              placeholder="Post title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+
+            <Textarea
+              placeholder="What's on your mind?"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={4}
+            />
+          </>
+        )}
+
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add tags..."
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+              className="flex-1"
+            />
+            <Button onClick={addTag} size="sm" disabled={!newTag.trim() || tags.length >= 5}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+              {tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                   {tag}
-                  <X
-                    className="h-3 w-3 cursor-pointer hover:text-red-500"
-                    onClick={() => removeTag(tag)}
-                  />
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
                 </Badge>
               ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Attachment */}
-          <div className="space-y-2">
-            <Label>Attachment (Optional)</Label>
-            <div className="flex items-center gap-2">
-              <input
-                type="file"
-                id="attachment"
-                onChange={handleFileChange}
-                accept="image/*,.pdf,.doc,.docx"
-                className="hidden"
-              />
-              <Label htmlFor="attachment" className="cursor-pointer">
-                <div className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-gray-50">
-                  <Paperclip className="h-4 w-4" />
-                  {attachment ? attachment.name : 'Choose file'}
-                </div>
-              </Label>
-              {attachment && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAttachment(null)}
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
+        {postType !== 'poll' && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Paperclip className="h-4 w-4 mr-2" />
+              Attach File
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {attachment ? attachment.name : 'No file selected'}
+            </span>
           </div>
+        )}
 
-          {/* Privacy */}
-          <div className="space-y-2">
-            <Label>Privacy</Label>
-            <Select value={formData.privacy} onValueChange={(value) => setFormData(prev => ({ ...prev, privacy: value }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="followers">Followers Only</SelectItem>
-                <SelectItem value="groups">Specific Groups</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Posting...' : 'Post'}
+        <div className="flex gap-2 pt-4">
+          <Button onClick={onCancel} variant="outline" className="flex-1">
+            Cancel
           </Button>
-        </form>
+          <Button onClick={handleSubmit} disabled={!isValid} className="flex-1">
+            {postType === 'poll' ? (
+              <>
+                <Vote className="h-4 w-4 mr-2" />
+                Create Poll
+              </>
+            ) : (
+              'Create Post'
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
-};
+}
