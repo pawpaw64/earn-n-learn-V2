@@ -208,3 +208,47 @@ export const findGroupByName = async (req, res) => {
     res.status(500).json({ message: 'Failed to find group' });
   }
 };
+
+// File upload handler
+export const uploadFile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+
+    const fileUrl = `http://localhost:8080/uploads/messages/${req.file.filename}`;
+    
+    res.json({
+      fileUrl,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
+  } catch (error) {
+    console.error('Error in uploadFile controller:', error);
+    res.status(500).json({ message: 'Failed to upload file' });
+  }
+};
+
+// Leave group
+export const leaveGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    const success = await MessageModel.removeFromGroup(groupId, req.user.id);
+    
+    if (success) {
+      res.json({ message: 'Successfully left the group' });
+    } else {
+      res.status(404).json({ message: 'Group or membership not found' });
+    }
+  } catch (error) {
+    console.error('Error in leaveGroup controller:', error);
+    res.status(500).json({ message: 'Failed to leave group' });
+  }
+};

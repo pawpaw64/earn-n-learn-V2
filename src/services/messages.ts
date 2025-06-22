@@ -164,3 +164,36 @@ export const findGroupByName = async (namePattern: string) => {
     return null;
   }
 };
+
+// Upload file for messages
+export const uploadMessageFile = async (file: File, chatId: number, chatType: 'direct' | 'group') => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('chatId', chatId.toString());
+    formData.append('chatType', chatType);
+
+    const response = await axios.post(`${API_URL}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    throw error;
+  }
+};
+
+// Leave group
+export const leaveGroup = async (groupId: number) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.post(`${API_URL}/groups/${groupId}/leave`);
+    return response.data;
+  } catch (error) {
+    console.error('Error leaving group:', error);
+    throw error;
+  }
+};

@@ -43,7 +43,7 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
   
   return (
     <div className="w-full md:w-80 border-r flex flex-col h-full">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex-shrink-0">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -55,8 +55,8 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
         </div>
       </div>
       
-      <Tabs defaultValue="chats" className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-2 mx-4 mt-2">
+      <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">
+        <TabsList className="grid grid-cols-2 mx-4 mt-2 flex-shrink-0">
           <TabsTrigger value="chats" className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4" />
             <span>Chats</span>
@@ -67,8 +67,8 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="chats" className="flex-1 flex flex-col data-[state=inactive]:hidden">
-          <div className="p-2 flex justify-end">
+        <TabsContent value="chats" className="flex-1 flex flex-col min-h-0 mt-2 data-[state=inactive]:hidden">
+          <div className="p-2 flex justify-end flex-shrink-0">
             <Button 
               variant="ghost" 
               size="sm"
@@ -80,7 +80,7 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
             </Button>
           </div>
           
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-2 space-y-1">
               {isLoadingChats ? (
                 <div className="flex items-center justify-center p-4">
@@ -110,8 +110,8 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
           </ScrollArea>
         </TabsContent>
         
-        <TabsContent value="groups" className="flex-1 flex flex-col data-[state=inactive]:hidden">
-          <div className="p-2 flex justify-end">
+        <TabsContent value="groups" className="flex-1 flex flex-col min-h-0 mt-2 data-[state=inactive]:hidden">
+          <div className="p-2 flex justify-end flex-shrink-0">
             <Button 
               variant="ghost" 
               size="sm"
@@ -123,7 +123,7 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
             </Button>
           </div>
           
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-2 space-y-1">
               {isLoadingGroups ? (
                 <div className="flex items-center justify-center p-4">

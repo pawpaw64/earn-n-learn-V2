@@ -88,6 +88,19 @@ app.use(express.urlencoded({ extended: true }));
 // Static file serving
 app.use('/uploads', express.static('uploads'));
 
+// Ensure upload directories exist
+import fs from 'fs';
+import path from 'path';
+
+const ensureDirectoryExists = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
+
+// Create upload directories
+ensureDirectoryExists('uploads/messages');
+
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
