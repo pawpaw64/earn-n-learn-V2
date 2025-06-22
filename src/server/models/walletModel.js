@@ -133,35 +133,201 @@ class WalletModel {
       throw new Error(error.message);
     }
   }
-
-  // In walletModel.js (add this method)
-  static async getMonthlyFinancials(userId, year, month) {
+ // Get monthly financials for dashboard (6 months)
+  static async getMonthlyFinancials(userId) {
     try {
-      // Calculate earnings (money coming in)
-      const [earningsResult] = await execute(
-        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
-         WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-         AND type IN ('deposit', 'release')`,
-        [userId, year, month]
+      const result = await execute(
+        `SELECT 
+          DATE_FORMAT(date, '%b') as name,
+          MONTH(date) as month,
+          YEAR(date) as year,
+          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
+        FROM transactions 
+        WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY YEAR(date), MONTH(date)
+        ORDER BY YEAR(date), MONTH(date)`,
+        [userId]
       );
       
-      // Calculate spending (money going out)
-      const [spendingResult] = await execute(
-        `SELECT COALESCE(SUM(amount), 0) as total FROM transactions 
-         WHERE user_id = ? AND YEAR(date) = ? AND MONTH(date) = ? 
-         AND type IN ('withdrawal', 'payment', 'escrow')`,
-        [userId, year, month]
-      );
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      
+      // Fill missing months with zero data
+      const monthlyData = [];
+      const now = new Date();
+      
+      for (let i = 5; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+        const month = date.getMonth() + 1;
+        const year = date.getFullYear();
+        
+        const existingData = rows.find(row => row.month === month && row.year === year);
+        
+        monthlyData.push({
+          name: monthName,
+          income: parseFloat(existingData?.income || 0),
+          expenses: parseFloat(existingData?.expenses || 0)
+        });
+      }
       
       return {
-        earnings: parseFloat(earningsResult[0]?.total || 0),
-        spending: parseFloat(spendingResult[0]?.total || 0)
+        monthlyData,
+        totalIncome: monthlyData.reduce((sum, item) => sum + item.income, 0),
+        totalExpenses: monthlyData.reduce((sum, item) => sum + item.expenses, 0)
       };
     } catch (error) {
       console.error('Error getting monthly financials:', error);
       throw error;
     }
   }
+
+  // Get quarterly financials for dashboard (4 quarters)
+  static async getQuarterlyFinancials(userId) {
+    try {
+      const result = await execute(
+        `SELECT 
+          CONCAT('Q', QUARTER(date)) as name,
+          QUARTER(date) as quarter,
+          YEAR(date) as year,
+          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
+        FROM transactions 
+        WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY YEAR(date), QUARTER(date)
+        ORDER BY YEAR(date), QUARTER(date)`,
+        [userId]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      
+      // Fill missing quarters with zero data
+      const quarterlyData = [];
+      const now = new Date();
+      const currentQuarter = Math.floor(now.getMonth() / 3) + 1;
+      
+      for (let i = 3; i >= 0; i--) {
+        let quarter = currentQuarter - i;
+        let year = now.getFullYear();
+        
+        if (quarter <= 0) {
+          quarter += 4;
+          year -= 1;
+        }
+        
+        const existingData = rows.find(row => row.quarter === quarter && row.year === year);
+        
+        quarterlyData.push({
+          name: `Q${quarter}`,
+          income: parseFloat(existingData?.income || 0),
+          expenses: parseFloat(existingData?.expenses || 0)
+        });
+      }
+      
+      return {
+        monthlyData: quarterlyData,
+        totalIncome: quarterlyData.reduce((sum, item) => sum + item.income, 0),
+        totalExpenses: quarterlyData.reduce((sum, item) => sum + item.expenses, 0)
+      };
+    } catch (error) {
+      console.error('Error getting quarterly financials:', error);
+      throw error;
+    }
+  }
+
+  // Get yearly financials for dashboard (3 years)
+  static async getYearlyFinancials(userId) {
+    try {
+      const result = await execute(
+        `SELECT 
+          YEAR(date) as name,
+          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
+        FROM transactions 
+        WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 3 YEAR)
+        GROUP BY YEAR(date)
+        ORDER BY YEAR(date)`,
+        [userId]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      
+      // Fill missing years with zero data
+      const yearlyData = [];
+      const currentYear = new Date().getFullYear();
+      
+      for (let i = 2; i >= 0; i--) {
+        const year = currentYear - i;
+        const existingData = rows.find(row => row.name === year);
+        
+        yearlyData.push({
+          name: year.toString(),
+          income: parseFloat(existingData?.income || 0),
+          expenses: parseFloat(existingData?.expenses || 0)
+        });
+      }
+      
+      return {
+        monthlyData: yearlyData,
+        totalIncome: yearlyData.reduce((sum, item) => sum + item.income, 0),
+        totalExpenses: yearlyData.reduce((sum, item) => sum + item.expenses, 0)
+      };
+    } catch (error) {
+      console.error('Error getting yearly financials:', error);
+      throw error;
+    }
+  }
+
+  // Get expense breakdown by category
+  static async getExpenseBreakdown(userId, timeframe) {
+    try {
+      let dateFilter;
+      switch (timeframe) {
+        case 'quarterly':
+          dateFilter = 'DATE_SUB(NOW(), INTERVAL 12 MONTH)';
+          break;
+        case 'yearly':
+          dateFilter = 'DATE_SUB(NOW(), INTERVAL 3 YEAR)';
+          break;
+        default: // monthly
+          dateFilter = 'DATE_SUB(NOW(), INTERVAL 6 MONTH)';
+      }
+      
+      // Categorize expenses based on description keywords
+      const result = await execute(`
+        SELECT 
+          CASE 
+            WHEN description LIKE '%education%' OR description LIKE '%course%' OR description LIKE '%learning%' THEN 'Education'
+            WHEN description LIKE '%transport%' OR description LIKE '%travel%' OR description LIKE '%uber%' OR description LIKE '%taxi%' THEN 'Transport'
+            WHEN description LIKE '%food%' OR description LIKE '%restaurant%' OR description LIKE '%meal%' THEN 'Food'
+            WHEN description LIKE '%utility%' OR description LIKE '%electricity%' OR description LIKE '%water%' OR description LIKE '%internet%' THEN 'Utilities'
+            WHEN description LIKE '%entertainment%' OR description LIKE '%movie%' OR description LIKE '%game%' THEN 'Entertainment'
+            WHEN description LIKE '%withdrawal%' THEN 'Withdrawals'
+            WHEN description LIKE '%escrow%' THEN 'Escrow Deposits'
+            ELSE 'Other'
+          END as name,
+          SUM(amount) as value
+        FROM transactions 
+        WHERE user_id = ? AND type IN ('withdrawal', 'payment', 'escrow') 
+        AND date >= ${dateFilter}
+        GROUP BY name
+        HAVING value > 0
+        ORDER BY value DESC`,
+        [userId]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      
+      return rows.map(row => ({
+        name: row.name,
+        value: parseFloat(row.value)
+      }));
+    } catch (error) {
+      console.error('Error getting expense breakdown:', error);
+      throw error;
+    }
+  }
+
 
   // Also make sure these methods exist in WalletModel:
   static async getEscrowTransactions(userId) {
@@ -296,6 +462,82 @@ class WalletModel {
         parameters: [status, transactionId]
       });
       throw new Error('Failed to update escrow status');
+    }
+  }
+
+  // Add savings goal
+  static async addSavingsGoal(userId, data) {
+    const { name, targetAmount, currentAmount, deadline } = data;
+    
+    try {
+      const result = await execute(
+        'INSERT INTO savings_goals (user_id, name, target_amount, current_amount, deadline) VALUES (?, ?, ?, ?, ?)',
+        [userId, name, targetAmount, currentAmount || 0, deadline]
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Savings goal creation error:', {
+        error: error.message,
+        query: 'INSERT INTO savings_goals...',
+        parameters: [userId, name, targetAmount, currentAmount, deadline]
+      });
+      throw new Error('Failed to add savings goal');
+    }
+  }
+
+  // Update savings goal amount
+  static async updateSavingsGoal(userId, goalId, amount) {
+    try {
+      const result = await execute(
+        'UPDATE savings_goals SET current_amount = current_amount + ?, updated_at = NOW() WHERE id = ? AND user_id = ?',
+        [amount, goalId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in updateSavingsGoal:', {
+        error: error.message,
+        query: 'UPDATE savings_goals...',
+        parameters: [amount, goalId, userId]
+      });
+      throw new Error('Failed to update savings goal');
+    }
+  }
+
+  // Delete savings goal
+  static async deleteSavingsGoal(userId, goalId) {
+    try {
+      const result = await execute(
+        'DELETE FROM savings_goals WHERE id = ? AND user_id = ?',
+        [goalId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in deleteSavingsGoal:', error);
+      throw new Error('Failed to delete savings goal');
+    }
+  }
+
+  // Edit savings goal details
+  static async editSavingsGoal(userId, goalId, data) {
+    const { name, targetAmount, currentAmount, deadline } = data;
+    
+    try {
+      const result = await execute(
+        'UPDATE savings_goals SET name = ?, target_amount = ?, current_amount = ?, deadline = ?, updated_at = NOW() WHERE id = ? AND user_id = ?',
+        [name, targetAmount, currentAmount, deadline, goalId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in editSavingsGoal:', {
+        error: error.message,
+        query: 'UPDATE savings_goals...',
+        parameters: [name, targetAmount, currentAmount, deadline, goalId, userId]
+      });
+      throw new Error('Failed to edit savings goal');
     }
   }
 }

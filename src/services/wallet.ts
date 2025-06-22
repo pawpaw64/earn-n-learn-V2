@@ -56,6 +56,34 @@ export interface EscrowTransaction {
   isProvider: boolean;
 }
 
+export interface FinancialData {
+  monthlyData: Array<{
+    name: string;
+    income: number;
+    expenses: number;
+  }>;
+  totalIncome: number;
+  totalExpenses: number;
+  savingsRate: number;
+}
+
+export interface ExpenseBreakdown {
+  name: string;
+  value: number;
+}
+
+export const getFinancialData = async (timeframe: string): Promise<FinancialData> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.get(`${API_URL}/wallet/financial-data?timeframe=${timeframe}`);
+  return response.data;
+};
+
+export const getExpenseBreakdown = async (timeframe: string): Promise<ExpenseBreakdown[]> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.get(`${API_URL}/wallet/expense-breakdown?timeframe=${timeframe}`);
+  return response.data;
+};
+
 export const getWalletDetails = async (): Promise<WalletDetails> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.get(`${API_URL}/wallet/details`);
@@ -111,18 +139,35 @@ export const getSavingsGoals = async (): Promise<SavingsGoal[]> => {
   return response.data;
 };
 
-export const addSavingsGoal = async (data: Partial<SavingsGoal>): Promise<any> => {
-  setAuthToken(localStorage.getItem('token'));
+export const addSavingsGoal = async (data: {
+  name: string;
+  targetAmount: number;
+  deadline?: string;
+}): Promise<any> => {  setAuthToken(localStorage.getItem('token'));
   const response = await axios.post(`${API_URL}/wallet/savings-goals`, data);
   return response.data;
 };
 
 export const updateSavingsGoal = async (goalId: number, amount: number): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
-  const response = await axios.put(`${API_URL}/wallet/savings-goals/${goalId}`, { amount });
+ const response = await axios.put(`${API_URL}/wallet/savings-goals/${goalId}/add-funds`, { amount });
   return response.data;
 };
-
+export const editSavingsGoal = async (goalId: number, data: {
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  deadline?: string;
+}): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.put(`${API_URL}/wallet/savings-goals/${goalId}`, data);
+  return response.data;
+};
+export const deleteSavingsGoal = async (goalId: number): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/wallet/savings-goals/${goalId}`);
+  return response.data;
+};
 export const getEscrowTransactions = async (): Promise<EscrowTransaction[]> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.get(`${API_URL}/wallet/escrow`);

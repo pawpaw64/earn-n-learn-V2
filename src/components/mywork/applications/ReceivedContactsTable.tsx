@@ -1,124 +1,124 @@
-
-import React, { useState } from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
-  TableCell 
+import React from "react";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Eye, MessageSquare, User, DollarSign } from "lucide-react";
+import { Check, X, Eye, UserCheck, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
-import { EscrowDialog } from "../dialogs/EscrowDialog";
 import { createOrFindContactGroup } from "@/services/contacts";
+import { createGroup, addToGroup, sendGroupMessage } from "@/services/messages";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReceivedContactsTableProps {
   contacts: any[];
+  type: "skill" | "material";
   isLoading: boolean;
   onViewDetails: (item: any, type: string) => void;
-  onStatusChange: (id: number, type: string, status: string) => Promise<boolean>;
+  onStatusChange: (id: number, type: string, status: string) => Promise<void>;
+  onCreateWork?: (id: number, type: string) => void;
 }
 
+/**
+ * Table component for displaying contacts received for user's skills or materials
+ */
 export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   contacts,
+  type,
   isLoading,
   onViewDetails,
   onStatusChange,
 }) => {
   const navigate = useNavigate();
-  const [showEscrowDialog, setShowEscrowDialog] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<any>(null);
-  const [processingId, setProcessingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
-  const handleAcceptContact = async (contactId: number, contact: any) => {
-    try {
-      setProcessingId(contactId);
-      const contactType = contact.skill_id ? 'skill_contact' : 'material_contact';
-      console.log(`[ReceivedContactsTable] Accepting contact ${contactId}`);
-      
-      const success = await onStatusChange(contactId, contactType, 'Accepted');
-      
-      if (success) {
-        // Create group chat
-        const itemName = contact.skill_name || contact.title;
-        const itemId = contact.skill_id || contact.material_id;
-        const itemType = contact.skill_id ? 'skill' : 'material';
-        
-        try {
-          const { groupId } = await createOrFindContactGroup(
-            itemType,
-            itemId,
-            itemName,
-            contact.user_id
-          );
-          
-          // Navigate to messages and open the group
-          navigate('/dashboard/messages');
-          localStorage.setItem('openChatWith', String(groupId));
-          localStorage.setItem('openChatType', 'group');
-          
-          toast.success('Contact accepted and group chat created!');
-        } catch (error) {
-          console.error('Failed to create group chat:', error);
-          toast.success('Contact accepted!');
-        }
-        
-        // Set up for escrow
-        setSelectedContact(contact);
-        setShowEscrowDialog(true);
-      }
-    } catch (error) {
-      console.error("Error accepting contact:", error);
-    } finally {
-      setProcessingId(null);
-    }
-  };
+  // Group contacts by skill/material
+  const itemGroups = contacts.reduce((groups: any, contact: any) => {
+    const itemId = type === "skill" ? contact.skill_id : contact.material_id;
+    const itemName = type === "skill" ? contact.skill_name : contact.title;
 
-  const handleRejectContact = async (contactId: number, contact: any) => {
-    try {
-      setProcessingId(contactId);
-      const contactType = contact.skill_id ? 'skill_contact' : 'material_contact';
-      console.log(`[ReceivedContactsTable] Rejecting contact ${contactId}`);
-      await onStatusChange(contactId, contactType, 'Rejected');
-    } catch (error) {
-      console.error("Error rejecting contact:", error);
-    } finally {
-      setProcessingId(null);
+    if (!groups[itemId]) {
+      groups[itemId] = {
+        itemId,
+        name: itemName,
+        contacts: [],
+      };
+    }
+    groups[itemId].contacts.push(contact);
+    return groups;
+  }, {});
+
+  if (!contacts || contacts.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        No {type === "skill" ? "skill" : "material"} contacts received
+      </div>
+    );
+  }
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "Agreement Reached":
+        return "secondary";
+      case "Declined":
+        return "destructive";
+      case "Responded":
+        return "default";
+      case "In Discussion":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
   const handleContactUser = async (contact: any) => {
-    // Create group chat and navigate to messages
-    const itemName = contact.skill_name || contact.title;
-    const itemId = contact.skill_id || contact.material_id;
-    const itemType = contact.skill_id ? 'skill' : 'material';
-    
     try {
-      const { groupId } = await createOrFindContactGroup(
-        itemType,
-        itemId,
-        itemName,
-        contact.user_id
+      const itemName = type === "skill" ? contact.skill_name : contact.title;
+      const itemId = type === "skill" ? contact.skill_id : contact.material_id;
+
+      // Create group name
+      const groupName = `${itemName} - Contact Discussion`;
+
+      // Create the group
+      const group = await createGroup(
+        groupName,
+        `Discussion about ${itemName}`
       );
-      
-      navigate('/dashboard/messages');
-      localStorage.setItem('openChatWith', String(groupId));
-      localStorage.setItem('openChatType', 'group');
-      
-      toast.success('Opening chat...');
+
+      // Add the contact initiator to the group
+      await addToGroup(group.id, contact.user_id);
+
+      // Send the original message to the group
+      await sendGroupMessage(
+        group.id,
+        `Original contact message: ${contact.message}`
+      );
+
+      // Refresh queries
+      queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+
+      toast.success("Group chat created successfully!");
+
+      // Navigate to messages and open the group
+      navigate("/dashboard/messages");
+      localStorage.setItem("openChatWith", String(group.id));
+      localStorage.setItem("openChatType", "group");
     } catch (error) {
-      console.error('Failed to create/find group chat:', error);
-      toast.error('Failed to open chat');
+      console.error("Error creating group chat:", error);
+      toast.error("Failed to create group chat. Please try again.");
     }
   };
 
@@ -126,259 +126,188 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
     navigate(`/dashboard/profile/${userId}`);
   };
 
-  const handleSetupEscrow = (contact: any) => {
-    setSelectedContact(contact);
-    setShowEscrowDialog(true);
+  const handleAcceptContact = async (contact: any, contactType: string) => {
+    try {
+      // Update contact status
+      await onStatusChange(
+        contact.id,
+        contactType === "skill" ? "skill_contact" : "material_contact",
+        "Responded"
+      );
+
+      const itemName = type === "skill" ? contact.skill_name : contact.title;
+
+      // Create group name
+      const groupName = `${itemName} - Contact Discussion`;
+
+      // Create the group
+      const group = await createGroup(
+        groupName,
+        `Discussion about ${itemName}`
+      );
+
+      // Add the contact initiator to the group
+      await addToGroup(group.id, contact.user_id);
+
+      // Send acceptance message to the group
+      const responseMessage = `Hi! I've accepted your inquiry about "${itemName}". Let's discuss further!
+
+Original message from ${type} contact:
+${contact.message}
+
+---
+This conversation started from a ${type} contact inquiry.`;
+
+      await sendGroupMessage(group.id, responseMessage);
+
+      // Refresh message queries
+      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+      queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+
+      toast.success("Contact accepted and group chat created!");
+
+      // Navigate to messages and open the group chat
+      navigate("/dashboard/messages");
+      localStorage.setItem("openChatWith", String(group.id));
+      localStorage.setItem("openChatType", "group");
+    } catch (error) {
+      console.error("Error accepting contact:", error);
+      toast.error("Failed to accept contact. Please try again.");
+    }
   };
-
-  const handleEscrowCreated = () => {
-    setSelectedContact(null);
-  };
-
-  if (!contacts || contacts.length === 0) {
-    return (
-      <div className="text-center py-10 text-muted-foreground">
-        No contact inquiries received
-      </div>
-    );
-  }
-
-  // Group contacts by type
-  const skillContacts = contacts.filter(contact => contact.skill_id);
-  const materialContacts = contacts.filter(contact => contact.material_id);
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Skill Contacts */}
-        {skillContacts.length > 0 && (
-          <div className="border rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Skill Inquiries</h3>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Inquirer</TableHead>
-                    <TableHead>Skill</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {skillContacts.map((contact: any) => (
-                    <TableRow key={contact.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleViewProfile(contact.user_id)}>
-                            <AvatarImage src={contact.contact_avatar} />
-                            <AvatarFallback>{contact.contact_name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium cursor-pointer hover:underline" onClick={() => handleViewProfile(contact.user_id)}>
-                              {contact.contact_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{contact.contact_email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{contact.skill_name}</p>
-                          <p className="text-xs text-muted-foreground">{contact.pricing}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(contact.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          contact.status === 'Accepted' ? 'secondary' : 
-                          contact.status === 'Rejected' ? 'destructive' : 
-                          'outline'
-                        }>
-                          {contact.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            className="bg-white border border-black text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                            size="sm"
-                            onClick={() => onViewDetails(contact, 'contact')}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />View Details
-                          </Button>
-                          <Button 
-                            className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleContactUser(contact)}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-1" />Contact
-                          </Button>
-                          
-                          {contact.status === 'Contact Initiated' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                onClick={() => handleAcceptContact(contact.id, contact)}
-                                disabled={processingId === contact.id}
-                              >
-                                <Check className="w-4 h-4 mr-1"/> {processingId === contact.id ? 'Processing...' : 'Accept'}
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                onClick={() => handleRejectContact(contact.id, contact)}
-                                disabled={processingId === contact.id}
-                              >
-                                <X className="w-4 h-4 mr-1" /> {processingId === contact.id ? 'Processing...' : 'Reject'}
-                              </Button>
-                            </>
-                          )}
-                          
-                          {contact.status === 'Accepted' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              className="text-blue-600"
-                              onClick={() => handleSetupEscrow(contact)}
-                            >
-                              <DollarSign className="w-4 h-4 mr-1" /> Set Up Escrow
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+    <div className="space-y-6">
+      {Object.values(itemGroups).map((group: any) => (
+        <div key={group.itemId} className="border rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">{group.name}</h3>
+            {group.contacts.length > 0 && (
+              <Button
+                className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black "
+                variant="outline"
+                size="sm"
+                onClick={() => onViewDetails(group.contacts[0], type)}>
+                <Eye className="w-4 h-4 mr-2" />
+                {type === "skill" ? "Skill Details" : "Material Details"}
+              </Button>
+            )}
           </div>
-        )}
 
-        {/* Material Contacts */}
-        {materialContacts.length > 0 && (
-          <div className="border rounded-lg p-4">
-            <h3 className="text-lg font-semibold mb-4">Material Inquiries</h3>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Inquirer</TableHead>
-                    <TableHead>Material</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {materialContacts.map((contact: any) => (
-                    <TableRow key={contact.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleViewProfile(contact.user_id)}>
-                            <AvatarImage src={contact.contact_avatar} />
-                            <AvatarFallback>{contact.contact_name?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium cursor-pointer hover:underline" onClick={() => handleViewProfile(contact.user_id)}>
-                              {contact.contact_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{contact.contact_email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Contact</TableHead>
+                  <TableHead className="hidden md:table-cell">Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {group.contacts.map((contact: any) => (
+                  <TableRow key={contact.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Avatar
+                          className="h-8 w-8 cursor-pointer"
+                          onClick={() => handleViewProfile(contact.user_id)}>
+                          <AvatarImage src={contact.contact_avatar} />
+                          <AvatarFallback>
+                            {contact.contact_name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                         <div>
-                          <p className="font-medium">{contact.title}</p>
-                          <p className="text-xs text-muted-foreground">{contact.price}</p>
+                          <p
+                            className="font-medium cursor-pointer hover:underline"
+                            onClick={() => handleViewProfile(contact.user_id)}>
+                            {contact.contact_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {contact.contact_email}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(contact.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          contact.status === 'Accepted' ? 'secondary' : 
-                          contact.status === 'Rejected' ? 'destructive' : 
-                          'outline'
-                        }>
-                          {contact.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button 
-                            className="bg-white border border-black text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                            size="sm"
-                            onClick={() => onViewDetails(contact, 'contact')}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />View Details
-                          </Button>
-                          <Button 
-                            className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleContactUser(contact)}
-                          >
-                            <MessageSquare className="w-4 h-4 mr-1" />Contact
-                          </Button>
-                          
-                          {contact.status === 'Contact Initiated' && (
-                            <>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                onClick={() => handleAcceptContact(contact.id, contact)}
-                                disabled={processingId === contact.id}
-                              >
-                                <Check className="w-4 h-4 mr-1"/> {processingId === contact.id ? 'Processing...' : 'Accept'}
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                onClick={() => handleRejectContact(contact.id, contact)}
-                                disabled={processingId === contact.id}
-                              >
-                                <X className="w-4 h-4 mr-1" /> {processingId === contact.id ? 'Processing...' : 'Reject'}
-                              </Button>
-                            </>
-                          )}
-                          
-                          {contact.status === 'Accepted' && (
-                            <Button 
-                              variant="outline" 
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {new Date(contact.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(contact.status)}>
+                        {contact.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onViewDetails(contact, "contact")}>
+                          <Eye className="w-4 h-4" />
+                          View Details
+                        </Button>
+                        <Button
+                          className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleContactUser(contact)}>
+                          <MessageSquare className="w-4 h-4 mr-2" />
+                          Contact
+                        </Button>
+
+                        {/* Show accept/decline only for new contacts */}
+                        {contact.status === "Contact Initiated" && (
+                          <>
+                            <Button
+                              variant="outline"
                               size="sm"
-                              className="text-blue-600"
-                              onClick={() => handleSetupEscrow(contact)}
-                            >
-                              <DollarSign className="w-4 h-4 mr-1" /> Set Up Escrow
+                              className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+                              onClick={() =>
+                                handleAcceptContact(contact, type)
+                              }>
+                              <Check className="w-4 h-4 mr-2" />
+                              Accept
                             </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
+                              onClick={() =>
+                                onStatusChange(
+                                  contact.id,
+                                  type === "skill"
+                                    ? "skill_contact"
+                                    : "material_contact",
+                                  "Declined"
+                                )
+                              }>
+                              <X className="w-4 h-4 mr-2" />
+                              Decline
+                            </Button>
+                          </>
+                        )}
+
+                        {/* Show create work button for responded or in discussion status */}
+                        {(contact.status === "Responded" ||
+                          contact.status === "In Discussion") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-blue-600">
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Create Work
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        )}
-      </div>
-      
-      <EscrowDialog
-        isOpen={showEscrowDialog}
-        onOpenChange={setShowEscrowDialog}
-        application={selectedContact}
-        onEscrowCreated={handleEscrowCreated}
-      />
-    </>
+        </div>
+      ))}
+    </div>
   );
 };

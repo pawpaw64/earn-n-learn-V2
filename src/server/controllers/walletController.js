@@ -1,6 +1,52 @@
 
 import WalletModel from '../models/walletModel.js';
 
+// Get financial data for dashboard
+export async function getFinancialData(req, res) {
+  try {
+    const userId = req.user.id;
+    const { timeframe } = req.query;
+    
+    console.log('Getting financial data for user:', userId, 'timeframe:', timeframe);
+    
+    let financialData;
+    
+    switch (timeframe) {
+      case 'quarterly':
+        financialData = await WalletModel.getQuarterlyFinancials(userId);
+        break;
+      case 'yearly':
+        financialData = await WalletModel.getYearlyFinancials(userId);
+        break;
+      default: // monthly
+        financialData = await WalletModel.getMonthlyFinancials(userId);
+    }
+    
+    res.json(financialData);
+    
+  } catch (error) {
+    console.error('Get financial data error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+// Get expense breakdown by category
+export async function getExpenseBreakdown(req, res) {
+  try {
+    const userId = req.user.id;
+    const { timeframe } = req.query;
+    
+    console.log('Getting expense breakdown for user:', userId, 'timeframe:', timeframe);
+    
+    const expenseBreakdown = await WalletModel.getExpenseBreakdown(userId, timeframe);
+    
+    res.json(expenseBreakdown);
+    
+  } catch (error) {
+    console.error('Get expense breakdown error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
 // Get wallet details
 export async function getWalletDetails(req, res) {
   try {
@@ -293,6 +339,7 @@ export async function getTransactions(req, res) {
 export async function getSavingsGoals(req, res) {
   try {
     const userId = req.user.id;
+     console.log('Getting savings goals for user:', userId);
     const goals = await WalletModel.getSavingsGoals(userId);
     
     // Transform the database format to the frontend format
@@ -304,6 +351,8 @@ export async function getSavingsGoals(req, res) {
       deadline: goal.deadline,
       progress: goal.target_amount > 0 ? Math.round((goal.current_amount / goal.target_amount) * 100) : 0
     }));
+        console.log('Transformed savings goals:', transformedGoals);
+
     
     res.json(transformedGoals);
     
@@ -318,7 +367,8 @@ export async function addSavingsGoal(req, res) {
   try {
     const userId = req.user.id;
     const { name, targetAmount, deadline } = req.body;
-    
+        console.log('Add savings goal request:', { userId, name, targetAmount, deadline });
+
     if (!name || !targetAmount || targetAmount <= 0) {
       return res.status(400).json({ message: 'Invalid savings goal details' });
     }
@@ -326,9 +376,9 @@ export async function addSavingsGoal(req, res) {
     // Add the savings goal
     const goalId = await WalletModel.addSavingsGoal(userId, {
       name,
-      targetAmount,
+      targetAmount: parseFloat(targetAmount),
       currentAmount: 0,
-      deadline
+      deadline: deadline ? new Date(deadline) : null
     });
     
     res.json({
@@ -348,7 +398,8 @@ export async function updateSavingsGoal(req, res) {
     const userId = req.user.id;
     const { goalId } = req.params;
     const { amount } = req.body;
-    
+        console.log('Update savings goal request:', { userId, goalId, amount });
+
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
     }
@@ -367,27 +418,85 @@ export async function updateSavingsGoal(req, res) {
     
     if (!success) {
       // Rollback the wallet balance update
-      await WalletModel.updateBalance(userId, parseFloat(amount));
+          await WalletModel.updateBalance(userId, parseFloat(amount));
+          return res.status(404).json({ message: 'Savings goal not found' });
+        }
+        
+        res.json({
+          message: 'Savings goal updated successfully'
+        });
+      } catch (error) {
+        console.error('Update savings goal error:', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+      }
+    }
+    
+ 
+
+// Edit savings goal details
+export async function editSavingsGoal(req, res) {
+  try {
+    const userId = req.user.id;
+    const { goalId } = req.params;
+    const { name, targetAmount, currentAmount, deadline } = req.body;
+    
+    console.log('Edit savings goal request:', { userId, goalId, name, targetAmount, currentAmount, deadline });
+    
+    if (!name || !targetAmount || targetAmount <= 0) {
+      return res.status(400).json({ message: 'Invalid savings goal details' });
+    }
+    
+    // Update the savings goal
+    const success = await WalletModel.editSavingsGoal(userId, goalId, {
+      name,
+      targetAmount: parseFloat(targetAmount),
+      currentAmount: parseFloat(currentAmount || 0),
+      deadline: deadline ? new Date(deadline) : null
+    });
+    
+    if (!success) {
       return res.status(404).json({ message: 'Savings goal not found' });
     }
     
-    // Record the transaction
-    await WalletModel.addTransaction(userId, {
-      description: 'Transfer to savings goal',
-      amount: parseFloat(amount),
-      type: 'payment',
-      status: 'completed'
-    });
+    console.log('Savings goal edited successfully');
     
     res.json({
       message: 'Savings goal updated successfully'
     });
     
   } catch (error) {
-    console.error('Update savings goal error:', error);
+    console.error('Edit savings goal error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+// Delete savings goal
+export async function deleteSavingsGoal(req, res) {
+  try {
+    const userId = req.user.id;
+    const { goalId } = req.params;
+    
+    console.log('Delete savings goal request:', { userId, goalId });
+    
+    // Delete the savings goal
+    const success = await WalletModel.deleteSavingsGoal(userId, goalId);
+    
+    if (!success) {
+      return res.status(404).json({ message: 'Savings goal not found' });
+    }
+    
+    console.log('Savings goal deleted successfully');
+    
+    res.json({
+      message: 'Savings goal deleted successfully'
+    });
+    
+  } catch (error) {
+    console.error('Delete savings goal error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+ 
 
 // Get escrow transactions
 export async function getEscrowTransactions(req, res) {

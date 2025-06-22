@@ -3,34 +3,72 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-// Mock data for the charts
-const monthlyData = [
-  { name: 'Jan', income: 1200, expenses: 850 },
-  { name: 'Feb', income: 1500, expenses: 900 },
-  { name: 'Mar', income: 1300, expenses: 950 },
-  { name: 'Apr', income: 1700, expenses: 1000 },
-  { name: 'May', income: 1800, expenses: 1050 },
-  { name: 'Jun', income: 2000, expenses: 1100 },
-];
-
-const categoryData = [
-  { name: 'Education', value: 400 },
-  { name: 'Transport', value: 300 },
-  { name: 'Food', value: 500 },
-  { name: 'Utilities', value: 200 },
-  { name: 'Entertainment', value: 100 },
-];
+import { useQuery } from '@tanstack/react-query';
+import { getFinancialData, getExpenseBreakdown } from '@/services/wallet';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export function FinancialDashboard() {
   const [timeframe, setTimeframe] = useState('monthly');
 
-  // Calculate total income, expenses, and savings
-  const totalIncome = monthlyData.reduce((sum, item) => sum + item.income, 0);
-  const totalExpenses = monthlyData.reduce((sum, item) => sum + item.expenses, 0);
-  const savingsRate = Math.floor((totalIncome - totalExpenses) / totalIncome * 100);
+  // Fetch financial data
+  const { data: financialData, isLoading: financialLoading } = useQuery({
+    queryKey: ['financialData', timeframe],
+    queryFn: () => getFinancialData(timeframe),
+  });
+
+  // Fetch expense breakdown
+  const { data: expenseData, isLoading: expenseLoading } = useQuery({
+    queryKey: ['expenseBreakdown', timeframe],
+    queryFn: () => getExpenseBreakdown(timeframe),
+  });
+
+  const isLoading = financialLoading || expenseLoading;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-semibold">Financial Dashboard</h2>
+          <Skeleton className="w-[180px] h-10" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Calculate summary metrics
+  const totalIncome = financialData?.monthlyData?.reduce((sum, item) => sum + item.income, 0) || 0;
+  const totalExpenses = financialData?.monthlyData?.reduce((sum, item) => sum + item.expenses, 0) || 0;
+  const savingsRate = totalIncome > 0 ? Math.floor((totalIncome - totalExpenses) / totalIncome * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -56,20 +94,26 @@ export function FinancialDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>Total Income</CardTitle>
-            <CardDescription>Last 6 months</CardDescription>
+            <CardDescription>
+              {timeframe === 'monthly' ? 'Last 6 months' : 
+               timeframe === 'quarterly' ? 'Last 4 quarters' : 'Last 3 years'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">${totalIncome}</div>
+            <div className="text-2xl font-bold text-emerald-600">${totalIncome.toFixed(2)}</div>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="pb-2">
             <CardTitle>Total Expenses</CardTitle>
-            <CardDescription>Last 6 months</CardDescription>
+            <CardDescription>
+              {timeframe === 'monthly' ? 'Last 6 months' : 
+               timeframe === 'quarterly' ? 'Last 4 quarters' : 'Last 3 years'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-500">${totalExpenses}</div>
+            <div className="text-2xl font-bold text-red-500">${totalExpenses.toFixed(2)}</div>
           </CardContent>
         </Card>
         
@@ -88,13 +132,16 @@ export function FinancialDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Income vs. Expenses</CardTitle>
-            <CardDescription>Monthly comparison</CardDescription>
+            <CardDescription>
+              {timeframe === 'monthly' ? 'Monthly comparison' : 
+               timeframe === 'quarterly' ? 'Quarterly comparison' : 'Yearly comparison'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={monthlyData}
+                  data={financialData?.monthlyData || []}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -122,7 +169,7 @@ export function FinancialDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categoryData}
+                    data={expenseData || []}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -132,7 +179,7 @@ export function FinancialDashboard() {
                     nameKey="name"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
-                    {categoryData.map((entry, index) => (
+                    {(expenseData || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>

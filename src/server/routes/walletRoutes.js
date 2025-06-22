@@ -24,10 +24,16 @@ router.delete('/payment-methods/:methodId', walletController.deletePaymentMethod
 // Transactions
 router.get('/transactions', walletController.getTransactions);
 
+// Financial data endpoints
+router.get('/financial-data', walletController.getFinancialData);
+router.get('/expense-breakdown', walletController.getExpenseBreakdown);
+
 // Savings goals
 router.get('/savings-goals', walletController.getSavingsGoals);
 router.post('/savings-goals', walletController.addSavingsGoal);
-router.put('/savings-goals/:goalId', walletController.updateSavingsGoal);
+router.put('/savings-goals/:goalId', walletController.editSavingsGoal);
+router.put('/savings-goals/:goalId/add-funds', walletController.updateSavingsGoal);
+router.delete('/savings-goals/:goalId', walletController.deleteSavingsGoal);
 
 // Escrow transactions
 router.get('/escrow', walletController.getEscrowTransactions);
