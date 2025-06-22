@@ -152,3 +152,15 @@ export const searchUsers = async (query: string) => {
     return [];
   }
 };
+
+// Find existing group by name pattern
+export const findGroupByName = async (namePattern: string) => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/groups/find/${encodeURIComponent(namePattern)}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error finding group by name:', error);
+    return null;
+  }
+};

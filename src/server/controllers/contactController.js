@@ -1,9 +1,9 @@
-
 import ContactModel from '../models/contactModel.js';
 import SkillModel from '../models/skillModel.js';
 import MaterialModel from '../models/materialModel.js';
 import NotificationModel from '../models/notificationModel.js';
 import UserModel from '../models/userModel.js';
+import MessageModel from '../models/messageModel.js';
 
 // Submit skill contact
 export const submitSkillContact = async (req, res) => {
@@ -377,6 +377,43 @@ export const getMaterialContactById = async (req, res) => {
     res.json(contact);
   } catch (error) {
     console.error('Get material contact by ID error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// Create or find contact group
+export const createOrFindContactGroup = async (req, res) => {
+  const { contactType, itemId, itemName, participantId } = req.body;
+  
+  if (!contactType || !itemId || !itemName || !participantId) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+  
+  try {
+    // Create group name pattern
+    const groupName = `${itemName} - Contact Discussion`;
+    
+    // Check if group already exists with this name and participants
+    const existingGroups = await MessageModel.getUserGroups(req.user.id);
+    const existingGroup = existingGroups.find(group => 
+      group.name === groupName && 
+      // Check if participant is in the group (this would require additional query)
+      true // For now, we'll create a new group each time
+    );
+    
+    if (existingGroup) {
+      return res.json({ groupId: existingGroup.id, isNew: false });
+    }
+    
+    // Create new group
+    const groupId = await MessageModel.createGroup(groupName, `Discussion about ${itemName}`, req.user.id);
+    
+    // Add participant to group
+    await MessageModel.addToGroup(groupId, participantId, false);
+    
+    res.status(201).json({ groupId, isNew: true });
+  } catch (error) {
+    console.error('Create/find contact group error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, MessageCircle, Send, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { submitSkillContact, submitMaterialContact } from "@/services/contacts";
-import { sendMessage } from "@/services/messages";
+import { createGroup, addToGroup, sendGroupMessage } from "@/services/messages";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -89,30 +89,41 @@ const ContactModal = ({
         await submitMaterialContact({ material_id: itemId, message: fullMessage });
       }
       
-      // If recipient ID is available, also send a direct message
+      // Create group chat if recipient ID is available
       if (recipientId) {
         try {
-          await sendMessage(recipientId, fullMessage);
+          // Create group name
+          const groupName = `${itemName} - Contact Discussion`;
+          
+          // Create the group
+          const group = await createGroup(groupName, `Discussion about ${itemName}`);
+          
+          // Add the recipient to the group
+          await addToGroup(group.id, recipientId);
+          
+          // Send the contact message to the group
+          await sendGroupMessage(group.id, contactData.message);
+          
           queryClient.invalidateQueries({ queryKey: ['recentChats'] });
+          queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+          
+          toast.success(`Message sent to ${recipientName} and group chat created!`);
+          
+          // Navigate to messages and open the group
+          navigate('/dashboard/messages');
+          localStorage.setItem('openChatWith', String(group.id));
+          localStorage.setItem('openChatType', 'group');
+          
         } catch (error) {
-          console.error('Failed to send direct message:', error);
+          console.error('Failed to create group chat:', error);
+          // We don't want to show an error here, as the contact was still submitted
+          toast.success(`Contact message sent to ${recipientName}!`);
         }
+      } else {
+        toast.success(`Message sent to ${recipientName}!`);
       }
       
-      // Show success state
-      setMessageSent(true);
-      toast.success(`Message sent to ${recipientName}!`, {
-        description: "Your message has been delivered successfully.",
-        duration: 3000,
-      });
-      
-      // Auto-open chat after a short delay
-      if (recipientId) {
-        setTimeout(() => {
-          handleOpenMessages();
-        }, 1500);
-      }
-      
+      onOpenChange(false);
     } catch (error: any) {
       console.error(`Error submitting ${itemType} contact:`, error);
       toast.error(error.response?.data?.message || "Failed to send message. Please try again.");
@@ -121,69 +132,37 @@ const ContactModal = ({
     }
   };
 
-  const handleOpenMessages = () => {
+  const handleOpenMessages = async () => {
     if (!recipientId) {
-      toast.error("Cannot start direct message - recipient information missing");
+      toast.error("Cannot start group chat - recipient information missing");
       return;
     }
     
-    // Navigate to messages page
-    navigate('/dashboard/messages');
-    
-    // Set localStorage to auto-open the chat
-    localStorage.setItem('openChatWith', String(recipientId));
-    localStorage.setItem('openChatType', 'direct');
-    
-    // Close the modal
-    onOpenChange(false);
+    try {
+      // Create group name
+      const groupName = `${itemName} - Contact Discussion`;
+      
+      // Create the group
+      const group = await createGroup(groupName, `Discussion about ${itemName}`);
+      
+      // Add the recipient to the group
+      await addToGroup(group.id, recipientId);
+      
+      queryClient.invalidateQueries({ queryKey: ['userGroups'] });
+      
+      navigate('/dashboard/messages');
+      onOpenChange(false);
+      
+      // This sets a temporary localStorage value that the Messages page can use
+      localStorage.setItem('openChatWith', String(group.id));
+      localStorage.setItem('openChatType', 'group');
+      
+      toast.success('Group chat created successfully!');
+    } catch (error) {
+      console.error('Error creating group chat:', error);
+      toast.error('Failed to create group chat. Please try again.');
+    }
   };
-
-  const handleClose = () => {
-    setMessageSent(false);
-    onOpenChange(false);
-  };
-
-  if (messageSent) {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader className="text-center">
-            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <DialogTitle className="text-xl font-bold text-green-600">
-              Message Sent Successfully!
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">
-              Your message about <strong>{itemName}</strong> has been sent to <strong>{recipientName}</strong>.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Opening chat window...
-            </p>
-          </div>
-          
-          <DialogFooter className="flex items-center justify-center gap-3 pt-4">
-            <Button variant="outline" onClick={handleClose}>
-              Close
-            </Button>
-            
-            {recipientId && (
-              <Button
-                onClick={handleOpenMessages}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-              >
-                <MessageCircle className="h-4 w-4" />
-                Open Chat Now
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -235,6 +214,18 @@ const ContactModal = ({
             </DialogClose>
             
             <div className="flex gap-2">
+              {recipientId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-1"
+                  onClick={handleOpenMessages}
+                >
+                  <MessageCircle className="h-4 w-4" /> 
+                  Create Group Chat
+                </Button>
+              )}
+              
               <Button 
                 type="submit"
                 className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"

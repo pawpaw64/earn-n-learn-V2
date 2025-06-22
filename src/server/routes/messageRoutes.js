@@ -16,6 +16,7 @@ router.post('/send', messageController.sendMessage);
 // Group messaging routes
 router.post('/groups', messageController.createGroup);
 router.get('/groups', messageController.getUserGroups);
+router.get('/groups/find/:namePattern', messageController.findGroupByName);
 router.get('/groups/:groupId/messages', messageController.getGroupMessages);
 router.post('/groups/message', messageController.sendGroupMessage);
 router.post('/groups/members', messageController.addToGroup);
