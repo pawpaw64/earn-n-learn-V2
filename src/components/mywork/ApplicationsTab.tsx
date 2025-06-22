@@ -1,269 +1,408 @@
-
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MyApplicationsTable } from "./applications/MyApplicationsTable";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Filter, RefreshCcw } from "lucide-react";
+import { LoadingSkeleton } from "./LoadingSkeleton";
+import { JobApplicationCard } from "./applications/JobApplicationCard";
+import { ContactCard } from "./applications/ContactCard";
 import { ReceivedApplicationsTable } from "./applications/ReceivedApplicationsTable";
 import { ReceivedContactsTable } from "./applications/ReceivedContactsTable";
-import { ContactsTable } from "./applications/ContactsTable";
-import { LoadingSkeleton } from "./LoadingSkeleton";
-import { DetailsDialog } from "./DetailsDialog";
+import {
+  fetchMyApplications,
+  fetchJobApplications,
+} from "@/services/applications";
+import {
+  fetchUserSkillContacts,
+  fetchUserMaterialContacts,
+  fetchSkillContacts,
+  fetchMaterialContacts,
+} from "@/services/contacts";
+import { fetchMyPosts } from "@/services";
+import { JobPostCard } from "@/components/JobPostCard";
+import { SkillPostCard } from "@/components/SkillPostCard";
+import { MaterialPostCard } from "@/components/MaterialPostCard";
 
 interface ApplicationsTabProps {
-  myApplications: any[];
-  receivedApplications: any[];
-  myContacts: any[];
-  receivedContacts: any[];
-  isLoading: boolean;
-  onStatusChange: (id: number, type: string, status: string) => Promise<void>;
-  onRefresh: () => void;
+  onViewDetails: (item: any, type: string) => Promise<void>;
+  onStatusChange: (
+    id: number,
+    type: string,
+    status: string
+  ) => Promise<boolean>;
+  onEdit: (item: any, type: string) => void;
+  onDelete: (id: number, type: string) => Promise<boolean>;
 }
 
+/**
+ * Main component for managing all applications and contacts
+ * Both sent and received
+ */
 export function ApplicationsTab({
-  myApplications,
-  receivedApplications,
-  myContacts,
-  receivedContacts,
-  isLoading,
+  onViewDetails,
   onStatusChange,
-  onRefresh,
+  onEdit,
+  onDelete,
 }: ApplicationsTabProps) {
-  const [selectedItem, setSelectedItem] = useState<any>(null);
-  const [selectedType, setSelectedType] = useState<string>("");
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [applicationsTab, setApplicationsTab] = useState("job");
+  const [activeContactsTab, setActiveContactsTab] = useState("myposts");
+  const [myPostsTab, setMyPostsTab] = useState("jobs");
+  const queryClient = useQueryClient();
 
-  const handleViewDetails = (item: any, type: string) => {
-    setSelectedItem(item);
-    setSelectedType(type);
-    setIsDetailsOpen(true);
+  // Function to refetch all data
+  const refetchAll = () => {
+    queryClient.invalidateQueries({ queryKey: ["myApplications"] });
+    queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
+    queryClient.invalidateQueries({ queryKey: ["skillContacts"] });
+    queryClient.invalidateQueries({ queryKey: ["materialContacts"] });
+    queryClient.invalidateQueries({ queryKey: ["receivedSkillContacts"] });
+    queryClient.invalidateQueries({ queryKey: ["receivedMaterialContacts"] });
+    queryClient.invalidateQueries({ queryKey: ["myPosts"] });
   };
 
-  const handleStatusChangeWrapper = async (id: number, type: string, status: string): Promise<boolean> => {
-    try {
-      await onStatusChange(id, type, status);
-      onRefresh();
-      return true;
-    } catch (error) {
-      console.error("Status change error:", error);
-      return false;
+  // Fetch all data
+  const { data: applications = [], isLoading: isLoadingApps } = useQuery({
+    queryKey: ["myApplications"],
+    queryFn: fetchMyApplications,
+    staleTime: 30000, // 30 seconds
+  });
+
+  const { data: jobApplications = [], isLoading: isLoadingJobApps } = useQuery({
+    queryKey: ["jobApplications"],
+    queryFn: fetchJobApplications,
+    staleTime: 30000,
+  });
+
+  const { data: skillContacts = [], isLoading: isLoadingSkillContacts } =
+    useQuery({
+      queryKey: ["skillContacts"],
+      queryFn: fetchUserSkillContacts,
+      staleTime: 30000,
+    });
+
+  const { data: materialContacts = [], isLoading: isLoadingMaterialContacts } =
+    useQuery({
+      queryKey: ["materialContacts"],
+      queryFn: fetchUserMaterialContacts,
+      staleTime: 30000,
+    });
+
+  const {
+    data: receivedSkillContacts = [],
+    isLoading: isLoadingReceivedSkillContacts,
+  } = useQuery({
+    queryKey: ["receivedSkillContacts"],
+    queryFn: fetchSkillContacts,
+    staleTime: 30000,
+  });
+
+  const {
+    data: receivedMaterialContacts = [],
+    isLoading: isLoadingReceivedMaterialContacts,
+  } = useQuery({
+    queryKey: ["receivedMaterialContacts"],
+    queryFn: fetchMaterialContacts,
+    staleTime: 30000,
+  });
+
+  const {
+    data: myPosts = { jobs: [], skills: [], materials: [] },
+    isLoading: isLoadingMyPosts,
+  } = useQuery({
+    queryKey: ["myPosts"],
+    queryFn: fetchMyPosts,
+    staleTime: 30000,
+  });
+
+  // Handle status changes with automatic refetch
+  const handleStatusChange = async (
+    id: number,
+    type: string,
+    status: string
+  ): Promise<boolean> => {
+    if (onStatusChange) {
+      return await onStatusChange(id, type, status);
+    }
+    return false;
+  };
+
+  const handleDeletePost = async (id: number, type: string) => {
+    if (onDelete) {
+      const success = await onDelete(id, type);
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ["myPosts"] });
+      }
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'applied':
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'accepted':
-        return 'bg-green-100 text-green-800';
-      case 'rejected':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStats = () => {
-    const totalApplications = myApplications.length;
-    const acceptedApplications = myApplications.filter(app => app.status === 'Accepted').length;
-    const totalContacts = myContacts.length;
-    const respondedContacts = myContacts.filter(contact => 
-      contact.status === 'Responded' || contact.status === 'Agreement Reached'
-    ).length;
-
-    return {
-      totalApplications,
-      acceptedApplications,
-      totalContacts,
-      respondedContacts,
-    };
-  };
-
-  const stats = getStats();
-
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  // Ensure all data arrays are valid arrays
+  const applicationsArray = Array.isArray(applications) ? applications : [];
+  const jobApplicationsArray = Array.isArray(jobApplications)
+    ? jobApplications
+    : [];
+  const skillContactsArray = Array.isArray(skillContacts) ? skillContacts : [];
+  const materialContactsArray = Array.isArray(materialContacts)
+    ? materialContacts
+    : [];
+  const receivedSkillContactsArray = Array.isArray(receivedSkillContacts)
+    ? receivedSkillContacts
+    : [];
+  const receivedMaterialContactsArray = Array.isArray(receivedMaterialContacts)
+    ? receivedMaterialContacts
+    : [];
 
   return (
-    <>
-      <div className="space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>My Applications</CardDescription>
-              <CardTitle className="text-2xl">{stats.totalApplications}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {stats.acceptedApplications} accepted
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Received Applications</CardDescription>
-              <CardTitle className="text-2xl">{receivedApplications.length}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {receivedApplications.filter(app => app.status === 'Applied').length} pending
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>My Contacts</CardDescription>
-              <CardTitle className="text-2xl">{stats.totalContacts}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {stats.respondedContacts} responded
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>Received Contacts</CardDescription>
-              <CardTitle className="text-2xl">{receivedContacts.length}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                {receivedContacts.filter(contact => contact.status === 'Pending' || contact.status === 'Contact Initiated').length} pending
-              </p>
-            </CardContent>
-          </Card>
+    <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
+      <TabsList className="mb-4">
+        <TabsTrigger value="job">Job Applications</TabsTrigger>
+        <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
+        <TabsTrigger value="material">Material Contacts</TabsTrigger>
+        <TabsTrigger value="received">My Posts/ Received Inquiries</TabsTrigger>
+      </TabsList>
+
+      {/* Job Applications Subtab */}
+      <TabsContent value="job">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Job Applications</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
         </div>
 
-        {/* Applications and Contacts Tabs */}
-        <Tabs defaultValue="my-applications" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="my-applications" className="flex items-center gap-2">
-              My Applications
-              {stats.totalApplications > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {stats.totalApplications}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="received-applications" className="flex items-center gap-2">
-              Received Applications
-              {receivedApplications.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {receivedApplications.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="my-contacts" className="flex items-center gap-2">
-              My Contacts
-              {stats.totalContacts > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {stats.totalContacts}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="received-contacts" className="flex items-center gap-2">
-              Received Contacts
-              {receivedContacts.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {receivedContacts.length}
-                </Badge>
-              )}
-            </TabsTrigger>
+        {isLoadingApps ? (
+          <LoadingSkeleton />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {applicationsArray.length > 0 ? (
+              applicationsArray.map((app) => (
+                <JobApplicationCard
+                  key={app.id}
+                  app={app}
+                  onViewDetails={onViewDetails}
+                  onStatusChange={handleStatusChange}
+                />
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-10 text-muted-foreground">
+                No job applications found
+              </div>
+            )}
+          </div>
+        )}
+      </TabsContent>
+
+      {/* Skill Inquiries Subtab */}
+      <TabsContent value="skill">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Skill Inquiries</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+
+        {isLoadingSkillContacts ? (
+          <LoadingSkeleton />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {skillContactsArray.length > 0 ? (
+              skillContactsArray.map((contact) => (
+                <ContactCard
+                  key={contact.id}
+                  contact={contact}
+                  type="skill"
+                  onViewDetails={onViewDetails}
+                />
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-10 text-muted-foreground">
+                No skill inquiries found
+              </div>
+            )}
+          </div>
+        )}
+      </TabsContent>
+
+      {/* Material Inquiries Subtab */}
+      <TabsContent value="material">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Material Inquiries</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+
+        {isLoadingMaterialContacts ? (
+          <LoadingSkeleton />
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {materialContactsArray.length > 0 ? (
+              materialContactsArray.map((contact) => (
+                <ContactCard
+                  key={contact.id}
+                  contact={contact}
+                  type="material"
+                  onViewDetails={onViewDetails}
+                />
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-10 text-muted-foreground">
+                No material inquiries found
+              </div>
+            )}
+          </div>
+        )}
+      </TabsContent>
+
+      {/* Received Applications Subtab */}
+      <TabsContent value="received">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">My post/Recieved Inquiries</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+
+        <Tabs
+          value={activeContactsTab}
+          onValueChange={setActiveContactsTab}
+          className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="myposts">My Posts</TabsTrigger>
+            <TabsTrigger value="received">Job Inquiries</TabsTrigger>
+            <TabsTrigger value="skills">Skill Inquiries</TabsTrigger>
+            <TabsTrigger value="materials">Material Inquiries</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="my-applications" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Job Applications</CardTitle>
-                <CardDescription>
-                  Track the status of jobs you've applied to
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <MyApplicationsTable
-                  applications={myApplications}
-                  isLoading={isLoading}
-                  onViewDetails={handleViewDetails}
-                  onStatusChange={handleStatusChangeWrapper}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="received">
+            <ReceivedApplicationsTable
+              applications={jobApplicationsArray}
+              isLoading={isLoadingJobApps}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+            />
           </TabsContent>
 
-          <TabsContent value="received-applications" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Received Applications</CardTitle>
-                <CardDescription>
-                  Applications received for your job postings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ReceivedApplicationsTable
-                  applications={receivedApplications}
-                  isLoading={isLoading}
-                  onViewDetails={handleViewDetails}
-                  onStatusChange={handleStatusChangeWrapper}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="skills">
+            <ReceivedContactsTable
+              contacts={receivedSkillContactsArray}
+              type="skill"
+              isLoading={isLoadingReceivedSkillContacts}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+            />
           </TabsContent>
 
-          <TabsContent value="my-contacts" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Contact Inquiries</CardTitle>
-                <CardDescription>
-                  Inquiries you've sent about skills and materials
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ContactsTable
-                  contacts={myContacts}
-                  isLoading={isLoading}
-                  onViewDetails={handleViewDetails}
-                  onStatusChange={handleStatusChangeWrapper}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="materials">
+            <ReceivedContactsTable
+              contacts={receivedMaterialContactsArray}
+              type="material"
+              isLoading={isLoadingReceivedMaterialContacts}
+              onViewDetails={onViewDetails}
+              onStatusChange={handleStatusChange}
+            />
           </TabsContent>
 
-          <TabsContent value="received-contacts" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Received Contact Inquiries</CardTitle>
-                <CardDescription>
-                  Inquiries received about your skills and materials
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ReceivedContactsTable
-                  contacts={receivedContacts}
-                  isLoading={isLoading}
-                  onViewDetails={handleViewDetails}
-                  onStatusChange={handleStatusChangeWrapper}
-                />
-              </CardContent>
-            </Card>
+          <TabsContent value="myposts">
+            <Tabs
+              value={myPostsTab}
+              onValueChange={setMyPostsTab}
+              className="mt-4">
+              <TabsList>
+                <TabsTrigger value="jobs">Job Posts</TabsTrigger>
+                <TabsTrigger value="skills">Skills Posts</TabsTrigger>
+                <TabsTrigger value="materials">Materials Posts</TabsTrigger>
+
+              </TabsList>
+              {/* Jobs Tab */}
+              <TabsContent value="jobs">
+                {isLoadingMyPosts ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts.jobs && myPosts.jobs.length > 0 ? (
+                      myPosts.jobs.map((job: any) => (
+                        <JobPostCard
+                          key={job.id}
+                          job={job}
+                          onView={() => onViewDetails(job, "job")}
+                          onEdit={() => onEdit(job, "job")}
+                          onDelete={() => handleDeletePost(job.id, "job")}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any jobs.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Skills Tab */}
+              <TabsContent value="skills">
+                {isLoadingMyPosts ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts.skills && myPosts.skills.length > 0 ? (
+                      myPosts.skills.map((skill: any) => (
+                        <SkillPostCard
+                          key={skill.id}
+                          skill={skill}
+                          onView={() => onViewDetails(skill, "skill")}
+                          onEdit={() => onEdit(skill, "skill")}
+                          onDelete={() => handleDeletePost(skill.id, "skill")}
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any skills.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="materials">
+                {isLoadingMyPosts ? (
+                  <LoadingSkeleton />
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
+                    {myPosts.materials && myPosts.materials.length > 0 ? (
+                      myPosts.materials.map((material: any) => (
+                        <MaterialPostCard
+                          key={material.id}
+                          material={material}
+                          onView={() => onViewDetails(material, "material")}
+                          onEdit={() => onEdit(material, "material")}
+                          onDelete={() =>
+                            handleDeletePost(material.id, "material")
+                          }
+                        />
+                      ))
+                    ) : (
+                      <div className="col-span-full text-center py-10 text-muted-foreground">
+                        You have not posted any skills.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
-      </div>
-
-      <DetailsDialog
-        isOpen={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
-        item={selectedItem}
-        type={selectedType}
-        onStatusChange={handleStatusChangeWrapper}
-      />
-    </>
+      </TabsContent>
+    </Tabs>
   );
 }
