@@ -138,15 +138,15 @@ class WalletModel {
     try {
       const result = await execute(
         `SELECT 
-          DATE_FORMAT(date, '%b') as name,
-          MONTH(date) as month,
-          YEAR(date) as year,
-          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
-          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
-        FROM transactions 
-        WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-        GROUP BY YEAR(date), MONTH(date)
-        ORDER BY YEAR(date), MONTH(date)`,
+    MONTH(date) as month,
+    YEAR(date) as year,
+    DATE_FORMAT(date, '%b') as name,
+    COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
+    COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
+FROM transactions 
+WHERE user_id = 2 AND date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+GROUP BY YEAR(date), MONTH(date), DATE_FORMAT(date, '%b')
+ORDER BY YEAR(date), MONTH(date)`,
         [userId]
       );
       

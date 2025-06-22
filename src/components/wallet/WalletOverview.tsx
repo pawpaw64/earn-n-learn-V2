@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,11 @@ import { WithdrawDialog } from './WithdrawDialog';
 import axios from 'axios';
 
 interface WalletData {
-  balance: number;
-  pendingEscrow: number;
-  monthlyEarnings: number;
-  monthlySpending: number;
-  savingsProgress: number;
+  balance?: number;
+  pendingEscrow?: number;
+  monthlyEarnings?: number;
+  monthlySpending?: number;
+  savingsProgress?: number;
 }
 
 export function WalletOverview() {
@@ -31,6 +30,11 @@ export function WalletOverview() {
     savingsProgress: 0
   });
 
+  // Helper function to safely format numbers
+  const formatCurrency = (value?: number) => {
+    return value?.toFixed(2) ?? "0.00";
+  };
+
   const fetchWalletData = async () => {
     setIsLoading(true);
     try {
@@ -45,7 +49,14 @@ export function WalletOverview() {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setWalletData(response.data);
+      // Ensure all numeric fields have default values
+      setWalletData({
+        balance: response.data.balance ?? 0,
+        pendingEscrow: response.data.pendingEscrow ?? 0,
+        monthlyEarnings: response.data.monthlyEarnings ?? 0,
+        monthlySpending: response.data.monthlySpending ?? 0,
+        savingsProgress: response.data.savingsProgress ?? 0
+      });
     } catch (error) {
       console.error('Error fetching wallet data:', error);
       toast({
@@ -75,7 +86,6 @@ export function WalletOverview() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update wallet data
       fetchWalletData();
       
       toast({
@@ -108,7 +118,6 @@ export function WalletOverview() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Update wallet data
       fetchWalletData();
       
       toast({
@@ -141,15 +150,15 @@ export function WalletOverview() {
             <div className="flex items-baseline space-x-2">
               <DollarSign className="h-5 w-5 text-emerald-500" />
               <span className="text-3xl font-bold">
-                ${isLoading ? "..." : walletData.balance.toFixed(2)}
+                ${isLoading ? "..." : formatCurrency(walletData.balance)}
               </span>
             </div>
             
-            {walletData.pendingEscrow > 0 && (
+            {walletData.pendingEscrow && walletData.pendingEscrow > 0 && (
               <div className="mt-4 flex items-center text-sm text-muted-foreground">
                 <span>Pending in escrow:</span>
                 <Badge variant="outline" className="ml-2">
-                  ${walletData.pendingEscrow.toFixed(2)}
+                  ${formatCurrency(walletData.pendingEscrow)}
                 </Badge>
               </div>
             )}
@@ -184,7 +193,7 @@ export function WalletOverview() {
             <div className="flex items-baseline space-x-2">
               <TrendingUp className="h-5 w-5 text-green-500" />
               <span className="text-2xl font-bold">
-                ${isLoading ? "..." : walletData.monthlyEarnings.toFixed(2)}
+                ${isLoading ? "..." : formatCurrency(walletData.monthlyEarnings)}
               </span>
             </div>
           </CardContent>
@@ -200,7 +209,7 @@ export function WalletOverview() {
             <div className="flex items-baseline space-x-2">
               <TrendingDown className="h-5 w-5 text-red-500" />
               <span className="text-2xl font-bold">
-                ${isLoading ? "..." : walletData.monthlySpending.toFixed(2)}
+                ${isLoading ? "..." : formatCurrency(walletData.monthlySpending)}
               </span>
             </div>
           </CardContent>
@@ -214,9 +223,9 @@ export function WalletOverview() {
           <CardDescription>Overall progress</CardDescription>
         </CardHeader>
         <CardContent>
-          <Progress value={walletData.savingsProgress} className="h-2" />
+          <Progress value={walletData.savingsProgress ?? 0} className="h-2" />
           <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-            <span>{walletData.savingsProgress}% completed</span>
+            <span>{walletData.savingsProgress ?? 0}% completed</span>
           </div>
         </CardContent>
       </Card>
@@ -232,7 +241,7 @@ export function WalletOverview() {
         isOpen={isWithdrawOpen} 
         onClose={() => setIsWithdrawOpen(false)} 
         onWithdraw={handleWithdraw}
-        maxAmount={walletData.balance}
+        maxAmount={walletData.balance ?? 0}
       />
     </div>
   );
