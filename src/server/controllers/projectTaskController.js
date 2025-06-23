@@ -43,20 +43,50 @@ export const createTask = async (req, res) => {
     const { title, description, priority, due_date, assigned_to } = req.body;
     const userId = req.user.id;
 
-    // Check project access
-    const projectAccess = await execute(
-      'SELECT provider_id, client_id FROM projects WHERE id = ? AND (provider_id = ? OR client_id = ?)',
-      [projectId, userId, userId]
+    console.log('Creating task for project:', projectId, 'by user:', userId);
+
+    // First, let's check if the project exists and get its details
+    const projectCheck = await execute(
+      'SELECT id, provider_id, client_id, title FROM projects WHERE id = ?',
+      [projectId]
     );
 
-    if (!projectAccess || projectAccess.length === 0) {
+    console.log('Project check result:', projectCheck);
+
+    if (!projectCheck || projectCheck.length === 0) {
+      console.log('Project not found:', projectId);
+      return res.status(404).json({ message: 'Project not found' });
+    }
+
+    const project = projectCheck[0];
+    console.log('Project details:', project);
+    console.log('User access check - User ID:', userId, 'Provider ID:', project.provider_id, 'Client ID:', project.client_id);
+
+    // Check if user has access to this project
+    if (project.provider_id !== userId && project.client_id !== userId) {
+      console.log('Access denied - User is neither provider nor client');
       return res.status(403).json({ message: 'Access denied to this project' });
     }
 
+    console.log('Access granted, creating task...');
+
+    // Handle empty assigned_to value - convert empty string to null
+    const assignedToValue = assigned_to && assigned_to.trim() !== '' ? assigned_to : null;
+    const dueDateValue = due_date && due_date.trim() !== '' ? due_date : null;
+
+    console.log('Task data before insert:', {
+      projectId,
+      title,
+      description,
+      priority,
+      due_date: dueDateValue,
+      assigned_to: assignedToValue,
+      created_by: userId
+    });
     const result = await execute(
       `INSERT INTO project_tasks (project_id, title, description, priority, 
        due_date, assigned_to, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [projectId, title, description, priority, due_date, assigned_to, userId]
+      [projectId, title, description, priority, dueDateValue, assignedToValue, userId]
     );
 
     const task = await execute(
@@ -77,6 +107,7 @@ export const createTask = async (req, res) => {
       [projectId, userId, `Created task: ${title}`, result.insertId]
     );
 
+    console.log('Task created successfully:', task[0]);
     res.status(201).json(task[0]);
   } catch (error) {
     console.error('Error creating task:', error);
@@ -103,12 +134,15 @@ export const updateTask = async (req, res) => {
     if (!taskAccess || taskAccess.length === 0) {
       return res.status(403).json({ message: 'Access denied to update this task' });
     }
+  // Handle empty values properly
+    const assignedToValue = assigned_to && assigned_to.trim() !== '' ? assigned_to : null;
+    const dueDateValue = due_date && due_date.trim() !== '' ? due_date : null;
 
     await execute(
       `UPDATE project_tasks SET title = ?, description = ?, priority = ?, 
        due_date = ?, assigned_to = ?, updated_at = CURRENT_TIMESTAMP 
        WHERE id = ?`,
-      [title, description, priority, due_date, assigned_to, taskId]
+      [title, description, priority, dueDateValue, assignedToValue, taskId]
     );
 
     const task = await execute(
@@ -272,4 +306,4 @@ export const assignTask = async (req, res) => {
     console.error('Error assigning task:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-};
+}

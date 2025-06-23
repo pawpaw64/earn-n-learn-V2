@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -181,6 +180,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Tasks</h3>
+        {/* Only show Add Task button if user is provider */}
         {isProvider && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -326,8 +326,8 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
         </div>
       )}
 
-      {/* Edit Task Dialog */}
-      {editingTask && (
+      {/* Edit Task Dialog - Only show if user is provider */}
+      {editingTask && isProvider && (
         <Dialog open={!!editingTask} onOpenChange={() => setEditingTask(null)}>
           <DialogContent>
             <DialogHeader>

@@ -39,7 +39,6 @@ export function ProjectActions({ project }: ProjectActionsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   
   // Task creation state
   const [newTask, setNewTask] = useState({
@@ -58,9 +57,9 @@ export function ProjectActions({ project }: ProjectActionsProps) {
     description: ''
   });
 
-  // Chat state
-  const [chatMessage, setChatMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  // Get current user info to determine if they're the provider
+  const currentUserId = 1; // This should come from auth context
+  const isProvider = project.provider_id === currentUserId;
 
   // Fetch project tasks
   const { data: tasks = [] } = useQuery({
@@ -119,21 +118,6 @@ export function ProjectActions({ project }: ProjectActionsProps) {
     setNewResource({ name: '', type: 'link', url: '', description: '' });
   };
 
-  const handleSendMessage = () => {
-    if (!chatMessage.trim()) return;
-    
-    const message = {
-      id: Date.now(),
-      content: chatMessage,
-      sender: 'You',
-      timestamp: new Date().toLocaleTimeString()
-    };
-    
-    setChatMessages(prev => [...prev, message]);
-    setChatMessage('');
-    toast.success('Message sent');
-  };
-
   const getTaskStatusColor = (status: string) => {
     switch (status) {
       case 'completed': return 'secondary';
@@ -157,27 +141,24 @@ export function ProjectActions({ project }: ProjectActionsProps) {
       <h3 className="text-lg font-semibold">Project Actions</h3>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">
-            <FileText className="w-4 h-4 mr-1" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="progress">
-            <BarChart3 className="w-4 h-4 mr-1" />
-            Progress
-          </TabsTrigger>
-          <TabsTrigger value="tasks">
-            <UserPlus className="w-4 h-4 mr-1" />
-            Tasks
-          </TabsTrigger>
-          <TabsTrigger value="resources">
-            <Share2 className="w-4 h-4 mr-1" />
-            Resources
-          </TabsTrigger>
-          <TabsTrigger value="chat">
-            <MessageSquare className="w-4 h-4 mr-1" />
-            Chat
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 ">
+          <TabsTrigger value="overview" className="px-2">
+      <FileText className="w-4 h-4 mr-1" />
+      Overview
+    </TabsTrigger>
+    <TabsTrigger value="progress" className="px-2">
+      <BarChart3 className="w-4 h-4 mr-1" />
+      Progress
+    </TabsTrigger>
+    <TabsTrigger value="tasks" className="px-2">
+      <UserPlus className="w-4 h-4 mr-1" />
+      Tasks
+    </TabsTrigger>
+    <TabsTrigger value="resources" className="px-2">
+      <Share2 className="w-4 h-4 mr-1" />
+      Resources
+    </TabsTrigger>
+          
         </TabsList>
 
         {/* Overview Tab */}
@@ -236,68 +217,71 @@ export function ProjectActions({ project }: ProjectActionsProps) {
         <TabsContent value="tasks" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="font-medium">Project Tasks</h4>
-            <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Task
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Task</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Title</label>
-                    <Input
-                      value={newTask.title}
-                      onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                      placeholder="Task title"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Description</label>
-                    <Textarea
-                      value={newTask.description}
-                      onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                      placeholder="Task description"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+          {/* Only show Add Task button if user is provider */}
+            {isProvider && (
+              <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add Task
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Task</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Priority</label>
-                      <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Due Date</label>
+                      <label className="text-sm font-medium">Title</label>
                       <Input
-                        type="date"
-                        value={newTask.due_date}
-                        onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                        value={newTask.title}
+                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                        placeholder="Task title"
                       />
                     </div>
+                    <div>
+                      <label className="text-sm font-medium">Description</label>
+                      <Textarea
+                        value={newTask.description}
+                        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                        placeholder="Task description"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium">Priority</label>
+                        <Select value={newTask.priority} onValueChange={(value: any) => setNewTask({ ...newTask, priority: value })}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium">Due Date</label>
+                        <Input
+                          type="date"
+                          value={newTask.due_date}
+                          onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleCreateTask}>
+                        Create Task
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTask}>
-                      Create Task
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           {tasks.length === 0 ? (
@@ -439,46 +423,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
           </div>
         </TabsContent>
 
-        {/* Chat Tab */}
-        <TabsContent value="chat" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Team Chat</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="h-48 border rounded p-2 overflow-y-auto space-y-2">
-                {chatMessages.length === 0 ? (
-                  <div className="text-center text-muted-foreground py-8">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>No messages yet</p>
-                    <p className="text-sm">Start a conversation with your team</p>
-                  </div>
-                ) : (
-                  chatMessages.map((message) => (
-                    <div key={message.id} className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">{message.sender}</span>
-                        <span className="text-xs text-muted-foreground">{message.timestamp}</span>
-                      </div>
-                      <p className="text-sm bg-muted p-2 rounded">{message.content}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  value={chatMessage}
-                  onChange={(e) => setChatMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                />
-                <Button onClick={handleSendMessage}>
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+       
       </Tabs>
     </div>
   );
