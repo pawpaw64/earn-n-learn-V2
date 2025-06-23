@@ -1,3 +1,4 @@
+
 import { execute } from "../config/db.js";
 
 class ApplicationModel {
@@ -26,36 +27,39 @@ class ApplicationModel {
     return [];
   }
 
-  // Get accepted applications by job ID
-  static async getAcceptedByJobId(jobId) {
+  // Create new application with additional fields
+  static async create(applicationData) {
+    // Validate input
+    if (!applicationData || typeof applicationData !== "object") {
+      throw new Error("Invalid application data");
+    }
+
+    const { job_id, user_id, cover_letter, phone, resume_url } = applicationData;
+
+    // Validate required fields
+    if (!job_id || !user_id || !cover_letter) {
+      throw new Error("Missing required application fields");
+    }
+
     try {
       const result = await execute(
-        "SELECT * FROM applications WHERE job_id = ? AND status = 'Accepted'",
-        [jobId]
+        "INSERT INTO applications (job_id, user_id, cover_letter, phone, resume_url) VALUES (?, ?, ?, ?, ?)",
+        [job_id, user_id, cover_letter, phone || null, resume_url || null]
       );
-      return this.#handleQueryResult(result);
+
+      // Handle different result formats
+      const insertId = Array.isArray(result)
+        ? result[0]?.insertId || result.insertId
+        : result.insertId;
+
+      return insertId;
     } catch (error) {
-      console.error("ApplicationModel.getAcceptedByJobId() - Error:", error);
+      console.error("ApplicationModel.create() - Error:", error);
       throw error;
     }
   }
 
-  // Get all applications (admin only)
-  static async getAll() {
-    const [rows] = await execute(`
-      SELECT a.*, j.title as job_title, j.type as job_type, 
-      u.name as applicant_name, u.email as applicant_email,
-      p.name as poster_name, p.email as poster_email
-      FROM applications a
-      JOIN jobs j ON a.job_id = j.id
-      JOIN users u ON a.user_id = u.id
-      JOIN users p ON j.user_id = p.id
-      ORDER BY a.created_at DESC
-    `);
-    return rows;
-  }
-
-  // Get application by ID
+  // Get application by ID with all details
   static async getById(id) {
     try {
       const result = await execute(
@@ -89,38 +93,8 @@ class ApplicationModel {
       throw error;
     }
   }
-  // Create new application
-  static async create(applicationData) {
-    // Validate input
-    if (!applicationData || typeof applicationData !== "object") {
-      throw new Error("Invalid application data");
-    }
 
-    const { job_id, user_id, cover_letter } = applicationData;
-
-    // Validate required fields
-    if (!job_id || !user_id || !cover_letter) {
-      throw new Error("Missing required application fields");
-    }
-
-    try {
-      const result = await execute(
-        "INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)",
-        [job_id, user_id, cover_letter]
-      );
-
-      // Handle different result formats
-      const insertId = Array.isArray(result)
-        ? result[0]?.insertId || result.insertId
-        : result.insertId;
-
-      return insertId;
-    } catch (error) {
-      console.error("ApplicationModel.create() - Error:", error);
-      throw error;
-    }
-  }
-  // Get applications by user ID (applicant)
+  // Get applications by user ID (applicant) with additional fields
   static async getByUserId(userId) {
     try {
       const result = await execute(
@@ -136,15 +110,7 @@ class ApplicationModel {
         [userId]
       );
 
-      // Handle different result formats
-      const rows = Array.isArray(result)
-        ? result[0] && Array.isArray(result[0])
-          ? result[0]
-          : result
-        : [];
-
-      // console.debug('ApplicationModel.getByUserId() - Result', { rows });
-      return rows;
+      return this.#handleQueryResult(result);
     } catch (error) {
       console.error("ApplicationModel.getByUserId() - Error", {
         userId,
@@ -155,7 +121,7 @@ class ApplicationModel {
     }
   }
 
-  // In getToUserJobs()
+  // Get applications for user's jobs with additional fields
   static async getToUserJobs(userId) {
     try {
       const result = await execute(
@@ -171,15 +137,7 @@ class ApplicationModel {
         [userId]
       );
 
-      // Handle different result formats
-      const rows = Array.isArray(result)
-        ? result[0] && Array.isArray(result[0])
-          ? result[0]
-          : result
-        : [];
-
-      // console.debug('ApplicationModel.getToUserJobs() - Result',);
-      return rows;
+      return this.#handleQueryResult(result);
     } catch (error) {
       console.error("ApplicationModel.getToUserJobs() - Error", {
         userId,
@@ -190,10 +148,10 @@ class ApplicationModel {
     }
   }
 
-  // Get applications by job ID
+  // Get applications by job ID with full applicant details
   static async getByJobId(jobId) {
     try {
-      const result = `
+      const result = await execute(`
       SELECT 
         a.*, 
         u.name as applicant_name, 
@@ -207,14 +165,9 @@ class ApplicationModel {
       JOIN jobs j ON a.job_id = j.id
       WHERE a.job_id = ?
       ORDER BY a.created_at DESC
-    `;
+    `, [jobId]);
 
-      const rows = Array.isArray(result)
-        ? result[0] && Array.isArray(result[0])
-          ? result[0]
-          : result
-        : [];
-      return rows;
+      return this.#handleQueryResult(result);
     } catch (error) {
       console.error("ApplicationModel.getByJobId() - Error", {
         jobId,
@@ -223,7 +176,9 @@ class ApplicationModel {
       });
       throw error;
     }
-  } // Update application status
+  }
+
+  // Update application status
   static async updateStatus(id, status) {
     try {
       const result = await execute(
@@ -250,11 +205,50 @@ class ApplicationModel {
 
   // Check if user has already applied for a job
   static async checkDuplicate(jobId, userId) {
-    const [rows] = await execute(
-      "SELECT id FROM applications WHERE job_id = ? AND user_id = ?",
-      [jobId, userId]
-    );
-    return rows;
+    try {
+      const result = await execute(
+        "SELECT id FROM applications WHERE job_id = ? AND user_id = ?",
+        [jobId, userId]
+      );
+      return this.#handleQueryResult(result);
+    } catch (error) {
+      console.error("ApplicationModel.checkDuplicate() - Error:", error);
+      throw error;
+    }
+  }
+
+  // Get accepted applications by job ID
+  static async getAcceptedByJobId(jobId) {
+    try {
+      const result = await execute(
+        "SELECT * FROM applications WHERE job_id = ? AND status = 'Accepted'",
+        [jobId]
+      );
+      return this.#handleQueryResult(result);
+    } catch (error) {
+      console.error("ApplicationModel.getAcceptedByJobId() - Error:", error);
+      throw error;
+    }
+  }
+
+  // Get all applications (admin only)
+  static async getAll() {
+    try {
+      const result = await execute(`
+      SELECT a.*, j.title as job_title, j.type as job_type, 
+      u.name as applicant_name, u.email as applicant_email,
+      p.name as poster_name, p.email as poster_email
+      FROM applications a
+      JOIN jobs j ON a.job_id = j.id
+      JOIN users u ON a.user_id = u.id
+      JOIN users p ON j.user_id = p.id
+      ORDER BY a.created_at DESC
+    `);
+      return this.#handleQueryResult(result);
+    } catch (error) {
+      console.error("ApplicationModel.getAll() - Error:", error);
+      throw error;
+    }
   }
   // Update escrow status for an application
   static async updateEscrowStatus(id, status) {
