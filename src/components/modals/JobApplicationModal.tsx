@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { JobType } from "@/types/marketplace";
 import { submitJobApplication } from "@/services/applications";
+import { fetchUserProfile } from "@/services/profile";
 
 interface JobApplicationModalProps {
   job: JobType | null;
@@ -30,20 +31,44 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
   const [coverLetter, setCoverLetter] = useState("");
   const [resume, setResume] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
   // Fetch user profile on modal open
-  React.useEffect(() => {
-    if (isOpen) {
-      // Get user info from local storage or state management
-      const userName = localStorage.getItem('userName') || "";
-      const userEmail = localStorage.getItem('userEmail') || "";
-      
-      setName(userName);
-      setEmail(userEmail);
-      setCoverLetter("");
-      setResume("");
-      setPhone("");
-    }
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      if (isOpen) {
+        setIsLoadingProfile(true);
+        try {
+          const profileData = await fetchUserProfile();
+          if (profileData && profileData.user) {
+            setName(profileData.user.name || "");
+            setEmail(profileData.user.email || "");
+            setPhone(profileData.user.mobile || "");
+          } else {
+            // Fallback to localStorage if profile fetch fails
+            const userName = localStorage.getItem('userName') || "";
+            const userEmail = localStorage.getItem('userEmail') || "";
+            setName(userName);
+            setEmail(userEmail);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // Fallback to localStorage
+          const userName = localStorage.getItem('userName') || "";
+          const userEmail = localStorage.getItem('userEmail') || "";
+          setName(userName);
+          setEmail(userEmail);
+        } finally {
+          setIsLoadingProfile(false);
+        }
+        
+        // Reset form fields
+        setCoverLetter("");
+        setResume("");
+      }
+    };
+
+    loadUserProfile();
   }, [isOpen]);
 
   if (!job) return null;
@@ -56,15 +81,21 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
       return;
     }
     
+    if (!name.trim() || !email.trim()) {
+      toast.error("Name and email are required");
+      return;
+    }
+    
     try {
       setIsSubmitting(true);
       
       const applicationData = {
         job_id: job.id,
-        cover_letter: coverLetter
+        cover_letter: coverLetter,
+        phone: phone || null,
+        resume_url: resume || null
       };
       
-      // Send the application to the backend
       await submitJobApplication(applicationData);
       
       toast.success("Application submitted! The poster will review your application soon.");
@@ -90,10 +121,11 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
               <Label htmlFor="name">Full Name</Label>
               <Input 
                 id="name" 
-                value={name} 
+                value={isLoadingProfile ? "Loading..." : name} 
                 onChange={(e) => setName(e.target.value)} 
                 required 
-                disabled
+                disabled={isLoadingProfile}
+                placeholder="Your full name"
               />
             </div>
             <div className="space-y-2">
@@ -101,10 +133,11 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
               <Input 
                 id="email" 
                 type="email" 
-                value={email} 
+                value={isLoadingProfile ? "Loading..." : email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
-                disabled
+                disabled={isLoadingProfile}
+                placeholder="your.email@example.com"
               />
             </div>
           </div>
@@ -115,6 +148,7 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
               id="phone" 
               value={phone} 
               onChange={(e) => setPhone(e.target.value)}
+              placeholder="Your phone number"
             />
           </div>
           
@@ -149,9 +183,10 @@ const JobApplicationModal = ({ job, isOpen, onOpenChange }: JobApplicationModalP
             <Button 
               type="submit"
               className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isLoadingProfile}
             >
-              <Check className="h-4 w-4" /> Submit Application
+              <Check className="h-4 w-4" /> 
+              {isSubmitting ? "Submitting..." : "Submit Application"}
             </Button>
           </DialogFooter>
         </form>
