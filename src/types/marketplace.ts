@@ -66,6 +66,7 @@ export interface ApplicationType {
   payment?: string;
   deadline?: string;
   location?: string;
+  project_id?: number;
 }
 
 // Contact types

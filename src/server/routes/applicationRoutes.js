@@ -7,7 +7,8 @@ import {
   updateApplicationStatus,
   getUserApplications,
   getJobApplications,
-  getApplicationsByJobId
+  getApplicationsByJobId,
+  updateEscrowStatus
 } from '../controllers/applicationController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -31,5 +32,7 @@ router.get('/user/received', getJobApplications);
 
 // Get applications for a specific job
 router.get('/job/:jobId', getApplicationsByJobId);
+// Add this route
+router.put('/:id/escrow', updateEscrowStatus);
 
 export default router;

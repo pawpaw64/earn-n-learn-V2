@@ -2,55 +2,47 @@
 import { execute } from '../config/db.js';
 
 class ProjectModel {
-  static async createFromApplication(projectData) {
-    try {
-      console.log('Creating project with data:', projectData);
-      
-      // 1. Validate required fields
-      const requiredFields = ['title', 'provider_id', 'client_id', 'source_type', 'source_id'];
-      for (const field of requiredFields) {
-        if (projectData[field] === undefined || projectData[field] === null) {
-          throw new Error(`Missing required field: ${field}`);
-        }
-      }
-
-      // 2. Insert project
-      const result = await execute(
-        `INSERT INTO projects 
-         (title, description, provider_id, client_id, source_type, 
-          source_id, project_type, total_amount, hourly_rate, 
-          status, start_date, expected_end_date)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          projectData.title,
-          projectData.description,
-          projectData.provider_id,
-          projectData.client_id,
-          projectData.source_type,
-          projectData.source_id,
-          projectData.project_type || 'fixed',
-          projectData.total_amount,
-          projectData.hourly_rate,
-          projectData.status || 'active',
-          new Date().toISOString().slice(0, 10),
-          projectData.expected_end_date
-        ]
-      );
-
-      const projectId = result.insertId;
-      console.log('Created project with ID:', projectId);
-
+ static async createFromApplication(projectData) {
+  try {
+    console.log('Creating project with data:', projectData);
     
-      // 4. Get full project details
-      const project = await this.getById(projectId);
-      
-      return project;
-
-    } catch (error) {
-      console.error('[ProjectModel] Creation failed:', error);
-      throw error;
+    // 1. Validate required fields
+    const requiredFields = ['title', 'provider_id', 'client_id', 'source_type', 'source_id'];
+    for (const field of requiredFields) {
+      if (projectData[field] === undefined || projectData[field] === null) {
+        throw new Error(`Missing required field: ${field}`);
+      }
     }
+
+    const result = await execute(
+      `INSERT INTO projects 
+      (title, description, provider_id, client_id, source_type, source_id, project_type, total_amount, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        projectData.title,
+        projectData.description,
+        projectData.provider_id,  // Fixed property name
+        projectData.client_id,    // Fixed property name
+        projectData.source_type,
+        projectData.source_id,
+        projectData.project_type || 'fixed',
+        projectData.total_amount,
+        projectData.status || 'active'
+      ]
+    );
+    
+    const projectId = result.insertId;
+    
+    // Get full project details
+    const project = await this.getById(projectId);
+    
+    return project;
+
+  } catch (error) {
+    console.error('[ProjectModel] Creation failed:', error);
+    throw error;
   }
+}
 
   // static async createFromContact(contactData) {
   // //   try {

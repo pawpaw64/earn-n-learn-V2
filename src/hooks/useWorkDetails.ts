@@ -103,56 +103,40 @@ export const useWorkDetails = ({
       setIsProcessing(false);
       return false;
     }
-  };const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
+  };
+  
+const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<{ success: boolean; projectId?: number }> => {
   try {
     setIsProcessing(true);
     
     if (type === 'job_application') {
-    
-     await updateApplicationStatus(id, newStatus);
-      // Create project when status is accepted
+      await updateApplicationStatus(id, newStatus);
+      
       if (newStatus === 'Accepted') {
         try {
           const project = await createProjectFromApplication(id);
           toast.success('Project created successfully', {
             description: `Project #${project.id} has been created`,
-            action: {
-              label: 'View',
-              onClick: () => navigate(`/projects/${project.id}`)
-            }
-         
           });
-        
+          
+          return { success: true, projectId: project.id };
         } catch (projectError) {
           console.error('Project creation failed:', projectError);
           toast.error('Project creation failed', {
-            description: 'The application was accepted but project creation failed',
-            action: {
-              label: 'Retry',
-              onClick: () => handleStatusChange(id, type, newStatus)
-            }
+            description: 'The application was accepted but project creation failed'
           });
+          return { success: false };
         }
       }
     }
-
-    if (newStatus !== 'Accepted') {
-      toast.success(`Status updated to ${newStatus}`);
-    }
-    
-    if (isDetailsOpen && detailsItem?.id === id) {
-      setIsDetailsOpen(false);
-    }
-    
-    setIsProcessing(false);
+    return { success: true };
   } catch (error) {
-    console.error(`Error updating ${type} status:`, error);
-    toast.error('Failed to update status');
+    console.error('Error updating status:', error);
+    return { success: false };
+  } finally {
     setIsProcessing(false);
-    throw error; // Re-throw to maintain error handling
   }
 };
-
 return {
   handleViewDetails,
   handleEdit,

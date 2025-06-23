@@ -256,6 +256,33 @@ class ApplicationModel {
     );
     return rows;
   }
+  // Update escrow status for an application
+  static async updateEscrowStatus(id, status) {
+    try {
+      const result = await execute(
+        "UPDATE applications SET escrow_status = ? WHERE id = ?",
+        [status, id]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("Error updating escrow status:", error);
+      throw error;
+    }
+  }
+
+  // Update project ID for an application
+  static async updateProjectId(id, projectId) {
+    try {
+      const result = await execute(
+        "UPDATE applications SET project_id = ? WHERE id = ?",
+        [projectId, id]
+      );
+      return result.affectedRows > 0;
+    } catch (error) {
+      console.error("Error updating project ID:", error);
+      throw error;
+    }
+  }
 }
 
 export default ApplicationModel;

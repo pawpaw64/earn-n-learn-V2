@@ -24,19 +24,19 @@ export const createProjectFromApplication = async (req, res) => {
       return res.status(404).json({ message: 'Accepted application not found or you do not have permission to access it.' });
     }
 
-    const application = applicationResult[0];
-
-    const projectData = {
-      title: application.job_title,
-      description: application.job_description,
-      provider_id: application.user_id, // applicant is provider
-      client_id: application.client_id, // job owner is client
-      source_type: 'job',
-      source_id: application.job_id,
-      project_type: 'fixed',
-      total_amount: application.job_payment,
-      status: 'active'
-    };
+  const application = applicationResult[0];
+  console.log('Creating project from application:', { applicationId, userId, application_user_id: application.user_id });
+  const projectData = {
+    title: application.job_title,
+    description: application.job_description,
+    provider_id: application.user_id, // applicant is provider
+    client_id: application.client_id, // job owner is client
+    source_type: 'job',
+    source_id: application.job_id,
+    project_type: 'fixed',
+    total_amount: application.job_payment,
+    status: 'active'
+  };
 
     const project = await ProjectModel.createFromApplication(projectData);
     res.status(201).json(project);
