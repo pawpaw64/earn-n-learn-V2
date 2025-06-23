@@ -90,13 +90,13 @@ class ApplicationModel {
     }
   }
   // Create new application
-  static async create(applicationData) {
+ static async create(applicationData) {
     // Validate input
     if (!applicationData || typeof applicationData !== "object") {
       throw new Error("Invalid application data");
     }
 
-    const { job_id, user_id, cover_letter } = applicationData;
+    const { job_id, user_id, cover_letter, phone, resume_url } = applicationData;
 
     // Validate required fields
     if (!job_id || !user_id || !cover_letter) {
@@ -105,8 +105,8 @@ class ApplicationModel {
 
     try {
       const result = await execute(
-        "INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)",
-        [job_id, user_id, cover_letter]
+        "INSERT INTO applications (job_id, user_id, cover_letter, phone, resume_url) VALUES (?, ?, ?, ?, ?)",
+        [job_id, user_id, cover_letter, phone || null, resume_url || null]
       );
 
       // Handle different result formats

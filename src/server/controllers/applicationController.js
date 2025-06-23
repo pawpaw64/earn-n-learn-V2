@@ -42,76 +42,88 @@ export const getApplicationById = async (req, res) => {
 };
 
 // Submit job application
-export const submitApplication = async (req, res) => {
-  const { job_id, cover_letter } = req.body;
 
-  if (!job_id) {
-    return res.status(400).json({ message: "Job ID is required" });
-  }
-
+// Submit application
+export async function submitApplication(req, res) {
+  console.log('Submitting application... [applicationController.js.submitApplication]');
+  
   try {
+    const { job_id, cover_letter, phone, resume_url } = req.body;
+    const user_id = req.user.id;
+
+    // Validate required fields
+    if (!job_id || !cover_letter) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Job ID and cover letter are required' 
+      });
+    }
     // Check if job exists
     const job = await JobModel.getById(job_id);
     if (!job) {
-      return res.status(404).json({ message: "Job not found" });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Job not found' 
+      });
     }
 
-    // Check if job poster is applying to their own job
-    if (job.user_id === req.user.id) {
-      return res.status(400).json({ message: "Cannot apply to your own job" });
+    // Check if user is trying to apply to their own job
+    if (job.user_id === user_id) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'You cannot apply to your own job' 
+      });
     }
 
-    // Check if user already applied
-    const hasDuplicate = await ApplicationModel.checkDuplicate(
+    // Check for duplicate applications
+    const existingApplications = await ApplicationModel.checkDuplicate(job_id, user_id);
+    if (existingApplications && existingApplications.length > 0) {
+      return res.status(409).json({ 
+        success: false,
+        message: 'You have already applied for this job' 
+      });
+
+
+    }
+
+    // Create application with additional fields
+    const applicationData = {
       job_id,
-      req.user.id
-    );
-    if (hasDuplicate) {
-      return res
-        .status(400)
-        .json({ message: "You have already applied to this job" });
+      user_id,
+      cover_letter,
+      phone: phone || null,
+      resume_url: resume_url || null
+    };
+
+    const applicationId = await ApplicationModel.create(applicationData);
+
+    if (!applicationId) {
+      throw new Error('Failed to create application');
     }
 
-    // Create application
-    const applicationId = await ApplicationModel.create({
-      job_id,
-      user_id: req.user.id,
-      cover_letter: cover_letter || "",
-    });
-
-    // Get job poster and applicant details
-    const jobPoster = await UserModel.getById(job.user_id);
-    const applicant = await UserModel.getById(req.user.id);
-
-    // Create notification for job poster
-    // await NotificationModel.create({
-    //   user_id: job.user_id,
-    //   title: 'New Job Application',
-    //   message: `${applicant.name} has applied to your job posting: ${job.title}`,
-    //   type: 'application',
-    //   reference_id: applicationId,
-    //   reference_type: 'job_application'
-    // });
-
-    // // Create notification for applicant
-    // await NotificationModel.create({
-    //   user_id: req.user.id,
-    //   title: 'Application Submitted',
-    //   message: `Your application to ${job.title} has been submitted to ${jobPoster.name}`,
-    //   type: 'application',
-    //   reference_id: applicationId,
-    //   reference_type: 'job_application'
-    // });
-
-    res.status(201).json({
-      message: "Application submitted successfully",
+    console.log('Application submitted successfully:', applicationId);
+    
+    res.status(201).json({ 
+      success: true,
       applicationId,
+      message: 'Application submitted successfully' 
     });
+
   } catch (error) {
-    console.error("Submit application error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error('Submit application error:', {
+      error: error.message,
+      body: req.body,
+      userId: req.user?.id,
+      stack: error.stack
+    });
+    
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to submit application',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-};
+}
 
 // Get applications by job ID
 export const getApplicationsByJobId = async (req, res) => {
