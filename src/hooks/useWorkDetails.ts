@@ -36,21 +36,21 @@ export const useWorkDetails = ({
   detailsItem,
 }: UseWorkDetailsProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  
+
   const handleViewDetails = async (item: any, type: string): Promise<void> => {
     // For certain types, we need to fetch more details
     let detailItem = item;
-    
+
     try {
       setIsProcessing(true);
-     
+
       if (type === 'application' && item.id) {
         const details = await getApplicationDetails(item.id);
         if (details) {
           detailItem = { ...item, ...details };
         }
       }
-      
+
       else if (type === 'contact') {
         if (item.skill_id || item.skill_name) {
           const details = await getSkillContactDetails(item.id);
@@ -64,7 +64,7 @@ export const useWorkDetails = ({
           }
         }
       }
-      
+
       setDetailsItem(detailItem);
       setDetailsType(type);
       setIsDetailsOpen(true);
@@ -85,7 +85,7 @@ export const useWorkDetails = ({
   const handleDelete = async (id: number, type: string): Promise<boolean> => {
     try {
       setIsProcessing(true);
-      
+
       if (type === 'job') {
         await deleteJob(id);
       } else if (type === 'skill') {
@@ -93,7 +93,7 @@ export const useWorkDetails = ({
       } else if (type === 'material') {
         await deleteMaterial(id);
       }
-      
+
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
       setIsProcessing(false);
       return true;
@@ -103,53 +103,58 @@ export const useWorkDetails = ({
       setIsProcessing(false);
       return false;
     }
-  };const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
+  };
+  
+const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<{ success: boolean; projectId?: number }> => {
   try {
     setIsProcessing(true);
-    
+
     if (type === 'job_application') {
-    
-     await updateApplicationStatus(id, newStatus);
-      // Create project when status is accepted
+      await updateApplicationStatus(id, newStatus);
+      
+
       if (newStatus === 'Accepted') {
         try {
           const project = await createProjectFromApplication(id);
           toast.success('Project created successfully', {
             description: `Project #${project.id} has been created`,
-            action: {
-              label: 'View',
-              onClick: () => navigate(`/projects/${project.id}`)
-            }
-         
+
+
+
+
+
           });
-        
+          
+          return { success: true, projectId: project.id };
         } catch (projectError) {
           console.error('Project creation failed:', projectError);
           toast.error('Project creation failed', {
-            description: 'The application was accepted but project creation failed',
-            action: {
-              label: 'Retry',
-              onClick: () => handleStatusChange(id, type, newStatus)
-            }
+            description: 'The application was accepted but project creation failed'
+
+
+
+
           });
+          return { success: false };
         }
       }
     }
+    return { success: true };
 
-    if (newStatus !== 'Accepted') {
-      toast.success(`Status updated to ${newStatus}`);
-    }
-    
-    if (isDetailsOpen && detailsItem?.id === id) {
-      setIsDetailsOpen(false);
-    }
-    
-    setIsProcessing(false);
+
+
+
+
+
+
+
+
   } catch (error) {
-    console.error(`Error updating ${type} status:`, error);
-    toast.error('Failed to update status');
+    console.error('Error updating status:', error);
+    return { success: false };
+  } finally {
     setIsProcessing(false);
-    throw error; // Re-throw to maintain error handling
+
   }
 };
 

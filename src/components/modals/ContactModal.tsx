@@ -181,47 +181,6 @@ const ContactModal = ({
     onOpenChange(false);
   };
 
-  if (messageSent) {
-    return (
-      <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader className="text-center">
-            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <DialogTitle className="text-xl font-bold text-green-600">
-              Message Sent Successfully!
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">
-              Your message about <strong>{itemName}</strong> has been sent to{" "}
-              <strong>{recipientName}</strong>.
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              Opening chat window...
-            </p>
-          </div>
-
-          <DialogFooter className="flex items-center justify-center gap-3 pt-4">
-            <Button variant="outline" onClick={handleClose}>
-              Close
-            </Button>
-
-            {recipientId && (
-              <Button
-                onClick={handleOpenMessages}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Open Chat Now
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

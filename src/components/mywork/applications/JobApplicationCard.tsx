@@ -75,7 +75,7 @@ export function JobApplicationCard({ app, onViewDetails, onStatusChange }: JobAp
             <Eye className="mr-1 h-4 w-4" /> View Details
           </Button>
           
-          {app.status === 'Applied' && (
+          {app.status === 'Pending' && (
             <Button 
               className="bg-red-600 hover:bg-red-700 text-white w-full xs:w-auto flex items-center gap-1"
               size="sm"

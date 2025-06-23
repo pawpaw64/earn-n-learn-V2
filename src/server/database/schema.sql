@@ -82,11 +82,13 @@ CREATE TABLE IF NOT EXISTS applications (
   phone VARCHAR(20),
   resume_url VARCHAR(500),
   status VARCHAR(50) DEFAULT 'Pending',
+  escrow_status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
 
 -- Skills marketplace table (updated with image_url)
 CREATE TABLE IF NOT EXISTS skill_marketplace (

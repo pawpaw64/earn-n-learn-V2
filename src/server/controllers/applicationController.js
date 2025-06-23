@@ -163,7 +163,7 @@ export const updateApplicationStatus = async (req, res) => {
   }
 
   const validStatuses = [
-    "Applied",
+    "Pending",
     "Reviewing",
     "Accepted",
     "Rejected",
@@ -289,6 +289,22 @@ export const getJobApplications = async (req, res) => {
     res.json(applications);
   } catch (error) {
     console.error("Get job applications error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updateEscrowStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const updated = await ApplicationModel.updateEscrowStatus(id, status);
+    if (!updated) {
+      return res.status(400).json({ message: "Failed to update escrow status" });
+    }
+    res.json({ message: "Escrow status updated successfully" });
+  } catch (error) {
+    console.error("Update escrow status error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

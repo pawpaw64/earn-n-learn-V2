@@ -126,3 +126,14 @@ export const fetchJobApplications = async () => {
     return [];
   }
 };
+
+export const updateEscrowStatus = async (applicationId: number, status: string) => {
+  try {
+    setAuthToken(localStorage.getItem('token'));
+    const response = await axios.put(`${API_URL}/applications/${applicationId}/escrow`, { status });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating escrow status:", error);
+    throw error;
+  }
+};
