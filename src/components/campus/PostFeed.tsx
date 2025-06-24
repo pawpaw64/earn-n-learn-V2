@@ -97,10 +97,14 @@ export const PostFeed = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Campus Feed</h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadPosts} disabled={isLoading}>
+          <Button variant="outline" className="h-10 " size="sm" onClick={loadPosts} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </Button>
-          <Button onClick={() => setShowEditor(!showEditor)}>
+         Refresh </Button>
+          <Button
+            variant="outline"
+            className="bg-emerald-600 text-white"
+            onClick={() => setShowEditor(!showEditor)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Post
           </Button>

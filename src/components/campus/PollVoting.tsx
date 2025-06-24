@@ -43,7 +43,7 @@ export function PollVoting({
   return (
     <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
       {/* Question Header */}
-      <div className="bg-black text-white px-4 py-3 text-center">
+      <div className="bg-emerald-600 text-white px-4 py-3 text-center">
         <h3 className="font-semibold text-sm uppercase tracking-wide">{question} 👆</h3>
       </div>
 
@@ -76,7 +76,7 @@ export function PollVoting({
             <Button
               onClick={handleVote}
               disabled={!selectedOption}
-              className="w-full bg-black hover:bg-gray-800 disabled:bg-gray-300 text-white"
+              className="w-full bg-emerald-600 hover:bg-gray-800 disabled:bg-gray-300 text-white"
             >
               <Vote className="h-4 w-4 mr-2" />
               Vote
@@ -102,7 +102,7 @@ export function PollVoting({
                     </div>
                     <div
                       className={`absolute left-0 top-0 h-full transition-all duration-500 ${
-                        isUserChoice ? 'bg-black' : 'bg-gray-300'
+                        isUserChoice ? 'bg-emerald-900' : 'bg-gray-300'
                       }`}
                       style={{ width: `${percentage}%` }}
                     />

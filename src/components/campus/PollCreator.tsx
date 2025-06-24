@@ -46,7 +46,7 @@ export function PollCreator({ onCreatePoll, onCancel }: PollCreatorProps) {
 
   return (
     <Card className="w-full max-w-md mx-auto bg-white border border-gray-200">
-      <CardHeader className="bg-black text-white rounded-t-lg">
+      <CardHeader className="bg-emerald-600 text-white rounded-t-lg">
         <CardTitle className="text-lg text-center">Create Poll</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4 p-6">
@@ -102,7 +102,7 @@ export function PollCreator({ onCreatePoll, onCancel }: PollCreatorProps) {
           <Button
             onClick={handleSubmit}
             disabled={!isValid}
-            className="flex-1 bg-black hover:bg-gray-800 disabled:bg-gray-400 text-white"
+            className="flex-1 bg-emerald-600 hover:bg-gray-800 disabled:bg-gray-400 text-white"
           >
             Create Poll
           </Button>

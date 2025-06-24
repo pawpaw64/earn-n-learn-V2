@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getDirectMessages, getGroupMessages, sendMessage, sendGroupMessage } from '@/services/messages';
@@ -11,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { MessageBubble } from './MessageBubble';
 
 interface ChatWindowProps {
   chatId: number;
@@ -272,83 +272,13 @@ export function ChatWindow({ chatId, chatType, chatName, chatAvatar, onLeaveChat
             </div>
           ) : (
             <>
-              {messages.map((message: any, index: number) => {
-                const isMine = isMyMessage(message.sender_id);
-                
-                return (
-                  <div
-                    key={message.id}
-                    className={`flex gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {!isMine && (
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarImage src={message.sender_avatar} />
-                        <AvatarFallback>{message.sender_name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    )}
-                    
-                    <div className={`max-w-[70%] ${isMine ? 'order-first' : ''}`}>
-                      {!isMine && (
-                        <p className="text-xs text-gray-500 mb-1 px-1">
-                          {message.sender_name}
-                        </p>
-                      )}
-                      
-                      <div
-                        className={`rounded-lg px-3 py-2 ${
-                          isMine
-                            ? 'bg-blue-500 text-white ml-auto'
-                            : 'bg-white text-gray-900 border'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        {message.has_attachment && message.attachment_url && (
-                          <div className="mt-2">
-                            {message.attachment_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                              <img 
-                                src={message.attachment_url} 
-                                alt="Attachment" 
-                                className="max-w-full max-h-64 rounded-md cursor-pointer"
-                                onClick={() => window.open(message.attachment_url, '_blank')}
-                              />
-                            ) : message.attachment_url.match(/\.(mp4|webm|ogg)$/i) ? (
-                              <video 
-                                src={message.attachment_url} 
-                                controls
-                                className="max-w-full max-h-64 rounded-md"
-                              />
-                            ) : (
-                              <a 
-                                href={message.attachment_url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 underline"
-                              >
-                                <File className="h-4 w-4" />
-                                View Attachment
-                              </a>
-                            )}
-                          </div>
-                        )}
-                        <p
-                          className={`text-xs mt-1 ${
-                            isMine ? 'text-blue-100' : 'text-gray-500'
-                          }`}
-                        >
-                          {formatTime(message.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {isMine && (
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarImage src={message.sender_avatar} />
-                        <AvatarFallback>{message.sender_name?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                );
-              })}
+              {messages.map((message: any) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isOwnMessage={message.sender_id === currentUserId}
+                />
+              ))}
               <div ref={messagesEndRef} />
             </>
           )}

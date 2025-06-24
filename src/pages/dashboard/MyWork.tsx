@@ -36,7 +36,8 @@ export default function MyWork() {
   };
 
   return (
-    <div className="space-y-6">
+       <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
+
       <h1 className="text-3xl font-bold">My Work</h1>
       <Tabs defaultValue="applications" className="w-full">
         <TabsList className="mb-6 w-full flex gap-2">
@@ -63,17 +64,7 @@ export default function MyWork() {
             </svg>
             My Works
           </TabsTrigger>
-          <TabsTrigger 
-            value="invoices" 
-            className="flex-1 flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-              <line x1="3" y1="9" x2="21" y2="9"/>
-              <line x1="9" y1="21" x2="9" y2="9"/>
-            </svg>
-            Invoices
-          </TabsTrigger>
+         
         </TabsList>
 
         {/* Projects Tab Content */}
@@ -94,7 +85,6 @@ export default function MyWork() {
           />
         </TabsContent>
 
-        {/* Invoices Tab Content */}
         <TabsContent value="invoices">
           <InvoicesTab onViewDetails={handleViewDetails} />
         </TabsContent>

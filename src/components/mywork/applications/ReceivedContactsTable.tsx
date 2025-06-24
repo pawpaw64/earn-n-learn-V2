@@ -177,7 +177,7 @@ This conversation started from a ${type} contact inquiry.`;
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-white p-6 rounded-sm shadow-md">
       {Object.values(itemGroups).map((group: any) => (
         <div key={group.itemId} className="border rounded-lg p-4">
           <div className="flex justify-between items-center mb-4">

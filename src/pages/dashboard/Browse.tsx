@@ -26,11 +26,11 @@ export default function Browse() {
   } = useBrowseData();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
       <h1 className="text-3xl font-bold">Campus Marketplace</h1>
       
       <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-6  text-black rounded-lg">
           <TabsTrigger value="explore">Explore Opportunities</TabsTrigger>
           <TabsTrigger value="post">Post Opportunities</TabsTrigger>
         </TabsList>

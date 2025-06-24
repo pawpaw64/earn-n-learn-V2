@@ -44,17 +44,18 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
   // Section color classes
   const sectionClasses = {
     jobs: {
-      bg: 'bg-blue-50/30',
+      bg: 'bg-yellow-50/60',
+      border: 'border-yellow-200',
+      
+      text: 'text-yellow-800'
+    },
+    skills: {
+      bg: 'bg-blue-50/90',
       border: 'border-blue-200',
       text: 'text-blue-800'
     },
-    skills: {
-      bg: 'bg-green-50/30',
-      border: 'border-green-200',
-      text: 'text-green-800'
-    },
     materials: {
-      bg: 'bg-purple-50/30',
+      bg: 'bg-purple-50/90',
       border: 'border-purple-200',
       text: 'text-purple-800'
     }
@@ -115,7 +116,7 @@ const ListingsSection: React.FC<ListingsSectionProps> = ({
 
   return (
     <>
-      <div className="space-y-6">
+    <div className="space-y-6 ">
         {/* Jobs Section */}
         <div className={`rounded-lg p-4 ${sectionClasses.jobs.bg} ${sectionClasses.jobs.border} border`}>
           <h2 className={`text-xl font-semibold mb-4 ${sectionClasses.jobs.text}`}>Jobs</h2>

@@ -77,7 +77,7 @@ export function JobApplicationCard({ app, onViewDetails, onStatusChange }: JobAp
           
           {app.status === 'Pending' && (
             <Button 
-              className="bg-red-600 hover:bg-red-700 text-white w-full xs:w-auto flex items-center gap-1"
+              className="bg-emerald-600 hover:bg-red-700 text-white w-full xs:w-auto flex items-center gap-1"
               size="sm"
               onClick={handleWithdraw}
             >

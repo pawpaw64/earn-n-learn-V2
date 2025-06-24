@@ -36,7 +36,7 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
   }, [setActivePostTab]);
 
   return (
-    <Card className="border-none shadow-none">
+    <Card className="w-full max-w-3xl mx-auto bg-white border border-gray-200 shadow-md">
       <CardHeader>
         <CardTitle>Post a Listing</CardTitle>
       </CardHeader>

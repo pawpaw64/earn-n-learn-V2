@@ -102,14 +102,14 @@ const formatAmount = (amount?: number | string, hourlyRate?: number | string) =>
             <span className="capitalize">{project.project_type}</span>
           </div>
         </div>
-
+{/* 
         <div className="space-y-2">
           <div className="flex justify-between items-center text-sm">
             <span className="text-muted-foreground">Progress</span>
             <span className="font-medium">{Math.round(getProgressPercentage())}% Complete</span>
           </div>
           <Progress value={getProgressPercentage()} className="h-2" />
-        </div>
+        </div> */}
 
         {project.milestones && project.milestones.length > 0 && (
           <div className="space-y-1">

@@ -1,15 +1,46 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Calendar, DollarSign, User, Clock, Target } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getProjectTasks, updateTaskStatus } from "@/services/projectTasks";
+import { toast } from "sonner";
 
 interface ProjectDetailsProps {
   item: any;
 }
 
 export function ProjectDetails({ item }: ProjectDetailsProps) {
-  if (!item) return null;
+  const queryClient = useQueryClient();
+  
+  // Fetch project tasks with user role information
+  const { data: tasksData } = useQuery({
+    queryKey: ['projectTasks', item.id],
+    queryFn: () => getProjectTasks(item.id),
+    enabled: !!item.id
+  });
+
+  const tasks = tasksData?.tasks || [];
+  const userRole = tasksData?.userRole || 'client';
+  const currentUserId = tasksData?.currentUserId || 0;
+  const isProvider = userRole === 'provider';
+
+  // Update task status mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: number; status: string }) => 
+      updateTaskStatus(taskId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTasks', item.id] });
+      toast.success('Task updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update task');
+    }
+  });
+
+  const handleUpdateTaskStatus = (taskId: number, status: string) => {
+    updateTaskMutation.mutate({ taskId, status });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -26,10 +57,22 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     }
   };
 
-  const getProgressPercentage = () => {
-    if (!item.milestones || item.milestones.length === 0) return 0;
-    const completedMilestones = item.milestones.filter((m: any) => m.status === 'completed' || m.status === 'approved').length;
-    return (completedMilestones / item.milestones.length) * 100;
+  const getTaskStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'secondary';
+      case 'in_progress': return 'default';
+      case 'pending': return 'outline';
+      default: return 'outline';
+    }
+  };
+
+  const getTaskPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'destructive';
+      case 'medium': return 'default';
+      case 'low': return 'outline';
+      default: return 'outline';
+    }
   };
 
   const formatDate = (dateString?: string) => {
@@ -37,8 +80,7 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     return new Date(dateString).toLocaleDateString();
   };
 
- const formatAmount = (amount?: number | string, hourlyRate?: number | string) => {
-    // Convert string numbers to numbers if needed
+  const formatAmount = (amount?: number | string, hourlyRate?: number | string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     const numHourlyRate = typeof hourlyRate === 'string' ? parseFloat(hourlyRate) : hourlyRate;
 
@@ -51,6 +93,29 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     return 'Not specified';
   };
 
+  // Calculate progress based on both milestones and tasks
+  const getMilestoneProgressPercentage = () => {
+    if (!item.milestones || item.milestones.length === 0) return 0;
+    const completedMilestones = item.milestones.filter((m: any) => m.status === 'completed' || m.status === 'approved').length;
+    return (completedMilestones / item.milestones.length) * 100;
+  };
+
+  const getTaskProgressPercentage = () => {
+    if (tasks.length === 0) return 0;
+    const completedTasks = tasks.filter((t: any) => t.status === 'completed').length;
+    return (completedTasks / tasks.length) * 100;
+  };
+
+  const getOverallProgress = () => {
+    if (item.milestones && item.milestones.length > 0 && tasks.length > 0) {
+      return (getMilestoneProgressPercentage() + getTaskProgressPercentage()) / 2;
+    } else if (item.milestones && item.milestones.length > 0) {
+      return getMilestoneProgressPercentage();
+    } else if (tasks.length > 0) {
+      return getTaskProgressPercentage();
+    }
+    return 0;
+  };
 
   const collaboratorName = item.provider_id === parseInt(localStorage.getItem('userId') || '0') 
     ? item.client_name 
@@ -93,12 +158,34 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between items-center text-sm">
-          <span className="font-medium">Overall Progress</span>
-          <span>{Math.round(getProgressPercentage())}% Complete</span>
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="font-medium">Overall Progress</span>
+            <span>{Math.round(getOverallProgress())}% Complete</span>
+          </div>
+          <Progress value={getOverallProgress()} className="h-2" />
         </div>
-        <Progress value={getProgressPercentage()} className="h-2" />
+
+        {item.milestones && item.milestones.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">Milestone Progress</span>
+              <span>{Math.round(getMilestoneProgressPercentage())}% Complete</span>
+            </div>
+            <Progress value={getMilestoneProgressPercentage()} className="h-2" />
+          </div>
+        )}
+
+        {/* {tasks.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-sm">
+              <span className="font-medium">Task Progress</span>
+              <span>{Math.round(getTaskProgressPercentage())}% Complete</span>
+            </div>
+            <Progress value={getTaskProgressPercentage()} className="h-2" />
+          </div>
+        )} */}
       </div>
 
       {item.milestones && item.milestones.length > 0 && (
@@ -133,6 +220,65 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
           </div>
         </div>
       )}
+
+      {/* {tasks.length > 0 && (
+        // <div className="space-y-4">
+        //   <h4 className="font-medium flex items-center gap-2">
+        //     <Target className="h-4 w-4" />
+        //     Tasks
+        //   </h4> */}
+          {/* <div className="space-y-3">
+            {tasks.map((task: any) => (
+              <div key={task.id} className="border rounded-lg p-3">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h5 className="font-medium">{task.title}</h5>
+                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant={getTaskStatusColor(task.status)}>
+                      {task.status.replace('_', ' ')}
+                    </Badge>
+                    <Badge variant={getTaskPriorityColor(task.priority)}>
+                      {task.priority}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  {task.due_date && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Clock className="w-3 h-3" />
+                      {new Date(task.due_date).toLocaleDateString()}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    {task.status !== 'completed' && (
+                      <>
+                        {task.status === 'pending' && (
+                          <button 
+                            className="text-xs px-2 py-1 border rounded"
+                            onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}
+                          >
+                            Start
+                          </button>
+                        )}
+                        {task.status === 'in_progress' && (
+                          <button 
+                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded"
+                            onClick={() => handleUpdateTaskStatus(task.id, 'completed')}
+                          >
+                            Complete
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div> */}
+        {/* </div> */}
+      
     </div>
   );
 }

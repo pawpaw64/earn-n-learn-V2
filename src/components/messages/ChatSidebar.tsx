@@ -42,17 +42,17 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
   });
   
   return (
-    <div className="w-full md:w-80 border-r flex flex-col h-full">
-      <div className="p-4 border-b flex-shrink-0">
-        <div className="relative">
+    <div className="w-full md:w-80 border-r flex flex-col h-full ">
+      <div className="flex items-center justify-between p-4">
+        {/* <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
+          <Inpu
             placeholder="Search messages..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
+        </div> */}
       </div>
       
       <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">

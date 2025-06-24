@@ -184,7 +184,7 @@ export function PostEditor({ onSubmit, onCancel }: PostEditorProps) {
           <Button onClick={onCancel} variant="outline" className="flex-1">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!isValid} className="flex-1">
+          <Button onClick={handleSubmit} disabled={!isValid} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white">
             {postType === 'poll' ? (
               <>
                 <Vote className="h-4 w-4 mr-2" />
