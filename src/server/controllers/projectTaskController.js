@@ -1,4 +1,3 @@
-
 import { execute } from '../config/db.js';
 
 // Get all tasks for a project
@@ -7,16 +6,31 @@ export const getProjectTasks = async (req, res) => {
     const { projectId } = req.params;
     const userId = req.user.id;
 
-    // Check project access
+     console.log('=== Getting tasks for project ===');
+    console.log('Project ID:', projectId);
+    console.log('User ID:', userId);
+
+    // Check project access and get user role
     const projectAccess = await execute(
-      'SELECT id FROM projects WHERE id = ? AND (provider_id = ? OR client_id = ?)',
+      'SELECT id, provider_id, client_id FROM projects WHERE id = ? AND (provider_id = ? OR client_id = ?)',
       [projectId, userId, userId]
     );
 
     if (!projectAccess || projectAccess.length === 0) {
+            console.log('Access denied - user not found in project');
+
       return res.status(403).json({ message: 'Access denied to this project' });
     }
 
+    const project = projectAccess[0];
+    const userRole = project.provider_id === userId ? 'provider' : 'client';
+ console.log('Project details:', {
+      projectId: project.id,
+      providerId: project.provider_id,
+      clientId: project.client_id,
+      currentUserId: userId,
+      determinedRole: userRole
+    });
     const tasks = await execute(
       `SELECT pt.*, 
               creator.name as creator_name,
@@ -28,8 +42,17 @@ export const getProjectTasks = async (req, res) => {
        ORDER BY pt.created_at DESC`,
       [projectId]
     );
+    console.log('Tasks found:', tasks.length);
 
-    res.json(tasks);
+    // Include user role information in response
+   const response = {
+      tasks: tasks,
+      userRole: userRole,
+      currentUserId: userId
+    };
+    
+    console.log('Response being sent:', response);
+    res.json(response);
   } catch (error) {
     console.error('Error fetching project tasks:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

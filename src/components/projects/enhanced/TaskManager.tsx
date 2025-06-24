@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,12 +37,18 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
     due_date: ''
   });
 
-  // Fetch project tasks
-  const { data: tasks = [], isLoading } = useQuery({
+  // Fetch project tasks with user role information
+  const { data: tasksData, isLoading } = useQuery({
     queryKey: ['projectTasks', project.id],
     queryFn: () => getProjectTasks(project.id),
     enabled: !!project.id
   });
+
+  const tasks = tasksData?.tasks || [];
+  const userRole = tasksData?.userRole || 'client';
+  const actualIsProvider = userRole === 'provider';
+
+  console.log('TaskManager - User role:', userRole, 'Is provider (from prop):', isProvider, 'Actual is provider:', actualIsProvider);
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -180,8 +187,8 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Tasks</h3>
-        {/* Only show Add Task button if user is provider */}
-        {isProvider && (
+        {/* Show Add Task button if user is provider based on backend response */}
+        {actualIsProvider && (
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
@@ -253,7 +260,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
           <div className="space-y-2">
             <div className="text-4xl">📋</div>
             <p>No tasks yet</p>
-            {isProvider && <p className="text-sm">Create tasks to organize your project work</p>}
+            {actualIsProvider && <p className="text-sm">Create tasks to organize your project work</p>}
           </div>
         </div>
       ) : (
@@ -268,7 +275,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
                       <p className="text-sm text-muted-foreground">{task.description}</p>
                     )}
                   </div>
-                  {isProvider && (
+                  {actualIsProvider && (
                     <div className="flex gap-1">
                       <Button variant="ghost" size="sm" onClick={() => setEditingTask(task)}>
                         <Edit className="w-4 h-4" />
@@ -327,7 +334,7 @@ export function TaskManager({ project, isProvider, onTaskUpdate }: TaskManagerPr
       )}
 
       {/* Edit Task Dialog - Only show if user is provider */}
-      {editingTask && isProvider && (
+      {editingTask && actualIsProvider && (
         <Dialog open={!!editingTask} onOpenChange={() => setEditingTask(null)}>
           <DialogContent>
             <DialogHeader>

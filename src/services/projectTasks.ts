@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { setAuthToken } from './auth';
 
@@ -21,11 +20,37 @@ export interface ProjectTask {
   updated_at: string;
 }
 
-export const getProjectTasks = async (projectId: number): Promise<ProjectTask[]> => {
+export interface ProjectTasksResponse {
+  tasks: ProjectTask[];
+  userRole: 'provider' | 'client';
+  currentUserId: number;
+}
+
+export const getProjectTasks = async (projectId: number): Promise<ProjectTasksResponse> => {
   try {
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.get(`${API_URL}/projects/${projectId}/tasks`);
-    return response.data || [];
+    
+    console.log('Task API Response:', response.data);
+    
+    // Handle both old and new response formats for backward compatibility
+    if (Array.isArray(response.data)) {
+      // Old format - just return tasks array with default values
+      return {
+        tasks: response.data,
+        userRole: 'client',
+        currentUserId: 0
+      };
+    } else {
+      // New format with user role information
+      const result = {
+        tasks: response.data.tasks || [],
+        userRole: response.data.userRole || 'client',
+        currentUserId: response.data.currentUserId || 0
+      };
+      console.log('Parsed task data:', result);
+      return result;
+    }
   } catch (error) {
     console.error('Error fetching project tasks:', error);
     throw error;

@@ -57,16 +57,19 @@ export function ProjectActions({ project }: ProjectActionsProps) {
     description: ''
   });
 
-  // Get current user info to determine if they're the provider
-  const currentUserId = 1; // This should come from auth context
-  const isProvider = project.provider_id === currentUserId;
-
-  // Fetch project tasks
-  const { data: tasks = [] } = useQuery({
+  // Fetch project tasks with user role information
+  const { data: tasksData } = useQuery({
     queryKey: ['projectTasks', project.id],
     queryFn: () => getProjectTasks(project.id),
     enabled: !!project.id
   });
+
+  const tasks = tasksData?.tasks || [];
+  const userRole = tasksData?.userRole || 'client';
+  const currentUserId = tasksData?.currentUserId || 0;
+  const isProvider = userRole === 'provider';
+
+  console.log('ProjectActions - User role:', userRole, 'Is provider:', isProvider, 'Current user ID:', currentUserId);
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -182,8 +185,8 @@ export function ProjectActions({ project }: ProjectActionsProps) {
                   <p className="text-sm text-muted-foreground">Phase {project.current_phase}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Team Members</label>
-                  <p className="text-sm text-muted-foreground">2 members</p>
+                  <label className="text-sm font-medium">Your Role</label>
+                  <p className="text-sm text-muted-foreground capitalize">{userRole}</p>
                 </div>
               </div>
             </CardContent>
@@ -217,7 +220,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
         <TabsContent value="tasks" className="space-y-4">
           <div className="flex justify-between items-center">
             <h4 className="font-medium">Project Tasks</h4>
-          {/* Only show Add Task button if user is provider */}
+          {/* Show Add Task button if user is provider */}
             {isProvider && (
               <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
                 <DialogTrigger asChild>
@@ -289,7 +292,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
               <div className="space-y-2">
                 <div className="text-4xl">📋</div>
                 <p>No tasks yet</p>
-                <p className="text-sm">Create tasks to organize your project work</p>
+                {isProvider && <p className="text-sm">Create tasks to organize your project work</p>}
               </div>
             </div>
           ) : (
