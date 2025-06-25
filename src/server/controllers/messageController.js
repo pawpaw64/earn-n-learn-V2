@@ -37,11 +37,13 @@ export const getRecentChats = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const { receiverId, content, hasAttachment, attachmentUrl } = req.body;
-       console.log('sendMessage controller - user:', req.user, 'receiverId:', receiverId);
+    console.log('sendMessage controller - user:', req.user, 'receiverId:', receiverId);
     
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
+
+    // 1. Send the message
     const message = await MessageModel.sendMessage(
       req.user.id,
       receiverId,
@@ -49,7 +51,26 @@ export const sendMessage = async (req, res) => {
       hasAttachment || false,
       attachmentUrl || null
     );
-    
+
+    // 2. Create notification for the receiver
+    try {
+      const sender = await UserModel.getById(req.user.id); // Get sender details
+      
+      await NotificationModel.create({
+        user_id: receiverId,
+        title: "New Message",
+        message: `You have a new message from ${sender.name}`,
+        type: "message",
+        reference_id: message.id,
+        reference_type: "direct_message"
+      });
+      
+      console.log(`Notification created for new message to user ${receiverId}`);
+    } catch (notificationError) {
+      console.error("Error creating message notification:", notificationError);
+      // Don't fail the message send if notification fails
+    }
+
     res.status(201).json(message);
   } catch (error) {
     console.error('Error in sendMessage controller:', error);
@@ -108,11 +129,13 @@ export const getGroupMessages = async (req, res) => {
 export const sendGroupMessage = async (req, res) => {
   try {
     const { groupId, content, hasAttachment, attachmentUrl } = req.body;
-     console.log('sendGroupMessage controller - user:', req.user, 'groupId:', groupId);
+    console.log('sendGroupMessage controller - user:', req.user, 'groupId:', groupId);
     
     if (!req.user || !req.user.id) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
+
+    // 1. Send the group message
     const message = await MessageModel.sendGroupMessage(
       req.user.id,
       groupId,
@@ -120,7 +143,32 @@ export const sendGroupMessage = async (req, res) => {
       hasAttachment || false,
       attachmentUrl || null
     );
-    
+
+    // 2. Get all group members except sender
+    const members = await MessageModel.getGroupMembers(groupId);
+    const membersToNotify = members.filter(member => member.user_id !== req.user.id);
+
+    // 3. Create notifications for each member
+    try {
+      const sender = await UserModel.getById(req.user.id);
+      const group = await MessageModel.getGroupById(groupId);
+      
+      await Promise.all(membersToNotify.map(async (member) => {
+        await NotificationModel.create({
+          user_id: member.user_id,
+          title: "New Group Message",
+          message: `New message in ${group.name} from ${sender.name}`,
+          type: "group_message",
+          reference_id: message.id,
+          reference_type: "group_message"
+        });
+      }));
+      
+      console.log(`Notifications created for ${membersToNotify.length} group members`);
+    } catch (notificationError) {
+      console.error("Error creating group message notifications:", notificationError);
+    }
+
     res.status(201).json(message);
   } catch (error) {
     console.error('Error in sendGroupMessage controller:', error);

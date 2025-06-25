@@ -43,24 +43,24 @@ export const submitSkillContact = async (req, res) => {
     const contactInitiator = await UserModel.getById(req.user.id);
     
     // Create notification for skill provider
-    // await NotificationModel.create({
-    //   user_id: skill.user_id,
-    //   title: 'New Skill Inquiry',
-    //   message: `${contactInitiator.name} is interested in your skill: ${skill.skill_name}`,
-    //   type: 'contact',
-    //   reference_id: contactId,
-    //   reference_type: 'skill_contact'
-    // });
+    await NotificationModel.create({
+      user_id: skillProvider.id,
+      title: 'New Skill Inquiry',
+      message: `${contactInitiator.name} is interested in your skill: ${skill.skill_name}`,
+      type: 'contact',
+      reference_id: contactId,
+      reference_type: 'skill_contact'
+    });
     
-    // // Create notification for contact initiator
-    // await NotificationModel.create({
-    //   user_id: req.user.id,
-    //   title: 'Inquiry Sent',
-    //   message: `Your message about "${skill.skill_name}" has been sent to ${skillProvider.name}`,
-    //   type: 'contact',
-    //   reference_id: contactId,
-    //   reference_type: 'skill_contact'
-    // });
+    // Create notification for contact initiator
+    await NotificationModel.create({
+      user_id: contactInitiator.id,
+      title: 'Inquiry Sent',
+      message: `Your message about "${skill.skill_name}" has been sent to ${skillProvider.name}`,
+      type: 'contact',
+      reference_id: contactId,
+      reference_type: 'skill_contact'
+    });
     
     res.status(201).json({ 
       message: 'Contact request sent successfully',

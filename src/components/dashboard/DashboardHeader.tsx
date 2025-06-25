@@ -27,7 +27,7 @@ const DashboardHeader = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
-
+const [isFetching, setIsFetching] = useState(false);
   useEffect(() => {
     // Fetch user data from localStorage or your auth context
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -68,15 +68,20 @@ const DashboardHeader = () => {
   };
 
   const handleNotificationClick = async () => {
-    try {
-      const notificationData = await fetchNotifications();
-      setNotifications(notificationData);
-      setShowNotifications(true);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      toast.error("Failed to load notifications");
-    }
-  };
+  if (showNotifications && notifications.length > 0) return;
+  
+  try {
+    setIsFetching(true);
+    const notificationData = await fetchNotifications();
+    const notificationsArray = Array.isArray(notificationData) ? notificationData : [];
+    setNotifications(notificationsArray);
+  } catch (error) {
+    console.error("Failed to fetch notifications:", error);
+    toast.error("Failed to load notifications");
+  } finally {
+    setIsFetching(false);
+  }
+};
 
   const handleNotificationRead = async (id: number) => {
     try {
@@ -106,7 +111,7 @@ const DashboardHeader = () => {
   };
 
   return (
-    <div className=" top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px">
+    <div className="sticky top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px-8">
       <Sheet>
         <SheetTrigger className="md:hidden">
           <Button size="icon" variant="outline">
@@ -122,42 +127,71 @@ const DashboardHeader = () => {
       <div className="flex-1 gap-2 flex md:flex items-center">
       </div>
       <div className="flex items-center gap-2">
-        <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="relative h-12 w-12 rounded-full" onClick={handleNotificationClick}>
-              <Bell className="h-12 w-12" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="p-2 font-medium border-b">Notifications</div>
-            <div className="max-h-[400px] overflow-y-auto">
-              {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className={`p-3 border-b cursor-pointer ${!notification.is_read ? 'bg-slate-50' : ''}`}
-                    onClick={() => handleNotificationRead(notification.id)}
-                  >
-                    <div>
-                      <div className="font-medium">{notification.title}</div>
-                      <div className="text-sm text-gray-500">{notification.message}</div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        {new Date(notification.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                ))
-              ) : (
-                <div className="p-4 text-center text-gray-500">No notifications</div>
-              )}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+  {/* Notifications Dropdown - Fixed Version */}
+  <DropdownMenu 
+    open={showNotifications} 
+    onOpenChange={(open) => {
+      setShowNotifications(open);
+      if (open) {
+        handleNotificationClick();
+      }
+    }}
+  >
+    <DropdownMenuTrigger asChild>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        className="relative h-10 w-10 rounded-full"
+      >
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent 
+      align="end" 
+      className="w-[350px] max-h-[60vh] overflow-y-auto z-[100]"
+    >
+      <div className="p-3 font-medium border-b sticky top-0 bg-background">
+        Notifications ({notifications.length})
+        {isFetching && (
+          <span className="ml-2 text-sm text-gray-500">Loading...</span>
+        )}
+      </div>
+      <div className="divide-y">
+        {isFetching && notifications.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">Loading notifications...</div>
+        ) : notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <DropdownMenuItem
+              key={notification.id}
+              className={`p-3 cursor-pointer ${!notification.is_read ? 'bg-blue-50' : ''}`}
+              onClick={() => handleNotificationRead(notification.id)}
+            >
+              <div className="w-full space-y-1">
+                <div className="font-medium flex justify-between items-start">
+                  <span>{notification.title}</span>
+                  {!notification.is_read && (
+                    <span className="text-xs text-green-600 ml-2">New</span>
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">{notification.message}</div>
+                <div className="text-xs text-gray-400 mt-1">
+                  {new Date(notification.created_at).toLocaleString()}
+                </div>
+              </div>
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <div className="p-4 text-center text-gray-500">No notifications</div>
+        )}
+      </div>
+    </DropdownMenuContent>
+  </DropdownMenu>
+</div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -187,7 +221,7 @@ const DashboardHeader = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    
   );
 };
 

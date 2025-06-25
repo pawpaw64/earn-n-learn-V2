@@ -40,7 +40,7 @@ export const markAsRead = async (req, res) => {
 // Mark all notifications as read
 export const markAllAsRead = async (req, res) => {
   try {
-    await NotificationModel.markAllAsRead(req.user.id);
+    const updated = await NotificationModel.markAllAsRead(req.user.id);
     res.json({ message: 'All notifications marked as read' });
   } catch (error) {
     console.error('Mark all as read error:', error);
