@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableHeader,
@@ -14,7 +14,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { LoadingSkeleton } from "../LoadingSkeleton";
 import { useNavigate } from "react-router-dom";
 import { createOrFindContactGroup } from "@/services/contacts";
-import { createGroup, addToGroup, sendGroupMessage } from "@/services/messages";
+import { findGroupByName, sendGroupMessage } from "@/services/messages";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -39,6 +39,9 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
 }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [processingId, setProcessingId] = useState<number | null>(null);
+
+  const [projectIds, setProjectIds] = useState<Record<number, number>>({});
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -86,39 +89,54 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
   const handleContactUser = async (contact: any) => {
     try {
       const itemName = type === "skill" ? contact.skill_name : contact.title;
-      const itemId = type === "skill" ? contact.skill_id : contact.material_id;
 
-      // Create group name
-      const groupName = `${itemName} - Contact Discussion`;
-
-      // Create the group
-      const group = await createGroup(
-        groupName,
-        `Discussion about ${itemName}`
+      // Try to find existing group first using the new service
+      const existingGroup = await findGroupByName(
+        `${itemName} - Contact Discussion`
       );
 
-      // Add the contact initiator to the group
-      await addToGroup(group.id, contact.user_id);
+      if (existingGroup) {
+        // Navigate to existing group
+        navigate("/dashboard/messages");
+        localStorage.setItem("openChatWith", String(existingGroup.id));
+        localStorage.setItem("openChatType", "group");
+        return;
+      }
 
-      // Send the original message to the group
-      await sendGroupMessage(
-        group.id,
-        `Original contact message: ${contact.message}`
+      // Create or find group using the contact service
+      const result = await createOrFindContactGroup(
+        type,
+        type === "skill" ? contact.skill_id : contact.material_id,
+        itemName,
+        contact.user_id
       );
 
-      // Refresh queries
-      queryClient.invalidateQueries({ queryKey: ["userGroups"] });
-      queryClient.invalidateQueries({ queryKey: ["recentChats"] });
+      if (!result.isNew) {
+        // Group already exists, just navigate
+        navigate("/dashboard/messages");
+        localStorage.setItem("openChatWith", String(result.groupId));
+        localStorage.setItem("openChatType", "group");
+      } else {
+        // New group created, send initial message
+        await sendGroupMessage(
+          result.groupId,
+          `Original contact message: ${contact.message}`
+        );
 
-      toast.success("Group chat created successfully!");
+        // Refresh queries
+        queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+        queryClient.invalidateQueries({ queryKey: ["recentChats"] });
 
-      // Navigate to messages and open the group
-      navigate("/dashboard/messages");
-      localStorage.setItem("openChatWith", String(group.id));
-      localStorage.setItem("openChatType", "group");
+        toast.success("Group chat created successfully!");
+
+        // Navigate to messages and open the group
+        navigate("/dashboard/messages");
+        localStorage.setItem("openChatWith", String(result.groupId));
+        localStorage.setItem("openChatType", "group");
+      }
     } catch (error) {
-      console.error("Error creating group chat:", error);
-      toast.error("Failed to create group chat. Please try again.");
+      console.error("Error handling contact user:", error);
+      toast.error("Failed to create or find group chat. Please try again.");
     }
   };
 
@@ -128,8 +146,8 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
 
   const handleAcceptContact = async (contact: any, contactType: string) => {
     try {
-      // Update contact status
-      await onStatusChange(
+      // Update contact status first
+      const result = await onStatusChange(
         contact.id,
         contactType === "skill" ? "skill_contact" : "material_contact",
         "Responded"
@@ -137,38 +155,42 @@ export const ReceivedContactsTable: React.FC<ReceivedContactsTableProps> = ({
 
       const itemName = type === "skill" ? contact.skill_name : contact.title;
 
-      // Create group name
-      const groupName = `${itemName} - Contact Discussion`;
-
-      // Create the group
-      const group = await createGroup(
-        groupName,
-        `Discussion about ${itemName}`
+      // Try to find existing group first
+      const existingGroup = await findGroupByName(
+        `${itemName} - Contact Discussion`
       );
 
-      // Add the contact initiator to the group
-      await addToGroup(group.id, contact.user_id);
+      let groupId;
+      if (existingGroup) {
+        groupId = existingGroup.id;
+      } else {
+        // Create or find group using the contact service
+        const result = await createOrFindContactGroup(
+          type,
+          type === "skill" ? contact.skill_id : contact.material_id,
+          itemName,
+          contact.user_id
+        );
+        groupId = result.groupId;
+      }
 
       // Send acceptance message to the group
-      const responseMessage = `Hi! I've accepted your inquiry about "${itemName}". Let's discuss further!
+      const responseMessage = `Hi! I've accepted your inquiry about "${itemName}". Let's discuss further!Original message from ${type} 
+      contact:${contact.message}---This conversation started from a ${type} contact inquiry.`;
 
-Original message from ${type} contact:
-${contact.message}
-
----
-This conversation started from a ${type} contact inquiry.`;
-
-      await sendGroupMessage(group.id, responseMessage);
+      await sendGroupMessage(groupId, responseMessage);
 
       // Refresh message queries
       queryClient.invalidateQueries({ queryKey: ["recentChats"] });
       queryClient.invalidateQueries({ queryKey: ["userGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["skillContacts"] });
+      queryClient.invalidateQueries({ queryKey: ["materialContacts"] });
 
-      toast.success("Contact accepted and group chat created!");
+      toast.success("Contact accepted and group chat ready!");
 
       // Navigate to messages and open the group chat
       navigate("/dashboard/messages");
-      localStorage.setItem("openChatWith", String(group.id));
+      localStorage.setItem("openChatWith", String(groupId));
       localStorage.setItem("openChatType", "group");
     } catch (error) {
       console.error("Error accepting contact:", error);
@@ -263,10 +285,9 @@ This conversation started from a ${type} contact inquiry.`;
                               variant="outline"
                               size="sm"
                               className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                              onClick={() =>
-                                handleAcceptContact(contact, type)
-                              }>
-                              <Check className="w-4 h-4 mr-2" />
+                              onClick={() => handleAcceptContact(contact, type)}
+                              disabled={processingId == contact.id}>
+                              <Check className="w-4 h-4 mr-1" />
                               Accept
                             </Button>
                             <Button
@@ -288,17 +309,20 @@ This conversation started from a ${type} contact inquiry.`;
                           </>
                         )}
 
-                        {/* Show create work button for responded or in discussion status */}
-                        {(contact.status === "Responded" ||
-                          contact.status === "In Discussion") && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-blue-600">
-                            <UserCheck className="w-4 h-4 mr-2" />
-                            Create Work
-                          </Button>
+                        {/* Show status message for responded contacts */}
+                        {contact.status === "Responded" && (
+                          <div className="text-sm text-green-600 font-medium px-3 py-1">
+                            ✓ {type === "skill" ? "Skill" : "Material"} accepted
+                          </div>
                         )}
+                       { contact.status === "Declined" && (
+  <div className="flex items-center text-sm text-red-600 font-medium px-3 py-1  rounded-md">
+    <X className="w-4 h-4 mr-1" />
+    {type === "skill" ? "Skill" : "Material"}  declined
+  </div>
+)}
+
+                     
                       </div>
                     </TableCell>
                   </TableRow>

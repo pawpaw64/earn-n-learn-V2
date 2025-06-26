@@ -110,24 +110,24 @@ export const submitMaterialContact = async (req, res) => {
     const contactInitiator = await UserModel.getById(req.user.id);
     
     // Create notification for material seller
-    // await NotificationModel.create({
-    //   user_id: material.user_id,
-    //   title: 'New Material Inquiry',
-    //   message: `${contactInitiator.name} is interested in your material: ${material.title}`,
-    //   type: 'contact',
-    //   reference_id: contactId,
-    //   reference_type: 'material_contact'
-    // });
+    await NotificationModel.create({
+      user_id: materialSeller.id,
+      title: 'New Material Inquiry',
+      message: `${contactInitiator.name} is interested in your material: ${material.title}`,
+      type: 'contact',
+      reference_id: contactId,
+      reference_type: 'material_contact'
+    });
     
-    // // Create notification for contact initiator
-    // await NotificationModel.create({
-    //   user_id: req.user.id,
-    //   title: 'Inquiry Sent',
-    //   message: `Your message about "${material.title}" has been sent to ${materialSeller.name}`,
-    //   type: 'contact',
-    //   reference_id: contactId,
-    //   reference_type: 'material_contact'
-    // });
+    // Create notification for contact initiator
+    await NotificationModel.create({
+      user_id: contactInitiator.id,
+      title: 'Inquiry Sent',
+      message: `Your message about "${material.title}" has been sent to ${materialSeller.name}`,
+      type: 'contact',
+      reference_id: contactId,
+      reference_type: 'material_contact'
+    });
     
     res.status(201).json({ 
       message: 'Contact request sent successfully',
@@ -185,26 +185,26 @@ export const updateSkillContactStatus = async (req, res) => {
     }
     
     // // Create notification for contact initiator
-    // if (isProvider) {
-    //   await NotificationModel.create({
-    //     user_id: contact.user_id,
-    //     title: 'Skill Inquiry Update',
-    //     message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
-    //     type: 'contact_status',
-    //     reference_id: parseInt(id),
-    //     reference_type: 'skill_contact'
-    //   });
-    // } else {
-    //   // Notification for provider if initiator updates
-    //   await NotificationModel.create({
-    //     user_id: contact.provider_id,
-    //     title: 'Skill Inquiry Update',
-    //     message: `A contact regarding your skill "${contact.skill_name}" has been updated to: ${status}`,
-    //     type: 'contact_status',
-    //     reference_id: parseInt(id),
-    //     reference_type: 'skill_contact'
-    //   });
-    // }
+    if (isProvider) {
+      await NotificationModel.create({
+        user_id: contact.user_id,
+        title: 'Skill Inquiry Update',
+        message: `Your inquiry about "${contact.skill_name}" status has been updated to: ${status}`,
+        type: 'contact_status',
+        reference_id: parseInt(id),
+        reference_type: 'skill_contact'
+      });
+    } else {
+      // Notification for provider if initiator updates
+      await NotificationModel.create({
+        user_id: contact.provider_id,
+        title: 'Skill Inquiry Update',
+        message: `A contact regarding your skill "${contact.skill_name}" has been updated to: ${status}`,
+        type: 'contact_status',
+        reference_id: parseInt(id),
+        reference_type: 'skill_contact'
+      });
+    }
     
     res.json({ 
       message: 'Contact status updated successfully',
@@ -262,26 +262,26 @@ export const updateMaterialContactStatus = async (req, res) => {
     }
     
     // // Create notification for contact initiator
-    // if (isSeller) {
-    //   await NotificationModel.create({
-    //     user_id: contact.user_id,
-    //     title: 'Material Inquiry Update',
-    //     message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
-    //     type: 'contact_status',
-    //     reference_id: parseInt(id),
-    //     reference_type: 'material_contact'
-    //   });
-    // } else {
-    //   // Notification for seller if initiator updates
-    //   await NotificationModel.create({
-    //     user_id: contact.seller_id,
-    //     title: 'Material Inquiry Update',
-    //     message: `A contact regarding your material "${contact.title}" has been updated to: ${status}`,
-    //     type: 'contact_status',
-    //     reference_id: parseInt(id),
-    //     reference_type: 'material_contact'
-    //   });
-    // }
+    if (isSeller) {
+      await NotificationModel.create({
+        user_id: contact.user_id,
+        title: 'Material Inquiry Update',
+        message: `Your inquiry about "${contact.title}" status has been updated to: ${status}`,
+        type: 'contact_status',
+        reference_id: parseInt(id),
+        reference_type: 'material_contact'
+      });
+    } else {
+      // Notification for seller if initiator updates
+      await NotificationModel.create({
+        user_id: contact.seller_id,
+        title: 'Material Inquiry Update',
+        message: `A contact regarding your material "${contact.title}" has been updated to: ${status}`,
+        type: 'contact_status',
+        reference_id: parseInt(id),
+        reference_type: 'material_contact'
+      });
+    }
     
     res.json({ 
       message: 'Contact status updated successfully',
@@ -393,12 +393,11 @@ export const createOrFindContactGroup = async (req, res) => {
     // Create group name pattern
     const groupName = `${itemName} - Contact Discussion`;
     
-    // Check if group already exists with this name and participants
-    const existingGroups = await MessageModel.getUserGroups(req.user.id);
-    const existingGroup = existingGroups.find(group => 
-      group.name === groupName && 
-      // Check if participant is in the group (this would require additional query)
-      true // For now, we'll create a new group each time
+    // Check if group already exists with these participants
+    const existingGroup = await MessageModel.findGroupByNameAndParticipants(
+      itemName, 
+      req.user.id, 
+      participantId
     );
     
     if (existingGroup) {

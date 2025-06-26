@@ -119,37 +119,25 @@ const handleStatusChange = async (id: number, type: string, newStatus: string): 
           toast.success('Project created successfully', {
             description: `Project #${project.id} has been created`,
 
-
-
-
-
           });
           
           return { success: true, projectId: project.id };
         } catch (projectError) {
           console.error('Project creation failed:', projectError);
           toast.error('Project creation failed', {
-            description: 'The application was accepted but project creation failed'
-
-
-
-
+      
           });
           return { success: false };
         }
       }
     }
+    else if (type === 'skill_contact') {
+      await updateSkillContactStatus(id, newStatus);
+    } else if (type === 'material_contact') {
+      await updateMaterialContactStatus(id, newStatus);
+    }
     return { success: true };
-
-
-
-
-
-
-
-
-
-  } catch (error) {
+    } catch (error) {
     console.error('Error updating status:', error);
     return { success: false };
   } finally {

@@ -285,6 +285,25 @@ class MessageModel {
       throw error;
     }
   }
+
+  // Find existing group by name pattern and participants
+  static async findGroupByNameAndParticipants(namePattern, userId1, userId2) {
+    try {
+      const [rows] = await db.query(
+        `SELECT DISTINCT g.* FROM message_groups g
+         JOIN group_members gm1 ON g.id = gm1.group_id
+         JOIN group_members gm2 ON g.id = gm2.group_id
+         WHERE g.name LIKE ? 
+         AND gm1.user_id = ? 
+         AND gm2.user_id = ?`,
+        [`%${namePattern}%`, userId1, userId2]
+      );
+      return rows.length > 0 ? rows[0] : null;
+    } catch (error) {
+      console.error('Error in findGroupByNameAndParticipants:', error);
+      throw error;
+    }
+  }
 }
 
 export default MessageModel;

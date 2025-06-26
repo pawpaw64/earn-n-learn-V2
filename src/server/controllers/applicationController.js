@@ -41,8 +41,6 @@ export const getApplicationById = async (req, res) => {
   }
 };
 
-// Submit job application
-
 // Submit application
 export async function submitApplication(req, res) {
   console.log('Submitting application... [applicationController.js.submitApplication]');
