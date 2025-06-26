@@ -1,4 +1,5 @@
 import MessageModel from '../models/messageModel.js';
+import UserModel from '../models/userModel.js';
 
 // Get direct messages between two users
 export const getDirectMessages = async (req, res) => {

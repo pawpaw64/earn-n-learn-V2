@@ -116,19 +116,12 @@ export async function login(req, res) {
       console.log('No user found with email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-
-    console.log('Comparing passwords:');
-    console.log('Input password:', password);
-    console.log('Stored hash:', user.password);
-    
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
       console.log('Password comparison failed');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-
-    console.log('Login successful for user:', user.email);
     
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email },
@@ -138,7 +131,7 @@ export async function login(req, res) {
 
     res.json({ 
       token,
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar },
       message: 'Login successful'
     });
   } catch (error) {
@@ -154,8 +147,12 @@ export async function getMe(req, res) {
     const user = await UserModel.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
+ }
     
+    // Add full URL for avatar if it exists
+    if (user.avatar) {
+      user.avatar = `http://localhost:8080${user.avatar}`;
+    }    
     const [skills, portfolio, websites] = await Promise.all([
       UserModel.getUserSkills(req.user.id),
       UserModel.getUserPortfolio(req.user.id),
@@ -183,8 +180,12 @@ export async function getUserById(req, res) {
    
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
-    }
+ }
     
+    // Add full URL for avatar if it exists
+    if (user.avatar) {
+      user.avatar = `http://localhost:8080${user.avatar}`;
+    }    
     const [skills, portfolio, websites] = await Promise.all([
       UserModel.getUserSkills(userId),
       UserModel.getUserPortfolio(userId),
@@ -215,27 +216,31 @@ export async function updateProfile(req, res) {
       
       // Get current user to delete old avatar
       const currentUser = await UserModel.getById(req.user.id);
-      if (currentUser && currentUser.avatar) {
+      if (currentUser && currentUser.avatar && currentUser.avatar.startsWith('/uploads/')) {
         const oldImagePath = path.join(process.cwd(), 'src/server', currentUser.avatar);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
     }
-    
     const updated = await UserModel.updateProfile(req.user.id, updateData);
+    
+    // Return the full avatar URL
+    let avatarUrl = null;
+    if (updateData.avatar) {
+      avatarUrl = `http://localhost:8080${updateData.avatar}`;
+    }
+    
     res.json({ 
       message: updated ? 'Profile updated successfully' : 'Profile update failed',
       success: updated,
-      avatar: updateData.avatar || null
+      avatar: avatarUrl
     });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }
-
-// Upload profile avatar
 export async function uploadAvatar(req, res) {
   try {
     if (!req.file) {
@@ -248,7 +253,10 @@ export async function uploadAvatar(req, res) {
     const updated = await UserModel.updateProfile(req.user.id, { avatar: imageUrl });
     
     if (updated) {
-      res.json({ imageUrl, message: 'Avatar uploaded successfully' });
+      res.json({ 
+        imageUrl: `http://localhost:8080${imageUrl}`, 
+        message: 'Avatar uploaded successfully' 
+      });
     } else {
       res.status(500).json({ message: 'Failed to update avatar in database' });
     }

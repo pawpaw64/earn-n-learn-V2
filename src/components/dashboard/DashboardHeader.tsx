@@ -52,12 +52,25 @@ const [isFetching, setIsFetching] = useState(false);
     
     fetchCount();
     
-    // Set up an interval to check notifications
     const intervalId = setInterval(fetchCount, 30000); // Check every 30 seconds
+    const handleStorageChange = () => {
+      const updatedUserData = JSON.parse(localStorage.getItem("user") || "{}");
+      if (updatedUserData) {
+        setUser({
+          name: updatedUserData.name || updatedUserData.email?.split('@')[0] || "User",
+          email: updatedUserData.email || "",
+          avatar: updatedUserData.avatar || updatedUserData.image || "",
+        });
+      }
+    };
     
-    return () => clearInterval(intervalId);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
-
   const handleLogout = () => {
     // Clear user data from storage
     localStorage.removeItem("user");

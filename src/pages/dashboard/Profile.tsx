@@ -147,6 +147,8 @@ export default function Profile() {
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+            console.log('Avatar file selected:', file.name);
+
       setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -157,40 +159,45 @@ export default function Profile() {
   };
 
   // Save profile changes
-  const onSubmitBasicInfo = async (data: any) => {
+    const onSubmitBasicInfo = async (data: any) => {
     try {
-      let avatarUrl = profile.avatar;
-      
-      // Upload avatar if changed
-      if (avatarFile) {
-        try {
-          avatarUrl = await uploadProfileImage(avatarFile);
-        } catch (error) {
-          console.error("Avatar upload failed:", error);
-          toast.error("Failed to upload profile picture");
-        }
-      }
+      console.log('Submitting profile with avatar file:', avatarFile?.name);
       
       const profileData = {
         name: data.name,
         bio: data.bio,
-        avatar: avatarUrl,
         program: data.program,
         graduationYear: data.graduationYear
       };
       
-      const response = await updateUserProfile(profileData);
+      const response = await updateUserProfile(profileData, avatarFile);
+      console.log('Profile update response:', response);
       
       if (response.success) {
-        setProfile({
+        // Update local state with new data
+        const updatedProfile = {
           ...profile,
           name: data.name,
           bio: data.bio,
-          avatar: avatarUrl,
           program: data.program,
           graduation_year: data.graduationYear
-        });
+        };
+        
+        // If avatar was uploaded, update it
+        if (response.avatar) {
+          console.log('Updating avatar URL to:', response.avatar);
+          updatedProfile.avatar = response.avatar;
+          
+          // Update user data in localStorage
+          const userData = JSON.parse(localStorage.getItem("user") || "{}");
+          userData.avatar = response.avatar;
+          localStorage.setItem("user", JSON.stringify(userData));
+        }
+        
+        setProfile(updatedProfile);
         setIsEditingBasic(false);
+        setAvatarFile(null);
+        setAvatarPreview(null);
         toast.success("Profile updated successfully!");
       } else {
         toast.error(response.message || "Failed to update profile");
@@ -200,7 +207,6 @@ export default function Profile() {
       toast.error("Error updating profile");
     }
   };
-
   // Add new skill
   const addSkill = () => {
     if (!newSkill.name) return;
@@ -448,6 +454,7 @@ export default function Profile() {
                           }
                         })} 
                         placeholder="Your email" 
+                        disabled
                       />
                       {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
                     </div>

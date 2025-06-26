@@ -100,8 +100,23 @@ export async function submitApplication(req, res) {
     if (!applicationId) {
       throw new Error('Failed to create application');
     }
-
-    console.log('Application submitted successfully:', applicationId);
+ const applicant = await UserModel.getById(user_id);
+    
+    // Create notification for job poster
+    try {
+      await NotificationModel.create({
+        user_id: job.user_id, // Notify the job poster
+        title: "New Application Received",
+        message: `${applicant.name} has applied to your job "${job.title}"`,
+        type: "new_application",
+        reference_id: parseInt(applicationId),
+        reference_type: "job_application"
+      });
+    } catch (notificationError) {
+      console.error("Error creating new application notification:", notificationError);
+      // Don't fail the application submission if notification fails
+    }
+   
     
     res.status(201).json({ 
       success: true,
