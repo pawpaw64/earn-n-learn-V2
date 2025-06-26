@@ -6,6 +6,7 @@ import { Calendar, MapPin, Briefcase, User, Clock, Mail, Phone, Book, School } f
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { it } from "node:test";
 
 /**
  * Application details component for user's own applications
@@ -15,21 +16,15 @@ export const MyApplicationDetails: React.FC<{ item: any }> = ({ item }) => {
   const navigate = useNavigate();
   
   if (!item) return null;
-
+ 
   // Handler to view the poster's profile
-  const handleViewPosterProfile = () => {
-    if (item.poster_id) {
-      navigate(`/dashboard/profile/${item.poster_id}`);
-    }
+ 
+  const handleViewProfile = () => {
+  
+    navigate(`/dashboard/profile/${item.poster_id}`);
   };
   
-  // Handler to message the poster
-  const handleMessagePoster = () => {
-    if (item.poster_id) {
-      navigate(`/dashboard/messages?userId=${item.poster_id}`);
-    }
-  };
-  
+
   return (
     <div className="space-y-6">
       {/* Header with title and status */}
@@ -57,26 +52,26 @@ export const MyApplicationDetails: React.FC<{ item: any }> = ({ item }) => {
         <h3 className="font-medium">Job Poster Information</h3>
         
         <div className="flex items-center space-x-4 mb-4">
-          <Avatar className="h-12 w-12">
+          <Avatar  className="h-8 w-8 cursor-pointer"
+           onClick={() => handleViewProfile()} 
+           >
             <AvatarImage src={item.poster_avatar} />
             <AvatarFallback>{item.poster_name?.charAt(0) || 'P'}</AvatarFallback>
           </Avatar>
-          
-          <div>
-            <p className="font-medium">{item.poster_name}</p>
-            <p className="text-sm text-muted-foreground">{item.poster_email}</p>
-          </div>
-          
+        <div className="flex-1 overflow-hidden">
+    <p 
+      className="font-medium cursor-pointer hover:underline truncate"
+      onClick={()=>handleViewProfile()}
+    >
+      {item.poster_name || 'Unknown Poster'}
+    </p>
+    <p className="text-sm text-muted-foreground truncate">
+      {item.poster_email || 'No email provided'}
+    </p>
+  </div>
+         
           <div className="ml-auto space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleViewPosterProfile}
-            >
-              <User className="h-4 w-4 mr-1" />
-              View Profile
-            </Button>
-            
+           
           </div>
         </div>
       </div>

@@ -133,20 +133,46 @@ class WalletModel {
       throw new Error(error.message);
     }
   }
- // Get monthly financials for dashboard (6 months)
-  static async getMonthlyFinancials(userId) {
+
+  // Get current month's earnings and spending for a specific user
+  static async getCurrentMonthFinancials(userId) {
     try {
       const result = await execute(
         `SELECT 
-    MONTH(date) as month,
-    YEAR(date) as year,
-    DATE_FORMAT(date, '%b') as name,
-    COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
-    COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
-FROM transactions 
-WHERE user_id = 2 AND date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-GROUP BY YEAR(date), MONTH(date), DATE_FORMAT(date, '%b')
-ORDER BY YEAR(date), MONTH(date)`,
+          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as earnings,
+          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as spending
+        FROM transactions 
+        WHERE user_id = ? AND MONTH(date) = MONTH(NOW()) AND YEAR(date) = YEAR(NOW())`,
+        [userId]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      const data = rows[0] || { earnings: 0, spending: 0 };
+      
+      return {
+        earnings: parseFloat(data.earnings || 0),
+        spending: parseFloat(data.spending || 0)
+      };
+    } catch (error) {
+      console.error('Error getting current month financials:', error);
+      throw error;
+    }
+  }
+
+ // Get monthly financials for dashboard (6 months)
+ static async getMonthlyFinancials(userId) {
+    try {
+      const result = await execute(
+        `SELECT 
+          MONTH(date) as month,
+          YEAR(date) as year,
+          DATE_FORMAT(date, '%b') as name,
+          COALESCE(SUM(CASE WHEN type IN ('deposit', 'release') THEN amount ELSE 0 END), 0) as income,
+          COALESCE(SUM(CASE WHEN type IN ('withdrawal', 'payment', 'escrow') THEN amount ELSE 0 END), 0) as expenses
+        FROM transactions 
+        WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+        GROUP BY YEAR(date), MONTH(date), DATE_FORMAT(date, '%b')
+        ORDER BY YEAR(date), MONTH(date)`,
         [userId]
       );
       
@@ -519,6 +545,7 @@ ORDER BY YEAR(date), MONTH(date)`,
       throw new Error('Failed to delete savings goal');
     }
   }
+  
 
   // Edit savings goal details
   static async editSavingsGoal(userId, goalId, data) {

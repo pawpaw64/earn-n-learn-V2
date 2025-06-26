@@ -40,7 +40,6 @@ const upload = multer({
 // Register
 export async function register(req, res) {
   try {
-    console.log('Registering new user... [userController.js.register]');
     const { name, email, password, studentId, university, course, mobile } = req.body;
 
     // Validate input
@@ -101,7 +100,6 @@ export async function register(req, res) {
 
 // Login
 export async function login(req, res) {
-  console.log('Logging in user... [userController.js.login]');
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -109,17 +107,14 @@ export async function login(req, res) {
   }
 
   try {
-    console.log('Searching for user with email:', email);
     const user = await UserModel.findByEmail(email);
     
     if (!user) {
-      console.log('No user found with email:', email);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     
     if (!isMatch) {
-      console.log('Password comparison failed');
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
@@ -133,6 +128,7 @@ export async function login(req, res) {
       token,
       user: { id: user.id, name: user.name, email: user.email, avatar: user.avatar },
       message: 'Login successful'
+      
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -142,7 +138,6 @@ export async function login(req, res) {
 
 // Get current user
 export async function getMe(req, res) {
-  console.log('Getting current user... [userController.js.getMe]');
   try {
     const user = await UserModel.findById(req.user.id);
     if (!user) {
@@ -173,7 +168,6 @@ export async function getMe(req, res) {
 
 // Get user by ID (for viewing other profiles)
 export async function getUserById(req, res) {
-  console.log('Getting user by ID... [userController.js.getUserById]');
   try {
     const userId = req.params.id;
     const user = await UserModel.findById(userId);
@@ -206,7 +200,6 @@ export async function getUserById(req, res) {
 
 // Update user profile
 export async function updateProfile(req, res) {
-  console.log('Updating user profile... [userController.js.updateProfile]');
   try {
     const updateData = { ...req.body };
     

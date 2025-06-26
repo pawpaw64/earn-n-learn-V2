@@ -133,15 +133,12 @@ export default function Profile() {
       setIsLoading(true);
       try {
         let profileData: ProfileData | null = null;
-        console.log("Loading profile for userId:", userId);
 
         if (userId && userId !== currentUserId?.toString()) {
           // Fetch other user's profile
-          console.log("Fetching other user profile for ID:", userId);
 
           profileData = await fetchUserById(userId);
         } else {
-          console.log("Fetching current user profile");
 
           // Fetch current user's profile
           profileData = await fetchUserProfile();

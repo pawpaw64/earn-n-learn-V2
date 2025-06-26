@@ -26,7 +26,7 @@ export function MyApplicationActionButtons({ item, onStatusChange }: MyApplicati
       setIsLoading(false);
     }
   };
-
+ 
   if (!item) return null;
 
   // Only show withdraw button if application is still pending

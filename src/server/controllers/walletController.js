@@ -62,10 +62,8 @@ export async function getWalletDetails(req, res) {
     }
     
     // Get current month's financials
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const financials = await WalletModel.getMonthlyFinancials(userId, year, month);
+       const currentMonthFinancials = await WalletModel.getCurrentMonthFinancials(userId);
+
     
     // Get escrow balance (sum of all funded/in-progress escrow transactions where user is provider)
     const escrowTransactions = await WalletModel.getEscrowTransactions(userId);
@@ -82,8 +80,8 @@ export async function getWalletDetails(req, res) {
     const response = {
       balance: parseFloat(wallet.balance || 0),
       pendingEscrow,
-      monthlyEarnings: financials.earnings,
-      monthlySpending: financials.spending,
+      monthlyEarnings: currentMonthFinancials.earnings,
+      monthlySpending: currentMonthFinancials.spending,
       savingsProgress
     };
     

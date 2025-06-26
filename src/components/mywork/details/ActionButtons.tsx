@@ -100,13 +100,7 @@ export function ActionButtons({ type, item, onStatusChange}: ActionButtonsProps)
           >
             <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
           </Button>
-          {/* <Button 
-            variant="default" 
-            disabled={isLoading}
-            onClick={() => handleCreateWork(item.id, 'job_application')}
-          >
-            <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-          </Button> */}
+         
         </div>
       );
     }
@@ -168,16 +162,7 @@ export function ActionButtons({ type, item, onStatusChange}: ActionButtonsProps)
           >
             <DollarSign className="mr-1 h-4 w-4" /> Set Up Escrow
           </Button>
-          {/* <Button 
-            variant="default"
-            disabled={isLoading}
-            onClick={() => {
-              const contactType = item.skill_id ? 'skill_contact' : 'material_contact';
-              handleCreateWork(item.id, contactType);
-            }}
-          >
-            <PlayCircle className="mr-1 h-4 w-4" /> Create Work
-          </Button> */}
+          
         </div>
       );
     }
