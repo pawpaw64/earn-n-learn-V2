@@ -103,3 +103,42 @@ export const uploadProfileImage = async (imageFile: File) => {
   
   return response.data.imageUrl;
 };
+
+// Skills management
+export const addUserSkill = async (skillData: { name: string; description?: string; acquiredFrom?: string }) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/users/skills`, skillData);
+  return response.data;
+};
+
+export const removeUserSkill = async (skillId: string) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/users/skills/${skillId}`);
+  return response.data;
+};
+
+// Portfolio management
+export const addPortfolioItem = async (itemData: { title: string; description?: string; url: string; type?: string }) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/users/portfolio`, itemData);
+  return response.data;
+};
+
+export const removePortfolioItem = async (itemId: string) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/users/portfolio/${itemId}`);
+  return response.data;
+};
+
+// Websites management
+export const addUserWebsite = async (websiteData: { title: string; url: string; icon?: string }) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/users/websites`, websiteData);
+  return response.data;
+};
+
+export const removeUserWebsite = async (websiteId: string) => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.delete(`${API_URL}/users/websites/${websiteId}`);
+  return response.data;
+};

@@ -141,6 +141,102 @@ class UserModel {
       throw new Error(error.message);
     }
   }
+  // Add user skill
+  static async addUserSkill(userId, skillData) {
+    const { name, description, acquiredFrom } = skillData;
+    console.log('Adding skill:', { userId, name, description, acquiredFrom });
+    
+    try {
+      const result = await execute(
+        'INSERT INTO skills (user_id, name, description, acquired_from) VALUES (?, ?, ?, ?)',
+        [userId, name, description || null, acquiredFrom || null]
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Database error in addUserSkill:', error);
+      throw new Error(error.message);
+    }
+  }
+
+  // Remove user skill
+  static async removeUserSkill(userId, skillId) {
+    try {
+      const result = await execute(
+        'DELETE FROM skills WHERE id = ? AND user_id = ?',
+        [skillId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in removeUserSkill:', error);
+      throw new Error(error.message);
+    }
+  }
+
+  // Add portfolio item
+  static async addPortfolioItem(userId, itemData) {
+    const { title, description, url, type } = itemData;
+    
+    try {
+      const result = await execute(
+        'INSERT INTO portfolio_items (user_id, title, description, url, type) VALUES (?, ?, ?, ?, ?)',
+        [userId, title, description || null, url, type || 'other']
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Database error in addPortfolioItem:', error);
+      throw new Error(error.message);
+    }
+  }
+
+  // Remove portfolio item
+  static async removePortfolioItem(userId, itemId) {
+    try {
+      const result = await execute(
+        'DELETE FROM portfolio_items WHERE id = ? AND user_id = ?',
+        [itemId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in removePortfolioItem:', error);
+      throw new Error(error.message);
+    }
+  }
+
+  // Add user website
+  static async addUserWebsite(userId, websiteData) {
+    const { title, url, icon } = websiteData;
+    
+    try {
+      const result = await execute(
+        'INSERT INTO user_websites (user_id, title, url, description) VALUES (?, ?, ?, ?)',
+        [userId, title, url, icon || 'link']
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+      console.error('Database error in addUserWebsite:', error);
+      throw new Error(error.message);
+    }
+  }
+
+  // Remove user website
+  static async removeUserWebsite(userId, websiteId) {
+    try {
+      const result = await execute(
+        'DELETE FROM user_websites WHERE id = ? AND user_id = ?',
+        [websiteId, userId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Database error in removeUserWebsite:', error);
+      throw new Error(error.message);
+    }
+  }
 }
 
 export default UserModel;

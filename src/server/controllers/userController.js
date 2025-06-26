@@ -265,6 +265,138 @@ export async function uploadAvatar(req, res) {
     res.status(500).json({ message: 'Avatar upload failed' });
   }
 }
+// Add user skill
+export async function addUserSkill(req, res) {
+  console.log('Adding user skill... [userController.js.addUserSkill]');
+  try {
+    const { name, description, acquiredFrom } = req.body;
+    const userId = req.user.id;
+
+    if (!name) {
+      return res.status(400).json({ message: 'Skill name is required' });
+    }
+
+    const skillId = await UserModel.addUserSkill(userId, { name, description, acquiredFrom });
+    
+    res.status(201).json({ 
+      message: 'Skill added successfully',
+      skillId,
+      success: true
+    });
+  } catch (error) {
+    console.error('Add skill error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Remove user skill
+export async function removeUserSkill(req, res) {
+  console.log('Removing user skill... [userController.js.removeUserSkill]');
+  try {
+    const { skillId } = req.params;
+    const userId = req.user.id;
+
+    const removed = await UserModel.removeUserSkill(userId, skillId);
+    
+    if (removed) {
+      res.json({ message: 'Skill removed successfully', success: true });
+    } else {
+      res.status(404).json({ message: 'Skill not found' });
+    }
+  } catch (error) {
+    console.error('Remove skill error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Add portfolio item
+export async function addPortfolioItem(req, res) {
+  console.log('Adding portfolio item... [userController.js.addPortfolioItem]');
+  try {
+    const { title, description, url, type } = req.body;
+    const userId = req.user.id;
+
+    if (!title || !url) {
+      return res.status(400).json({ message: 'Title and URL are required' });
+    }
+
+    const itemId = await UserModel.addPortfolioItem(userId, { title, description, url, type });
+    
+    res.status(201).json({ 
+      message: 'Portfolio item added successfully',
+      itemId,
+      success: true
+    });
+  } catch (error) {
+    console.error('Add portfolio item error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Remove portfolio item
+export async function removePortfolioItem(req, res) {
+  console.log('Removing portfolio item... [userController.js.removePortfolioItem]');
+  try {
+    const { itemId } = req.params;
+    const userId = req.user.id;
+
+    const removed = await UserModel.removePortfolioItem(userId, itemId);
+    
+    if (removed) {
+      res.json({ message: 'Portfolio item removed successfully', success: true });
+    } else {
+      res.status(404).json({ message: 'Portfolio item not found' });
+    }
+  } catch (error) {
+    console.error('Remove portfolio item error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Add user website
+export async function addUserWebsite(req, res) {
+  console.log('Adding user website... [userController.js.addUserWebsite]');
+  try {
+    const { title, url, icon } = req.body;
+    const userId = req.user.id;
+
+    if (!title || !url) {
+      return res.status(400).json({ message: 'Title and URL are required' });
+    }
+
+    const websiteId = await UserModel.addUserWebsite(userId, { title, url, icon });
+    
+    res.status(201).json({ 
+      message: 'Website added successfully',
+      websiteId,
+      success: true
+    });
+  } catch (error) {
+    console.error('Add website error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Remove user website
+export async function removeUserWebsite(req, res) {
+  console.log('Removing user website... [userController.js.removeUserWebsite]');
+  try {
+    const { websiteId } = req.params;
+    const userId = req.user.id;
+
+    const removed = await UserModel.removeUserWebsite(userId, websiteId);
+    
+    if (removed) {
+      res.json({ message: 'Website removed successfully', success: true });
+    } else {
+      res.status(404).json({ message: 'Website not found' });
+    }
+  } catch (error) {
+    console.error('Remove website error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
 
 // Export multer middleware
 export const uploadAvatarMiddleware = upload.single('image');
