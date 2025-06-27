@@ -129,6 +129,10 @@ const handleStatusChange = async (id: number, type: string, newStatus: string): 
           });
           return { success: false };
         }
+      }else if (newStatus === 'Escrowed' ) {
+        await updateApplicationStatus(id, newStatus);
+        toast.success('Application status updated to Escrowed');
+        toast.success(`Application status updated to ${newStatus}`);
       }
     }
     else if (type === 'skill_contact') {

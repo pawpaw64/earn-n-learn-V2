@@ -54,9 +54,9 @@ const formatAmount = (amount?: number | string, hourlyRate?: number | string) =>
   }
   return 'Not specified';
 }; 
-  const collaboratorName = project.provider_id === parseInt(localStorage.getItem('userId') || '0') 
-    ? project.client_name 
-    : project.provider_name;
+  const collaboratorName = project.client_id === parseInt(localStorage.getItem('userId') || '0') 
+    ? project.provider_name 
+    : project.client_name;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">

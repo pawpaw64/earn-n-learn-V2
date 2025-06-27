@@ -181,6 +181,8 @@ export const updateApplicationStatus = async (req, res) => {
     "Accepted",
     "Rejected",
     "Withdrawn",
+    "Escrowed",
+    "Escrow Released",
   ];
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
@@ -261,17 +263,29 @@ export const updateApplicationStatus = async (req, res) => {
         });
         
         console.log(`Notification created for rejected application: ${id}`);
-      } else if (status === "Withdrawn") {
-        // Notify job poster
+      }else if (status === "Escrowed") {
+        // Notify applicant
         await NotificationModel.create({
-          user_id: jobPoster.id,
-          title: "Application Withdrawn",
-          message: `${applicant.name} has withdrawn their application for "${job.title}"`,
+          user_id: applicant.id,
+          title: "Application Escrowed",
+          message: `Your application for "${job.title}" has been escrowed by ${jobPoster.name}`,
           type: "application_status",
           reference_id: parseInt(id),
           reference_type: "job_application",
         });
-              }
+        
+          console.log(`Notification created for completed application: ${id}`);
+        } else if (status === "Withdrawn") {
+          // Notify job poster
+          await NotificationModel.create({
+            user_id: jobPoster.id,
+            title: "Application Withdrawn",
+            message: `${applicant.name} has withdrawn their application for "${job.title}"`,
+            type: "application_status",
+            reference_id: parseInt(id),
+            reference_type: "job_application",
+          });
+        }
     } catch (notificationError) {
       console.error("Error creating notification:", notificationError);
       // Don't fail the whole request if notification fails

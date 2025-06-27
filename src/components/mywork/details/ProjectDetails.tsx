@@ -117,9 +117,9 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     return 0;
   };
 
-  const collaboratorName = item.provider_id === parseInt(localStorage.getItem('userId') || '0') 
-    ? item.client_name 
-    : item.provider_name;
+  const collaboratorName = item.client_id === parseInt(localStorage.getItem('userId') || '0') 
+    ? item.provider_name 
+    : item.client_name;
 
   return (
     <div className="space-y-6">

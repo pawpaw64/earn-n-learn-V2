@@ -111,7 +111,29 @@ const [isFetching, setIsFetching] = useState(false);
       console.error("Failed to mark notification as read:", error);
     }
   };
+const handleMarkAllAsRead = async () => {
+  try {
+    // Get all unread notification IDs
+    const unreadIds = notifications
+      .filter(notif => !notif.is_read)
+      .map(notif => notif.id);
 
+    if (unreadIds.length === 0) return;
+
+    // Call API to mark all as read (you'll need to implement this endpoint)
+    await Promise.all(unreadIds.map(id => markNotificationAsRead(id)));
+    
+    // Update local state
+    setNotifications(prev => 
+      prev.map(notif => ({ ...notif, is_read: true }))
+    );
+    setUnreadCount(0);
+    toast.success("All notifications marked as read");
+  } catch (error) {
+    console.error("Failed to mark all notifications as read:", error);
+    toast.error("Failed to mark all as read");
+  }
+};
   const getAvatarFallback = () => {
     if (user.name) {
       return user.name
@@ -168,12 +190,19 @@ const [isFetching, setIsFetching] = useState(false);
       align="end" 
       className="w-[350px] max-h-[60vh] overflow-y-auto z-[100]"
     >
-      <div className="p-3 font-medium border-b sticky top-0 bg-background">
-        Notifications ({notifications.length})
-        {isFetching && (
-          <span className="ml-2 text-sm text-gray-500">Loading...</span>
-        )}
-      </div>
+      <div className="p-3 font-medium border-b sticky top-0 bg-background flex justify-between items-center">
+    <span>Notifications ({notifications.length})</span>
+    {unreadCount > 0 && (
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={handleMarkAllAsRead}
+        className="h-6 text-xs"
+      >
+        Mark all as read
+      </Button>
+    )}
+  </div>
       <div className="divide-y">
         {isFetching && notifications.length === 0 ? (
           <div className="p-4 text-center text-gray-500">Loading notifications...</div>

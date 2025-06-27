@@ -9,20 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Clock, Calendar, DollarSign, CheckCircle, XCircle, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
-interface TimeEntry {
-  id: number;
-  project_id: number;
-  task_id?: number;
-  user_id: number;
-  description: string;
-  hours: number;
-  date: string;
-  status: 'pending' | 'approved' | 'rejected';
-  user_name: string;
-  task_title?: string;
-  created_at: string;
-}
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { 
+  getProjectTimeEntries, 
+  createTimeEntry, 
+  updateTimeEntry, 
+  deleteTimeEntry,
+  ProjectTimeEntry 
+} from "@/services/projectTime";
 
 interface TimeTrackingProps {
   projectId: number;
@@ -30,8 +24,7 @@ interface TimeTrackingProps {
 }
 
 export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
-  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newEntry, setNewEntry] = useState({
     task_id: "",
@@ -40,65 +33,65 @@ export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
     date: new Date().toISOString().split('T')[0]
   });
 
-  const loadTimeEntries = async () => {
-    try {
-      setIsLoading(true);
-      // TODO: Replace with actual API call
-      // const data = await getProjectTimeEntries(projectId);
-      setTimeEntries([]);
-    } catch (error) {
-      console.error("Error loading time entries:", error);
-      toast.error("Failed to load time entries");
-    } finally {
-      setIsLoading(false);
+  // Fetch time entries
+  const { data: timeEntries = [], isLoading } = useQuery({
+    queryKey: ['projectTimeEntries', projectId],
+    queryFn: () => getProjectTimeEntries(projectId),
+    enabled: !!projectId
+  });
+
+  // Create time entry mutation
+  const createEntryMutation = useMutation({
+    mutationFn: (entryData: any) => createTimeEntry(projectId, entryData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTimeEntries', projectId] });
+      toast.success("Time entry created successfully");
+      setNewEntry({ task_id: "", description: "", hours: 0, date: new Date().toISOString().split('T')[0] });
+      setIsCreateDialogOpen(false);
+    },
+    onError: () => {
+      toast.error("Failed to create time entry");
     }
-  };
+  });
 
-  useEffect(() => {
-    loadTimeEntries();
-  }, [projectId]);
+  // Update time entry mutation
+  const updateEntryMutation = useMutation({
+    mutationFn: ({ entryId, data }: { entryId: number; data: any }) => updateTimeEntry(entryId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTimeEntries', projectId] });
+      toast.success("Time entry updated successfully");
+    },
+    onError: () => {
+      toast.error("Failed to update time entry");
+    }
+  });
 
-  const handleCreateEntry = async () => {
+  // Delete time entry mutation
+  const deleteEntryMutation = useMutation({
+    mutationFn: deleteTimeEntry,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projectTimeEntries', projectId] });
+      toast.success("Time entry deleted successfully");
+    },
+    onError: () => {
+      toast.error("Failed to delete time entry");
+    }
+  });
+
+  const handleCreateEntry = () => {
     if (!newEntry.description.trim() || newEntry.hours <= 0) {
       toast.error("Description and hours are required");
       return;
     }
-
-    try {
-      // TODO: Replace with actual API call
-      // await createTimeEntry(projectId, newEntry);
-      toast.success("Time entry created successfully");
-      setNewEntry({ task_id: "", description: "", hours: 0, date: new Date().toISOString().split('T')[0] });
-      setIsCreateDialogOpen(false);
-      loadTimeEntries();
-    } catch (error) {
-      console.error("Error creating time entry:", error);
-      toast.error("Failed to create time entry");
-    }
+    createEntryMutation.mutate(newEntry);
   };
 
-  const handleUpdateEntryStatus = async (entryId: number, status: string) => {
-    try {
-      // TODO: Replace with actual API call
-      // await updateTimeEntryStatus(entryId, status);
-      toast.success(`Time entry ${status}`);
-      loadTimeEntries();
-    } catch (error) {
-      console.error("Error updating time entry status:", error);
-      toast.error("Failed to update time entry status");
-    }
+  const handleUpdateEntryStatus = (entryId: number, status: string) => {
+    updateEntryMutation.mutate({ entryId, data: { status } });
   };
 
-  const handleDeleteEntry = async (entryId: number) => {
-    try {
-      // TODO: Replace with actual API call
-      // await deleteTimeEntry(entryId);
-      toast.success("Time entry deleted successfully");
-      loadTimeEntries();
-    } catch (error) {
-      console.error("Error deleting time entry:", error);
-      toast.error("Failed to delete time entry");
-    }
+  const handleDeleteEntry = (entryId: number) => {
+    deleteEntryMutation.mutate(entryId);
   };
 
   const getStatusColor = (status: string) => {
@@ -150,7 +143,9 @@ export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
                 onChange={(e) => setNewEntry({ ...newEntry, date: e.target.value })}
               />
               <div className="flex gap-2">
-                <Button onClick={handleCreateEntry}>Log Time</Button>
+                <Button onClick={handleCreateEntry} disabled={createEntryMutation.isPending}>
+                  {createEntryMutation.isPending ? 'Logging...' : 'Log Time'}
+                </Button>
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
@@ -220,6 +215,7 @@ export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => handleUpdateEntryStatus(entry.id, 'approved')}
+                          disabled={updateEntryMutation.isPending}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Approve
@@ -228,6 +224,7 @@ export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => handleUpdateEntryStatus(entry.id, 'rejected')}
+                          disabled={updateEntryMutation.isPending}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Reject
@@ -238,6 +235,7 @@ export function TimeTracking({ projectId, userRole }: TimeTrackingProps) {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDeleteEntry(entry.id)}
+                      disabled={deleteEntryMutation.isPending}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

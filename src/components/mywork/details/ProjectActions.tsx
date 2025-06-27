@@ -325,7 +325,7 @@ export function ProjectActions({ project }: ProjectActionsProps) {
                       <div className="flex gap-2">
                         {task.status !== 'completed' && (
                           <>
-                            {task.status === 'pending' && (
+                            {task.status === 'pending' && !isProvider && (
                               <Button 
                                 size="sm" 
                                 variant="outline"

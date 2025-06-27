@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { updateEscrowStatus } from "@/services/applications";
 import { Eye, MessageSquare, Check, X, DollarSign } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { createGroup, findGroupByName, addToGroup } from "@/services/messages";
 
 interface ReceivedApplicationsTableProps {
   applications: any[];
@@ -38,13 +39,6 @@ export const ReceivedApplicationsTable: React.FC<
   const [showEscrowDialog, setShowEscrowDialog] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [escrowCreated, setEscrowCreated] = useState<Record<number, boolean>>(
-    {}
-  );
-  const [projectCompleted, setProjectCompleted] = useState<
-    Record<number, boolean>
-  >({});
-  const [projectIds, setProjectIds] = useState<Record<number, number>>({});
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -53,21 +47,14 @@ export const ReceivedApplicationsTable: React.FC<
   const handleAcceptApplication = async (appId: number, app: any) => {
     try {
       setProcessingId(appId);
-      const result = await onStatusChange(
-        appId,
-        "job_application",
-        "Accepted"
-      );
-      
-      if (result?.success && result?.projectId) {
-        toast.success(`Application accepted and project #${result.projectId} created!`);
-        setProjectIds(prev => ({
-          ...prev,
-          [appId]: result.projectId as number
-        }));
+      const result = await onStatusChange(appId, "job_application", "Accepted");
+
+      if (result?.success) {
+        toast.success("Application accepted successfully!");
       }
     } catch (error) {
       console.error("Error accepting application:", error);
+      toast.error("Failed to accept application");
     } finally {
       setProcessingId(null);
     }
@@ -76,17 +63,76 @@ export const ReceivedApplicationsTable: React.FC<
   const handleRejectApplication = async (appId: number) => {
     try {
       setProcessingId(appId);
-      console.log(`[ReceivedApplicationsTable] Rejecting application ${appId}`);
       await onStatusChange(appId, "job_application", "Rejected");
+      toast.success("Application rejected");
     } catch (error) {
       console.error("Error rejecting application:", error);
+      toast.error("Failed to reject application");
     } finally {
       setProcessingId(null);
     }
   };
 
-  const handleContactUser = (userId: number) => {
-    navigate(`/dashboard/messages?userId=${userId}`);
+  const handleCompleteApplication = async (appId: number) => {
+    try {
+      setProcessingId(appId);
+      const result = await onStatusChange(appId, "job_application", "Escrowed");
+
+      if (result?.success) {
+        toast.success("Escrowed for the application!");
+      }
+    } catch (error) {
+      console.error("Error completing application:", error);
+      toast.error("Failed to complete application");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleContactUser = async (
+    userId: number,
+    userName: string,
+    jobTitle: string
+  ) => {
+    try {
+      setProcessingId(userId);
+
+      const groupName = `Job: ${jobTitle} - Discussion`;
+
+      let existingGroup;
+      try {
+        existingGroup = await findGroupByName(groupName);
+        console.log("Existing group found:", existingGroup);
+      } catch (error) {
+        console.log("No existing group found, will create new one");
+      }
+
+      let groupId;
+
+      if (existingGroup && existingGroup.id) {
+        groupId = existingGroup.id;
+        toast.success(`Opening existing discussion for ${jobTitle}`);
+      } else {
+        const newGroup = await createGroup(
+          groupName,
+          `Discussion about job application for: ${jobTitle}`
+        );
+        groupId = newGroup.id;
+
+        await addToGroup(groupId, userId, false);
+
+        toast.success(`Created new discussion group for ${jobTitle}`);
+      }
+
+      navigate(`/dashboard/messages`);
+      localStorage.setItem("openChatWith", String(groupId));
+      localStorage.setItem("openChatType", "group");
+    } catch (error) {
+      console.error("Error creating/finding group:", error);
+      toast.error("Failed to create discussion group");
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleViewProfile = (userId: number) => {
@@ -106,10 +152,6 @@ export const ReceivedApplicationsTable: React.FC<
       console.error("Error updating escrow status:", error);
       toast.error("Failed to update escrow status");
     }
-  };
-
-  const handleGoToProject = (projectId: number) => {
-    navigate(`/dashboard/mywork/projects/${projectId}`);
   };
 
   // Group applications by job
@@ -135,7 +177,7 @@ export const ReceivedApplicationsTable: React.FC<
 
   return (
     <>
-    <div className="space-y-6 bg-white p-6 rounded-sm shadow-md">
+      <div className="space-y-6 bg-white p-6 rounded-sm shadow-md">
         {Object.values(jobGroups).map((group: any) => (
           <div key={group.jobId} className="border rounded-lg p-4">
             <div className="flex justify-between items-center mb-4">
@@ -145,8 +187,7 @@ export const ReceivedApplicationsTable: React.FC<
                   className="bg-white border border-emerald-600 text-emerald-600 hover:bg-emerald-50 hover:text-black"
                   variant="outline"
                   size="sm"
-                  onClick={() => onViewDetails(group.applications[0], "job")}
-                >
+                  onClick={() => onViewDetails(group.applications[0], "job")}>
                   <Eye className="w-4 h-4 mr-2" />
                   Job details
                 </Button>
@@ -170,8 +211,7 @@ export const ReceivedApplicationsTable: React.FC<
                         <div className="flex items-center gap-2">
                           <Avatar
                             className="h-8 w-8 cursor-pointer"
-                            onClick={() => handleViewProfile(app.user_id)}
-                          >
+                            onClick={() => handleViewProfile(app.user_id)}>
                             <AvatarImage src={app.applicant_avatar} />
                             <AvatarFallback>
                               {app.applicant_name?.charAt(0)}
@@ -180,8 +220,7 @@ export const ReceivedApplicationsTable: React.FC<
                           <div>
                             <p
                               className="font-medium cursor-pointer hover:underline"
-                              onClick={() => handleViewProfile(app.user_id)}
-                            >
+                              onClick={() => handleViewProfile(app.user_id)}>
                               {app.applicant_name}
                             </p>
                             <p className="text-xs text-muted-foreground">
@@ -200,9 +239,10 @@ export const ReceivedApplicationsTable: React.FC<
                               ? "secondary"
                               : app.status === "Rejected"
                               ? "destructive"
+                              : app.status === "Escrowed"
+                              ? "default"
                               : "outline"
-                          }
-                        >
+                          }>
                           {app.status}
                         </Badge>
                       </TableCell>
@@ -211,8 +251,7 @@ export const ReceivedApplicationsTable: React.FC<
                           <Button
                             className="bg-white border border-black text-gray-700 hover:bg-gray-100 hover:text-black px-3 py-1 text-sm rounded-md flex items-center gap-1"
                             size="sm"
-                            onClick={() => onViewDetails(app, "application")}
-                          >
+                            onClick={() => onViewDetails(app, "application")}>
                             <Eye className="w-4 h-4 mr-1" />
                             View Details
                           </Button>
@@ -220,10 +259,18 @@ export const ReceivedApplicationsTable: React.FC<
                             className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                             variant="outline"
                             size="sm"
-                            onClick={() => handleContactUser(app.user_id)}
-                          >
+                            onClick={() =>
+                              handleContactUser(
+                                app.user_id,
+                                app.applicant_name,
+                                group.title
+                              )
+                            }
+                            disabled={processingId === app.user_id}>
                             <MessageSquare className="w-4 h-4 mr-1" />
-                            Contact
+                            {processingId === app.user_id
+                              ? "Creating..."
+                              : "Contact"}
                           </Button>
 
                           {app.status === "Pending" && (
@@ -232,9 +279,10 @@ export const ReceivedApplicationsTable: React.FC<
                                 variant="outline"
                                 size="sm"
                                 className="bg-white border border-green-500 text-green-600 hover:bg-green-50 hover:text-green-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                onClick={() => handleAcceptApplication(app.id, app)}
-                                disabled={processingId === app.id}
-                              >
+                                onClick={() =>
+                                  handleAcceptApplication(app.id, app)
+                                }
+                                disabled={processingId === app.id}>
                                 <Check className="w-4 h-4 mr-1" />
                                 {processingId === app.id
                                   ? "Processing..."
@@ -245,8 +293,7 @@ export const ReceivedApplicationsTable: React.FC<
                                 size="sm"
                                 className="bg-white border border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
                                 onClick={() => handleRejectApplication(app.id)}
-                                disabled={processingId === app.id}
-                              >
+                                disabled={processingId === app.id}>
                                 <X className="w-4 h-4 mr-1" />
                                 {processingId === app.id
                                   ? "Processing..."
@@ -254,42 +301,33 @@ export const ReceivedApplicationsTable: React.FC<
                               </Button>
                             </>
                           )}
+
                           {app.status === "Accepted" &&
-                            app.escrow_status === "pending" && 
-                            (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleSetupEscrow(app)}
-                              >
-                                <DollarSign className="w-4 h-4 mr-1" /> Set Up
-                                Escrow
-                              </Button>
+                            app.escrow_status === "pending" && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (app.escrow_status === "pending") {
+                                      handleSetupEscrow(app);
+                                    }
+                                    if (app.escrow_status === "created") {
+                                      handleCompleteApplication(app.id);
+                                      processingId;
+                                    }
+                                  }}>
+                                  <DollarSign className="w-4 h-4 mr-1" />
+                                  Set Up Escrow
+                                </Button>
+                              </>
                             )}
 
                           {app.status === "Accepted" &&
                             app.escrow_status === "created" && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleGoToProject(
-                                    projectIds[app.id] || app.project_id
-                                  )
-                                }
-                              >
-                                <Check className="w-4 h-4 mr-1" /> Go to Project
-                              </Button>
-                            )}
-
-                          {projectCompleted[app.id] && (
-                            <Button variant="outline" size="sm" disabled>
-                              Project Completed
-                            </Button>
-                          )}
-                          {app.status === "Accepted" &&
-                            app.escrow_status === "completed" && (
-                              <Button disabled>Project Completed</Button>
+                              <div className="text-sm text-purple-600 font-medium px-3 py-1">
+                                ✓ Escrowed
+                              </div>
                             )}
                         </div>
                       </TableCell>
