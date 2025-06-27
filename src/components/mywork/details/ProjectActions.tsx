@@ -29,6 +29,7 @@ import {
   assignTask 
 } from "@/services/projectTasks";
 import { toast } from "sonner";
+import { ResourceSharing } from "@/components/projects/enhanced/ResourceSharing";
 
 interface ProjectActionsProps {
   project: any;
@@ -354,76 +355,10 @@ export function ProjectActions({ project }: ProjectActionsProps) {
 
         {/* Resources Tab */}
         <TabsContent value="resources" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="font-medium">Shared Resources</h4>
-            <Dialog open={isResourceDialogOpen} onOpenChange={setIsResourceDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Upload className="w-4 h-4 mr-1" />
-                  Share Resource
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Share Resource</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Resource Name</label>
-                    <Input
-                      value={newResource.name}
-                      onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
-                      placeholder="Resource name"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Type</label>
-                    <Select value={newResource.type} onValueChange={(value: any) => setNewResource({ ...newResource, type: value })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="file">File</SelectItem>
-                        <SelectItem value="link">Link</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">URL</label>
-                    <Input
-                      value={newResource.url}
-                      onChange={(e) => setNewResource({ ...newResource, url: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Description</label>
-                    <Textarea
-                      value={newResource.description}
-                      onChange={(e) => setNewResource({ ...newResource, description: e.target.value })}
-                      placeholder="Resource description"
-                    />
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="outline" onClick={() => setIsResourceDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleResourceShare}>
-                      Share Resource
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="text-center py-8 text-muted-foreground">
-            <div className="space-y-2">
-              <div className="text-4xl">📁</div>
-              <p>No resources shared yet</p>
-              <p className="text-sm">Share files and links with your team</p>
-            </div>
-          </div>
+          <ResourceSharing 
+            projectId={project.id} 
+            userRole={userRole}
+          />
         </TabsContent>
 
        

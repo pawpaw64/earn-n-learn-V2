@@ -9,20 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Download, FileText, Image, Video, Archive, Trash2, ExternalLink, Camera, File } from "lucide-react";
 import { toast } from "sonner";
-
-interface ProjectResource {
-  id: number;
-  project_id: number;
-  name: string;
-  type: string;
-  url: string;
-  description?: string;
-  category: string;
-  size: number;
-  uploaded_by: number;
-  uploaded_by_name: string;
-  created_at: string;
-}
+import { 
+  getProjectResources, 
+  uploadProjectResource, 
+  uploadProjectFile, 
+  deleteProjectResource,
+  ProjectResource 
+} from "@/services/projectResources";
 
 interface ResourceSharingProps {
   projectId: number;
@@ -35,6 +28,7 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadType, setUploadType] = useState<'file' | 'url'>('file');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [newResource, setNewResource] = useState({
     name: "",
     type: "",
@@ -47,9 +41,8 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
   const loadResources = async () => {
     try {
       setIsLoading(true);
-      // TODO: Replace with actual API call
-      // const data = await getProjectResources(projectId);
-      setResources([]);
+      const data = await getProjectResources(projectId);
+      setResources(data);
     } catch (error) {
       console.error("Error loading resources:", error);
       toast.error("Failed to load resources");
@@ -90,20 +83,28 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
     }
 
     try {
+      setIsUploading(true);
+      
       if (uploadType === 'file' && selectedFile) {
         // Create FormData for file upload
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('name', newResource.name);
+        formData.append('name', newResource.name || selectedFile.name);
         formData.append('description', newResource.description);
         formData.append('category', newResource.category);
         
-        // TODO: Replace with actual file upload API call
-        // const response = await uploadProjectFile(projectId, formData);
+        await uploadProjectFile(projectId, formData);
         toast.success("File uploaded successfully");
       } else {
-        // TODO: Replace with actual URL resource API call
-        // await uploadProjectResource(projectId, newResource);
+        // Upload URL resource
+        await uploadProjectResource(projectId, {
+          name: newResource.name,
+          type: 'link',
+          url: newResource.url,
+          description: newResource.description,
+          category: newResource.category,
+          size: 0
+        });
         toast.success("Resource shared successfully");
       }
       
@@ -114,13 +115,14 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
     } catch (error) {
       console.error("Error uploading resource:", error);
       toast.error("Failed to upload resource");
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const handleDeleteResource = async (resourceId: number) => {
     try {
-      // TODO: Replace with actual API call
-      // await deleteProjectResource(resourceId);
+      await deleteProjectResource(resourceId);
       toast.success("Resource deleted successfully");
       loadResources();
     } catch (error) {
@@ -130,11 +132,11 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
   };
 
   const getResourceIcon = (type: string) => {
-    if (type.startsWith('image/')) return <Image className="h-4 w-4" />;
-    if (type.startsWith('video/')) return <Video className="h-4 w-4" />;
-    if (type.includes('pdf') || type.includes('doc')) return <FileText className="h-4 w-4" />;
+    if (type === 'image' || type.startsWith('image/')) return <Image className="h-4 w-4" />;
+    if (type === 'video' || type.startsWith('video/')) return <Video className="h-4 w-4" />;
+    if (type === 'document' || type.includes('pdf') || type.includes('doc')) return <FileText className="h-4 w-4" />;
     if (type.includes('zip') || type.includes('rar')) return <Archive className="h-4 w-4" />;
-    return <FileText className="h-4 w-4" />;
+    return <File className="h-4 w-4" />;
   };
 
   const formatFileSize = (bytes: number) => {
@@ -143,6 +145,16 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleResourceClick = (resource: ProjectResource) => {
+    if (resource.url.startsWith('/uploads/')) {
+      // For local files, open in new tab
+      window.open(`http://localhost:8080${resource.url}`, '_blank');
+    } else {
+      // For external URLs, open directly
+      window.open(resource.url, '_blank');
+    }
   };
 
   if (isLoading) {
@@ -191,15 +203,6 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
                         accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip,.rar"
                         className="flex-1"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement | null)?.click()}
-                      >
-                        <Camera className="h-4 w-4 mr-1" />
-                        Browse
-                      </Button>
                     </div>
                     {selectedFile && (
                       <div className="mt-2 p-3 bg-muted rounded-md">
@@ -213,11 +216,11 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
                   </div>
                   
                   <div>
-                    <label className="text-sm font-medium">Display Name</label>
+                    <label className="text-sm font-medium">Display Name (Optional)</label>
                     <Input
                       value={newResource.name}
                       onChange={(e) => setNewResource({ ...newResource, name: e.target.value })}
-                      placeholder="Resource display name"
+                      placeholder={selectedFile?.name || "Resource display name"}
                     />
                   </div>
                 </>
@@ -270,8 +273,10 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleUploadResource}>
-                  {uploadType === 'file' ? (
+                <Button onClick={handleUploadResource} disabled={isUploading}>
+                  {isUploading ? (
+                    <>Loading...</>
+                  ) : uploadType === 'file' ? (
                     <>
                       <Upload className="h-4 w-4 mr-1" />
                       Upload File
@@ -313,13 +318,15 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
                       {getResourceIcon(resource.type)}
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-medium">{resource.name}</h4>
+                      <h4 className="font-medium cursor-pointer hover:underline" onClick={() => handleResourceClick(resource)}>
+                        {resource.name}
+                      </h4>
                       {resource.description && (
                         <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
                       )}
                       <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
                         <Badge variant="outline">{resource.category}</Badge>
-                        <span>{formatFileSize(resource.size)}</span>
+                        {resource.size > 0 && <span>{formatFileSize(resource.size)}</span>}
                         <span>By {resource.uploaded_by_name}</span>
                         <span>{new Date(resource.created_at).toLocaleDateString()}</span>
                       </div>
@@ -329,7 +336,7 @@ export function ResourceSharing({ projectId, userRole }: ResourceSharingProps) {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(resource.url, '_blank')}
+                      onClick={() => handleResourceClick(resource)}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
