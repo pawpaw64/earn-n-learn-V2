@@ -37,14 +37,6 @@ const profileMenuItems = [{
   icon: User,
   href: "/dashboard/profile"
 }, {
-  title: "Settings",
-  icon: Settings,
-  href: "/dashboard/settings"
-}, {
-  title: "Leaderboard",
-  icon: Trophy,
-  href: "/dashboard/leaderboard"
-}, {
   title: "Calendar",
   icon: Calendar,
   href: "/dashboard/calendar"

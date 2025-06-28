@@ -108,26 +108,31 @@ export const submitMaterialContact = async (req, res) => {
     // Get material seller and contact initiator details
     const materialSeller = await UserModel.getById(material.user_id);
     const contactInitiator = await UserModel.getById(req.user.id);
-    
-    // Create notification for material seller
-    await NotificationModel.create({
+    // Create notifications, but don't fail the whole process if this fails
+    try {
+      // Create notification for material seller
+      await NotificationModel.create({
       user_id: materialSeller.id,
       title: 'New Material Inquiry',
       message: `${contactInitiator.name} is interested in your material: ${material.title}`,
       type: 'contact',
       reference_id: contactId,
       reference_type: 'material_contact'
-    });
-    
-    // Create notification for contact initiator
-    await NotificationModel.create({
+      });
+
+      // Create notification for contact initiator
+      await NotificationModel.create({
       user_id: contactInitiator.id,
       title: 'Inquiry Sent',
       message: `Your message about "${material.title}" has been sent to ${materialSeller.name}`,
       type: 'contact',
       reference_id: contactId,
       reference_type: 'material_contact'
-    });
+      });
+    } catch (notifyErr) {
+      console.error('Failed to create material contact notifications:', notifyErr);
+      // Do not throw, just log
+    }
     
     res.status(201).json({ 
       message: 'Contact request sent successfully',

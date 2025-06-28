@@ -52,8 +52,11 @@ export const useWorkDetails = ({
       }
 
       else if (type === 'contact') {
+        console.log("Fetching contact details for item:", item);
         if (item.skill_id || item.skill_name) {
-          const details = await getSkillContactDetails(item.id);
+          console.log("Fetching skill contact details for item:", item.id);
+          const details = await getSkillContactDetails(item.skill_id);
+          console.log("Skill contact details fetched:", details);
           if (details) {
             detailItem = { ...item, ...details };
           }

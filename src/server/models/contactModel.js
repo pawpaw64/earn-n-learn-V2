@@ -206,7 +206,7 @@ class ContactModel {
         [id]
       );
 
-      const rows = Array.isArray(result) ? result : result.rows || [];
+       const rows = Array.isArray(result) ? result : result.rows || [];
       return rows[0];
     } catch (error) {
       console.error("ContactModel.getSkillContactById() - Error:", error);

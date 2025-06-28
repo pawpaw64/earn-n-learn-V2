@@ -58,7 +58,7 @@ export const getApplicationDetails = async (id: number): Promise<ApplicationType
   setAuthToken(localStorage.getItem('token'));
   
   try {
-    const response = await axios.get(`${API_URL}/jobs/${id}`);
+    const response = await axios.get(`${API_URL}/applications/${id}`);
     return response.data;
   } catch (error: any) {
     console.error("Get application details error:", error);
