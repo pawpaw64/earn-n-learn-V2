@@ -176,19 +176,27 @@ class JobModel {
 
   // Update job
   static async update(id, jobData) {
-    const { title, description, type, payment, deadline, requirements, location, status } = jobData;
+  const { title, description, type, payment, deadline, requirements, location, status } = jobData;
+  
+  try {
+    const result = await execute(
+      'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, status = ? WHERE id = ?',
+      [title, description, type, payment, deadline, requirements, location, status, id]
+    );
     
-    try {
-      const [result] = await execute(
-        'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, status = ? WHERE id = ?',
-        [title, description, type, payment, deadline, requirements, location, status, id]
-      );
-      
-      return result.affectedRows > 0;
-    } catch (error) {
-      throw new Error(error.message);
-    }
+    // Handle different database driver response formats
+    const affectedRows = Array.isArray(result) ? result[0]?.affectedRows : result?.affectedRows;
+    return affectedRows > 0;
+  } catch (error) {
+    console.error('JobModel.update() - Error:', {
+      id,
+      jobData,
+      error: error.message,
+      stack: error.stack
+    });
+    throw new Error('Failed to update job');
   }
+}
 
   // Delete job
   static async delete(id) {
