@@ -1,3 +1,4 @@
+
 // src/api/auth.ts
 import axios from 'axios';
 
@@ -10,8 +11,15 @@ export const setAuthToken = (token: string | null) => {
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     
+    // Extract and store userId from token
+    const userId = getUserIdFromToken(token);
+    if (userId) {
+      localStorage.setItem('userId', userId.toString());
+      console.log('Stored userId in localStorage:', userId);
+    }
   } else {
     delete axios.defaults.headers.common['Authorization'];
+    localStorage.removeItem('userId');
   }
 };
 
@@ -31,6 +39,15 @@ export interface AuthResponse {
  */
 export const registerUser = async (userData: any): Promise<AuthResponse> => {
   const response = await axios.post(`${API_URL}/users/register`, userData);
+  
+  // Store user info in localStorage
+  if (response.data.user) {
+    localStorage.setItem('userId', response.data.user.id.toString());
+    localStorage.setItem('userName', response.data.user.name);
+    localStorage.setItem('userEmail', response.data.user.email);
+    console.log('Registration - Stored userId:', response.data.user.id);
+  }
+  
   return response.data;
 };
 
@@ -39,6 +56,15 @@ export const registerUser = async (userData: any): Promise<AuthResponse> => {
  */
 export const loginUser = async (credentials: any): Promise<AuthResponse> => {
   const response = await axios.post(`${API_URL}/users/login`, credentials);
+  
+  // Store user info in localStorage
+  if (response.data.user) {
+    localStorage.setItem('userId', response.data.user.id.toString());
+    localStorage.setItem('userName', response.data.user.name);
+    localStorage.setItem('userEmail', response.data.user.email);
+    console.log('Login - Stored userId:', response.data.user.id);
+  }
+  
   return response.data;
 };
 
@@ -48,6 +74,13 @@ export const loginUser = async (credentials: any): Promise<AuthResponse> => {
 export const getCurrentUser = async () => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.get(`${API_URL}/users/me`);
+  
+  // Ensure userId is stored in localStorage
+  if (response.data.id) {
+    localStorage.setItem('userId', response.data.id.toString());
+    console.log('getCurrentUser - Stored userId:', response.data.id);
+  }
+  
   return response.data;
 };
 
@@ -70,3 +103,27 @@ export function getUserIdFromToken(token: string | null): number | null {
     return null;
   }
 }
+
+/**
+ * Get current user ID from localStorage or token
+ */
+export const getCurrentUserId = (): number => {
+  const storedUserId = localStorage.getItem('userId');
+  if (storedUserId) {
+    console.log('Retrieved userId from localStorage:', storedUserId);
+    return parseInt(storedUserId);
+  }
+  
+  const token = localStorage.getItem('token');
+  if (token) {
+    const userId = getUserIdFromToken(token);
+    if (userId) {
+      localStorage.setItem('userId', userId.toString());
+      console.log('Retrieved and stored userId from token:', userId);
+      return userId;
+    }
+  }
+  
+  console.warn('No userId found, defaulting to 0');
+  return 0;
+};

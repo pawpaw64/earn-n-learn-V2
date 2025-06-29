@@ -233,18 +233,30 @@ export const ReceivedApplicationsTable: React.FC<
                         {new Date(app.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          variant={
-                            app.status === "Accepted"
-                              ? "secondary"
-                              : app.status === "Rejected"
-                              ? "destructive"
-                              : app.status === "Escrowed"
-                              ? "default"
-                              : "outline"
-                          }>
-                          {app.status}
-                        </Badge>
+                   <TableCell>
+  <Badge
+    variant={
+      app.status === "Accepted" && app.escrow_status === "created"
+        ? "default" // or your preferred variant for Escrowed
+        : app.status === "Accepted"
+        ? "secondary"
+        : app.status === "Rejected"
+        ? "destructive"
+        : app.status === "Escrowed"
+        ? "default"
+        : "outline"
+    }
+    className={
+      app.status === "Accepted" && app.escrow_status === "created"
+        ? "bg-purple-500 hover:bg-purple-600 text-white"
+        : ""
+    }
+  >
+    {app.status === "Accepted" && app.escrow_status === "created"
+      ? "Escrowed"
+      : app.status}
+  </Badge>
+</TableCell>
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">

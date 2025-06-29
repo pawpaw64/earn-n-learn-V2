@@ -5,6 +5,8 @@ import { Calendar, DollarSign, User, Clock, Target } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProjectTasks, updateTaskStatus } from "@/services/projectTasks";
 import { toast } from "sonner";
+import { parse } from "path";
+import { getCurrentUserId } from "@/services/auth";
 
 interface ProjectDetailsProps {
   item: any;
@@ -22,7 +24,7 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
 
   const tasks = tasksData?.tasks || [];
   const userRole = tasksData?.userRole || 'client';
-  const currentUserId = tasksData?.currentUserId || 0;
+  const currentUserId = getCurrentUserId();
   const isProvider = userRole === 'provider';
 
   // Update task status mutation
@@ -116,10 +118,18 @@ export function ProjectDetails({ item }: ProjectDetailsProps) {
     }
     return 0;
   };
-
-  const collaboratorName = item.client_id === parseInt(localStorage.getItem('userId') || '0') 
+  
+ 
+  // Fix the collaborator name logic
+  const collaboratorName = item.client_id === currentUserId 
     ? item.provider_name 
     : item.client_name;
+
+  console.log('ProjectDetails - Current User ID:', currentUserId);
+  console.log('ProjectDetails - Project client_id:', item.client_id);
+  console.log('ProjectDetails - Project provider_id:', item.provider_id);
+  console.log('ProjectDetails - Collaborator name:', collaboratorName);
+
 
   return (
     <div className="space-y-6">

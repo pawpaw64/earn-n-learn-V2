@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Eye, MessageSquare, Calendar, DollarSign, User, Clock, Edit } from "lucide-react";
 import { Project } from "@/types/marketplace";
-import { Action } from "@radix-ui/react-toast";
+import { getCurrentUserId } from "@/services/auth";
 
 interface ProjectCardProps {
   project: Project;
@@ -15,7 +15,8 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onViewDetails, onOpenChat }: ProjectCardProps) {
-  const getStatusColor = (status: string) => {
+   const currentUserId = getCurrentUserId();
+    const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
         return 'default';
@@ -54,10 +55,16 @@ const formatAmount = (amount?: number | string, hourlyRate?: number | string) =>
   }
   return 'Not specified';
 }; 
-  const collaboratorName = project.client_id === parseInt(localStorage.getItem('userId') || '0') 
+
+  // Fix the collaborator name logic
+  const collaboratorName = project.client_id === currentUserId 
     ? project.provider_name 
     : project.client_name;
 
+  console.log('ProjectCard - Current User ID:', currentUserId);
+  console.log('ProjectCard - Project client_id:', project.client_id);
+  console.log('ProjectCard - Project provider_id:', project.provider_id);
+  console.log('ProjectCard - Collaborator name:', collaboratorName);
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">

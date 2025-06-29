@@ -6,6 +6,8 @@ import { Project } from "@/types/marketplace";
 import { LoadingSkeleton } from "../mywork/LoadingSkeleton";
 import { ProjectsGrid } from "./ProjectsGrid";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Console } from "console";
 
 interface ProjectsTabProps {
   onViewDetails?: (item: any, type: string) => Promise<void>;
@@ -36,9 +38,13 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
     // This could open a dedicated chat interface or redirect to messages
   };
 
-  const activeProjects = allProjects.filter(p => p.status === 'active');
-  const completedProjects = allProjects.filter(p => p.status === 'completed');
-  const otherProjects = allProjects.filter(p => !['active', 'completed'].includes(p.status));
+  // Get current user ID
+  const currentUserId = parseInt(localStorage.getItem('userId') || '0');
+  console.log('Current user ID:', currentUserId);
+
+  // Separate projects by user role
+  const clientProjects = allProjects.filter(p => p.provider_id === currentUserId);
+  const providerProjects = allProjects.filter(p => p.client_id === currentUserId);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -87,43 +93,127 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
           </div>
         </div>
       ) : (
-        <Tabs defaultValue="active" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="active">
-              Active ({activeProjects.length})
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completed ({completedProjects.length})
-            </TabsTrigger>
-            <TabsTrigger value="other">
-              Other ({otherProjects.length})
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-8">
+          {/* Client Work Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Work as Recruiter</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {clientProjects.length} projects
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {clientProjects.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="space-y-2">
+                    <div className="text-3xl">👤</div>
+                    <p className="text-sm">No projects where you work as a client</p>
+                  </div>
+                </div>
+              ) : (
+                <Tabs defaultValue="active" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="active">
+                      Active ({clientProjects.filter(p => p.status === 'active').length})
+                    </TabsTrigger>
+                    <TabsTrigger value="completed">
+                      Completed ({clientProjects.filter(p => p.status === 'completed').length})
+                    </TabsTrigger>
+                    <TabsTrigger value="other">
+                      Other ({clientProjects.filter(p => !['active', 'completed'].includes(p.status)).length})
+                    </TabsTrigger>
+                  </TabsList>
 
-          <TabsContent value="active" className="mt-6">
-            <ProjectsGrid 
-              projects={activeProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
+                  <TabsContent value="active" className="mt-4">
+                    <ProjectsGrid 
+                      projects={clientProjects.filter(p => p.status === 'active')}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
 
-          <TabsContent value="completed" className="mt-6">
-            <ProjectsGrid 
-              projects={completedProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
+                  <TabsContent value="completed" className="mt-4">
+                    <ProjectsGrid 
+                      projects={clientProjects.filter(p => p.status === 'completed')}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
 
-          <TabsContent value="other" className="mt-6">
-            <ProjectsGrid 
-              projects={otherProjects}
-              onViewDetails={handleViewDetails}
-              onOpenChat={handleOpenChat}
-            />
-          </TabsContent>
-        </Tabs>
+                  <TabsContent value="other" className="mt-4">
+                    <ProjectsGrid 
+                      projects={clientProjects.filter(p => !['active', 'completed'].includes(p.status))}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Provider Work Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Work as Applicant</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {providerProjects.length} projects
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {providerProjects.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="space-y-2">
+                    <div className="text-3xl">🔧</div>
+                    <p className="text-sm">No projects where you work as a provider</p>
+                  </div>
+                </div>
+              ) : (
+                <Tabs defaultValue="active" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="active">
+                      Active ({providerProjects.filter(p => p.status === 'active').length})
+                    </TabsTrigger>
+                    <TabsTrigger value="completed">
+                      Completed ({providerProjects.filter(p => p.status === 'completed').length})
+                    </TabsTrigger>
+                    <TabsTrigger value="other">
+                      Other ({providerProjects.filter(p => !['active', 'completed'].includes(p.status)).length})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="active" className="mt-4">
+                    <ProjectsGrid 
+                      projects={providerProjects.filter(p => p.status === 'active')}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="completed" className="mt-4">
+                    <ProjectsGrid 
+                      projects={providerProjects.filter(p => p.status === 'completed')}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="other" className="mt-4">
+                    <ProjectsGrid 
+                      projects={providerProjects.filter(p => !['active', 'completed'].includes(p.status))}
+                      onViewDetails={handleViewDetails}
+                      onOpenChat={handleOpenChat}
+                    />
+                  </TabsContent>
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
