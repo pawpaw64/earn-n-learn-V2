@@ -22,9 +22,9 @@ FROM node:18-alpine AS production
 # Set working directory
 WORKDIR /app
 
-# Copy backend package.json and install ALL dependencies (not just production)
-COPY src/server/package*.json ./
-RUN npm install
+# First, copy and install backend dependencies
+COPY src/server/package*.json ./src/server/
+RUN cd src/server && npm install
 
 # Copy built frontend from build stage
 COPY --from=build /app/dist ./public
