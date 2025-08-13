@@ -13,11 +13,13 @@ FROM node:18-alpine AS production
 WORKDIR /app
 
 # Copy backend package files
-COPY src/server/package*.json ./src/server/
+COPY src/server/package*.json ./
 
 # Install backend dependencies
-WORKDIR /app/src/server
 RUN npm install
+
+# Go back to app root
+WORKDIR /app
 
 # Copy backend source AFTER installing dependencies
 COPY src/server/ ./src/server/
@@ -34,4 +36,4 @@ RUN mkdir -p uploads/messages uploads/profiles uploads/materials uploads/project
 EXPOSE 8080
 
 # Start backend server
-CMD ["node", "src/server/index.js"]
+CMD ["node", "server.js"]
