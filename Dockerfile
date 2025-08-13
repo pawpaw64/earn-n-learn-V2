@@ -1,28 +1,37 @@
-# Stage 2: Production backend
-FROM node:18-alpine AS production
-
+# Stage 1: Build frontend
+FROM node:18-alpine AS build
 WORKDIR /app
 
-# Step 1: Copy backend package files
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+RUN npm run build
+
+# Stage 2: Production backend
+FROM node:18-alpine AS production
+WORKDIR /app
+
+# Copy backend package files
 COPY src/server/package*.json ./src/server/
 
-# Step 2: Install backend dependencies
+# Install backend dependencies
 WORKDIR /app/src/server
 RUN npm install
 
-# Step 3: Copy backend source AFTER installing dependencies
+# Copy backend source AFTER installing dependencies
 COPY src/server/ ./src/server/
 COPY server.js ./ 
 COPY uploads/ ./uploads/
 
-# Step 4: Copy frontend build
+# Copy frontend build from previous stage
 COPY --from=build /app/dist ./public
 
-# Step 5: Create upload directories
+# Create upload directories
 RUN mkdir -p uploads/messages uploads/profiles uploads/materials uploads/projects
 
-# Step 6: Expose port
+# Expose backend port
 EXPOSE 8080
 
-# Step 7: Start backend server
+# Start backend server
 CMD ["node", "src/server/index.js"]
