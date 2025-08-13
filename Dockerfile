@@ -6,11 +6,9 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY src/server/package*.json ./src/server/
 
-# Install dependencies for both frontend and backend
+# Install frontend dependencies
 RUN npm install
-RUN cd src/server && npm install
 
 # Copy source code
 COPY . .
@@ -24,18 +22,19 @@ FROM node:18-alpine AS production
 # Set working directory
 WORKDIR /app
 
-# Copy backend package.json and install production dependencies
+# Copy backend package.json and install ALL dependencies (not just production)
 COPY src/server/package*.json ./
-RUN npm install --only=production
+RUN npm install
 
 # Copy built frontend from build stage
 COPY --from=build /app/dist ./public
 
-# Copy backend source code
+# Copy backend source code and other necessary files
 COPY src/server/ ./src/server/
-COPY .env ./
+COPY server.js ./
+COPY uploads/ ./uploads/
 
-# Create upload directories
+# Create upload directories if they don't exist
 RUN mkdir -p uploads/messages uploads/profiles uploads/materials uploads/projects
 
 # Expose port
@@ -44,6 +43,11 @@ EXPOSE 8080
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=8080
+ENV DB_HOST=mysql
+ENV DB_USER=root
+ENV DB_PASSWORD=password
+ENV DB_NAME=dbEarn_learn
+ENV JWT_SECRET=your-super-secret-jwt-key
 
-# Start the backend server (which will serve the built frontend)
+# Start the backend server directly
 CMD ["node", "src/server/index.js"]
