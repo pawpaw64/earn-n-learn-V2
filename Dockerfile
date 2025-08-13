@@ -1,10 +1,8 @@
 # Stage 1: Build frontend
 FROM node:18-alpine AS build
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm install
-
 COPY . .
 RUN npm run build
 
@@ -12,18 +10,13 @@ RUN npm run build
 FROM node:18-alpine AS production
 WORKDIR /app
 
-# Copy backend package files
+# Copy backend package files and install dependencies
 COPY src/server/package*.json ./
-
-# Install backend dependencies
 RUN npm install
 
-# Go back to app root
-WORKDIR /app
-
-# Copy backend source AFTER installing dependencies
+# Copy backend source files after dependencies installation
 COPY src/server/ ./src/server/
-COPY server.js ./ 
+COPY index.js ./
 COPY uploads/ ./uploads/
 
 # Copy frontend build from previous stage
@@ -35,5 +28,5 @@ RUN mkdir -p uploads/messages uploads/profiles uploads/materials uploads/project
 # Expose backend port
 EXPOSE 8080
 
-# Start backend server
-CMD ["node", "server.js"]
+# Start backend server (make sure this matches your entry script)
+CMD ["node", "index.js"]
