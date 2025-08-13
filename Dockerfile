@@ -16,7 +16,7 @@ RUN npm install
 
 # Copy backend source files after dependencies installation
 COPY src/server/ ./src/server/
-COPY index.js ./
+COPY server.js ./
 COPY uploads/ ./uploads/
 
 # Copy frontend build from previous stage
@@ -29,4 +29,4 @@ RUN mkdir -p uploads/messages uploads/profiles uploads/materials uploads/project
 EXPOSE 8080
 
 # Start backend server (make sure this matches your entry script)
-CMD ["node", "index.js"]
+CMD ["node", "server.js"]
