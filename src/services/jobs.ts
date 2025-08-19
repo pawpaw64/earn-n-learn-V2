@@ -51,3 +51,14 @@ export const getJobDetails = async (id: number): Promise<JobType> => {
   const response = await axios.get(`${API_URL}/jobs/${id}`);
   return response.data;
 };
+
+export const fetchJobsByUser = async (): Promise<JobType[]> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/jobs/user/posted`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user jobs:", error);
+    return [];
+  }
+};
