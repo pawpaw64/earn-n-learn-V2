@@ -7,7 +7,7 @@ import { MyApplicationActionButtons } from "./MyApplicationActionButtons";
 interface ActionButtonsProps {
   type: string;
   item: any;
-  onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<void>;
  
 }
 
@@ -24,10 +24,10 @@ export function ActionButtons({ type, item, onStatusChange}: ActionButtonsProps)
     
     try {
       setIsLoading(true);
-      const success = await onStatusChange(id, itemType, newStatus);
+      await onStatusChange(id, itemType, newStatus);
       
       // If successfully accepted, show escrow dialog
-      if (success && newStatus === 'Accepted' && type === 'application') {
+      if (newStatus === 'Accepted' && type === 'application') {
         setAcceptedApplication(item);
         setShowEscrowDialog(true);
       }

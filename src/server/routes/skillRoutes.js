@@ -12,6 +12,7 @@ router.get('/:id', getSkillById);
 router.post('/', auth, createSkill);
 router.put('/:id', auth, updateSkill);
 router.delete('/:id', auth, deleteSkill);
+router.get('/user/posted', auth, getUserSkills);
 router.get('/user/skills', auth, getUserSkills);
 
 export default router;

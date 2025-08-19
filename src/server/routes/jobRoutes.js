@@ -23,6 +23,7 @@ router.delete('/:id', auth, deleteJob);
 router.get('/:id/delete-permission', auth, checkJobDeletePermission);
 
 // User-specific job routes
+router.get('/user/posted', auth, getJobsByUserId);
 router.get('/user/:userId', auth, getJobsByUserId);
 
 export default router;

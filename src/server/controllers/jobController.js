@@ -45,7 +45,9 @@ export const getJobById = async (req, res) => {
 // Get jobs by user ID
 export const getJobsByUserId = async (req, res) => {
   try {
-    const jobs = await JobModel.getUserJobs(req.params.userId);
+    // If no userId in params, use the current authenticated user
+    const userId = req.params.userId || req.user.id;
+    const jobs = await JobModel.getUserJobs(userId);
     
     res.json(jobs);
   } catch (error) {

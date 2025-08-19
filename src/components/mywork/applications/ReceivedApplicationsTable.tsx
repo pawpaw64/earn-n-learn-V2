@@ -26,7 +26,7 @@ interface ReceivedApplicationsTableProps {
     id: number,
     type: string,
     status: string
-  ) => Promise<{ success: boolean; projectId?: number }>;
+  ) => Promise<void>;
 }
 
 /**
@@ -47,11 +47,8 @@ export const ReceivedApplicationsTable: React.FC<
   const handleAcceptApplication = async (appId: number, app: any) => {
     try {
       setProcessingId(appId);
-      const result = await onStatusChange(appId, "job_application", "Accepted");
-
-      if (result?.success) {
-        toast.success("Application accepted successfully!");
-      }
+      await onStatusChange(appId, "job_application", "Accepted");
+      toast.success("Application accepted successfully!");
     } catch (error) {
       console.error("Error accepting application:", error);
       toast.error("Failed to accept application");
@@ -76,11 +73,8 @@ export const ReceivedApplicationsTable: React.FC<
   const handleCompleteApplication = async (appId: number) => {
     try {
       setProcessingId(appId);
-      const result = await onStatusChange(appId, "job_application", "Escrowed");
-
-      if (result?.success) {
-        toast.success("Escrowed for the application!");
-      }
+      await onStatusChange(appId, "job_application", "Escrowed");
+      toast.success("Escrowed for the application!");
     } catch (error) {
       console.error("Error completing application:", error);
       toast.error("Failed to complete application");
