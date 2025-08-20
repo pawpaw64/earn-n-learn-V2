@@ -1,5 +1,4 @@
-
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { JobType, SkillType, MaterialType } from "@/types/marketplace";
 import { fetchSkills } from "@/services/skills";
 import { fetchJobs } from "@/services/jobs";
@@ -27,10 +26,7 @@ const useBrowseData = () => {
     materials: null,
   });
 
-  // Get current user ID from token
-  const currentUserId = getUserIdFromToken(localStorage.getItem('token'));
-  
-  // Fetch data on component mount
+  // Fetch data on component mount - FIXED: Added empty dependency array
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -39,9 +35,11 @@ const useBrowseData = () => {
         const token = localStorage.getItem('token');
         const userId = token ? getUserIdFromToken(token) : null;
         
-        const jobsData = await fetchJobs(userId || undefined);
-        const skillsData = await fetchSkills(userId || undefined);   
-        const materialsData = await fetchMaterials(userId || undefined);
+        const [jobsData, skillsData, materialsData] = await Promise.all([
+          fetchJobs(userId || undefined),
+          fetchSkills(userId || undefined),
+          fetchMaterials(userId || undefined)
+        ]);
        
         setJobs(jobsData);
         setSkills(skillsData);
@@ -62,8 +60,9 @@ const useBrowseData = () => {
         }));
       }
     };
+    
     fetchData();
-  });
+  }, []); // Empty dependency array to run only once on mount
 
   // Filter logic
   const filteredJobs = useMemo(() => {
@@ -84,20 +83,20 @@ const useBrowseData = () => {
     if (sortBy === "price-low") {
       // Simple sorting by extracting dollar amounts
       filtered = [...filtered].sort((a, b) => {
-        const aPrice = parseInt(a.payment.replace(/[^0-9]/g, '')) || 0;
-        const bPrice = parseInt(b.payment.replace(/[^0-9]/g, '')) || 0;
+        const aPrice = parseInt(a.payment?.replace(/[^0-9]/g, '') || '0') || 0;
+        const bPrice = parseInt(b.payment?.replace(/[^0-9]/g, '') || '0') || 0;
         return aPrice - bPrice;
       });
     } else if (sortBy === "price-high") {
       filtered = [...filtered].sort((a, b) => {
-        const aPrice = parseInt(a.payment.replace(/[^0-9]/g, '')) || 0;
-        const bPrice = parseInt(b.payment.replace(/[^0-9]/g, '')) || 0;
+        const aPrice = parseInt(a.payment?.replace(/[^0-9]/g, '') || '0') || 0;
+        const bPrice = parseInt(b.payment?.replace(/[^0-9]/g, '') || '0') || 0;
         return bPrice - aPrice;
       });
       
     } else if (sortBy === "recent") {
       filtered = [...filtered].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
       );
     }
     
@@ -158,6 +157,40 @@ const useBrowseData = () => {
     return filtered;
   }, [materials, searchQuery, categoryFilter, sortBy]);
 
+  // Optional: Add a refetch function if you need to refresh data
+  const refetch = useCallback(async () => {
+    try {
+      setLoading(prev => ({ ...prev, jobs: true, skills: true, materials: true }));
+      
+      const token = localStorage.getItem('token');
+      const userId = token ? getUserIdFromToken(token) : null;
+      
+      const [jobsData, skillsData, materialsData] = await Promise.all([
+        fetchJobs(userId || undefined),
+        fetchSkills(userId || undefined),
+        fetchMaterials(userId || undefined)
+      ]);
+     
+      setJobs(jobsData);
+      setSkills(skillsData);
+      setMaterials(materialsData);
+      
+    } catch (err: any) {
+      setError({
+        jobs: err.message,
+        skills: err.message,
+        materials: err.message
+      });
+    } finally {
+      setLoading(prev => ({
+        ...prev,
+        jobs: false,
+        skills: false,
+        materials: false
+      }));
+    }
+  }, []);
+
   return {
     searchQuery,
     setSearchQuery,
@@ -173,6 +206,7 @@ const useBrowseData = () => {
     filteredMaterials,
     loading,
     error,
+    refetch, // Add refetch function if needed
   };
 };
 

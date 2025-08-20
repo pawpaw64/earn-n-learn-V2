@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SearchFilters from "@/components/browse/SearchFilters";
@@ -8,16 +7,15 @@ import { MyPostsSection } from "@/components/browse/MyPostsSection";
 import useBrowseData from "@/hooks/useBrowseData";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
+
   const [postTab, setPostTab] = useState("job");
   const [detailsItem, setDetailsItem] = useState<any>(null);
   const [detailsType, setDetailsType] = useState<string>("");
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const navigate = useNavigate();
-
   const { 
     handleViewDetails,
     handleEdit,
@@ -45,7 +43,6 @@ export default function Browse() {
     filteredSkills,
     filteredMaterials
   } = useBrowseData();
-
   return (
     <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
       <h1 className="text-3xl font-bold">Campus Marketplace</h1>
@@ -87,23 +84,15 @@ export default function Browse() {
         <TabsContent value="my-posts" className="space-y-6">
           <MyPostsSection 
             onEdit={(item, type) => {
-              // Store edit data for PostingSection to pick up
-              localStorage.setItem("editItem", JSON.stringify(item));
-              localStorage.setItem("editType", type);
-              // Switch to posting tab and set correct sub-tab
-              setMainTab("post");
-              setPostTab(type);
+              handleEdit(item, type);
+              setMainTab("post"); // Switch to post tab for editing
             }}
-            onDelete={async (id, type) => {
-              const success = await handleDelete(id, type);
-              if (success) {
-                // Refresh the page to update MyPostsSection data
-                window.location.reload();
-              }
-            }}
+            onDelete={handleDelete}
             onViewDetails={handleViewDetails}
           />
         </TabsContent>
+
+  
       </Tabs>
     </div>
   );

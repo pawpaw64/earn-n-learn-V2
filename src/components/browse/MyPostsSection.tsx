@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 interface MyPostsSectionProps {
   onEdit?: (item: any, type: string) => void;
-  onDelete?: (id: number, type: string) => void;
+  onDelete?: (id: number, type: string) => Promise<boolean>;
   onViewDetails?: (item: any, type: string) => void;
 }
 
@@ -46,18 +46,62 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
   };
 
   const handleEdit = (item: any, type: string) => {
+    // Store edit data for PostingSection to pick up
     localStorage.setItem("editItem", JSON.stringify(item));
     localStorage.setItem("editType", type);
-    onEdit?.(item, type);
+    
+    // Call the parent's onEdit handler if provided
+    if (onEdit) {
+      onEdit(item, type);
+    } else {
+      console.log("Edit clicked:", { item, type });
+      toast.info("Edit functionality would be triggered here");
+    }
   };
 
   const handleDeletePost = async (id: number, type: string) => {
-    if (onDelete) {
-      const success = await onDelete(id, type);
+    // Confirm deletion
+    if (!window.confirm(`Are you sure you want to delete this ${type} post?`)) {
+      return;
+    }
+
+    try {
+      let success = false;
+      
+      // Call the parent's onDelete handler if provided
+      if (onDelete) {
+        success = await onDelete(id, type);
+      } else {
+        // Fallback behavior if no onDelete handler provided
+        console.log("Delete clicked:", { id, type });
+        toast.info("Delete functionality would be triggered here");
+        success = true; // Simulate success for demo
+      }
+
       if (success) {
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} post deleted successfully`);
         // Refetch posts after successful deletion
         loadMyPosts();
+      } else {
+        toast.error(`Failed to delete ${type} post`);
       }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast.error("An error occurred while deleting the post");
+    }
+  };
+
+  const handleViewDetails = (item: any, type: string) => {
+    // Call the parent's onViewDetails handler if provided
+    if (onViewDetails) {
+      onViewDetails(item, type);
+    } else {
+      console.log("View details clicked:", { item, type });
+      toast.info("View details functionality would be triggered here");
+      
+      // You could implement a modal or other UI to show details
+      // For now, let's just show an alert with basic info
+      alert(`${type.toUpperCase()} Details:\n${JSON.stringify(item, null, 2)}`);
     }
   };
 
@@ -74,6 +118,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleEdit(job, "job")}
+              title="Edit job post"
             >
               <Edit className="w-4 h-4" />
             </Button>
@@ -81,13 +126,15 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleDeletePost(job.id, "job")}
+              title="Delete job post"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewDetails?.(job, "job")}
+              onClick={() => handleViewDetails(job, "job")}
+              title="View job details"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -131,6 +178,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleEdit(skill, "skill")}
+              title="Edit skill post"
             >
               <Edit className="w-4 h-4" />
             </Button>
@@ -138,13 +186,15 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleDeletePost(skill.id, "skill")}
+              title="Delete skill post"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewDetails?.(skill, "skill")}
+              onClick={() => handleViewDetails(skill, "skill")}
+              title="View skill details"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -182,6 +232,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleEdit(material, "material")}
+              title="Edit material post"
             >
               <Edit className="w-4 h-4" />
             </Button>
@@ -189,13 +240,15 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
               variant="outline"
               size="sm"
               onClick={() => handleDeletePost(material.id, "material")}
+              title="Delete material post"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onViewDetails?.(material, "material")}
+              onClick={() => handleViewDetails(material, "material")}
+              title="View material details"
             >
               <Eye className="w-4 h-4" />
             </Button>
