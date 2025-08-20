@@ -4,9 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye, Calendar, MapPin, DollarSign } from "lucide-react";
-import { fetchJobsByUser } from "@/services/jobs";
-import { fetchSkillsByUser } from "@/services/skills";
-import { fetchMaterialsByUser } from "@/services/materials";
+import { fetchMyPosts } from "@/services"; // Import the working function
 import { JobType, SkillType, MaterialType } from "@/types/marketplace";
 import { toast } from "sonner";
 
@@ -30,28 +28,37 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
   const loadMyPosts = async () => {
     setLoading(true);
     try {
-      const [jobsData, skillsData, materialsData] = await Promise.all([
-        fetchJobsByUser(),
-        fetchSkillsByUser(),
-        fetchMaterialsByUser()
-      ]);
+      const myPostsData = await fetchMyPosts();
       
-      setJobs(jobsData || []);
-      setSkills(skillsData || []);
-      setMaterials(materialsData || []);
+      // Use the exact same pattern from ApplicationsTab
+      setJobs(Array.isArray(myPostsData?.jobs) ? myPostsData.jobs : []);
+      setSkills(Array.isArray(myPostsData?.skills) ? myPostsData.skills : []);
+      setMaterials(Array.isArray(myPostsData?.materials) ? myPostsData.materials : []);
     } catch (error) {
       console.error("Error loading posts:", error);
       toast.error("Failed to load your posts");
+      setJobs([]);
+      setSkills([]);
+      setMaterials([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleEdit = (item: any, type: string) => {
-    // Store edit data in localStorage for PostingSection to pick up
     localStorage.setItem("editItem", JSON.stringify(item));
     localStorage.setItem("editType", type);
     onEdit?.(item, type);
+  };
+
+  const handleDeletePost = async (id: number, type: string) => {
+    if (onDelete) {
+      const success = await onDelete(id, type);
+      if (success) {
+        // Refetch posts after successful deletion
+        loadMyPosts();
+      }
+    }
   };
 
   const JobCard = ({ job }: { job: JobType }) => (
@@ -73,7 +80,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDelete?.(job.id, "job")}
+              onClick={() => handleDeletePost(job.id, "job")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -130,7 +137,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDelete?.(skill.id, "skill")}
+              onClick={() => handleDeletePost(skill.id, "skill")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -181,7 +188,7 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDelete?.(material.id, "material")}
+              onClick={() => handleDeletePost(material.id, "material")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
