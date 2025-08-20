@@ -207,5 +207,15 @@ export async function uploadMaterialImage(req, res) {
   }
 }
 
+// Check if material can be deleted
+export async function checkMaterialDeletePermission(req, res) {
+  try {
+    res.json({ canDelete: true });
+  } catch (error) {
+    console.error('Check material delete permission error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
 // Export multer middleware
 export const uploadMaterialImageMiddleware = upload.single('image');

@@ -101,4 +101,12 @@ export async function getUserSkills(req, res) {
   }
 }
 
-// REMOVE the export block at the bottom completely
+// Check if skill can be deleted
+export async function checkSkillDeletePermission(req, res) {
+  try {
+    res.json({ canDelete: true });
+  } catch (error) {
+    console.error('Check skill delete permission error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}

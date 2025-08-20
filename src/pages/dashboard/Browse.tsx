@@ -8,6 +8,7 @@ import { MyPostsSection } from "@/components/browse/MyPostsSection";
 import useBrowseData from "@/hooks/useBrowseData";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
@@ -86,10 +87,20 @@ export default function Browse() {
         <TabsContent value="my-posts" className="space-y-6">
           <MyPostsSection 
             onEdit={(item, type) => {
-              handleEdit(item, type);
-              setMainTab("post"); // Switch to post tab for editing
+              // Store edit data for PostingSection to pick up
+              localStorage.setItem("editItem", JSON.stringify(item));
+              localStorage.setItem("editType", type);
+              // Switch to posting tab and set correct sub-tab
+              setMainTab("post");
+              setPostTab(type);
             }}
-            onDelete={handleDelete}
+            onDelete={async (id, type) => {
+              const success = await handleDelete(id, type);
+              if (success) {
+                // Refresh the page to update MyPostsSection data
+                window.location.reload();
+              }
+            }}
             onViewDetails={handleViewDetails}
           />
         </TabsContent>
