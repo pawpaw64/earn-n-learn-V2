@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CategoryBadge } from "@/components/ui/category-badge";
 import { ArrowUpRight } from "lucide-react";
 
 interface MaterialCardProps {
@@ -10,6 +11,7 @@ interface MaterialCardProps {
   price: string;
   availability: string;
   description: string;
+  category?: string;
   imageUrl?: string; // Add imageUrl prop
   onContact: () => void;
   onViewDetails: () => void;
@@ -25,6 +27,7 @@ const MaterialCard = ({
   price = "Not specified",
   availability = "Available",
   description = "No description provided",
+  category = "freelance",
   imageUrl,
   onContact,
   onViewDetails,
@@ -65,6 +68,7 @@ const MaterialCard = ({
             <p className="text-sm text-gray-600 mb-2">By {name}</p>        
           </div>
           <div className="flex gap-2 self-start sm:self-auto">
+            <CategoryBadge category={category} size="sm" />
             <Badge variant="secondary" className="bg-purple-100 text-purple-800">
               {condition}
             </Badge>

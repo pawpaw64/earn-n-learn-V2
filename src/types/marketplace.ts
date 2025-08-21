@@ -6,6 +6,7 @@ export interface JobType {
   type: string;
   description: string;
   payment: string;
+  category?: string;
   poster?: string;
   posterEmail?: string;
   posterAvatar?: string;
@@ -24,6 +25,7 @@ export interface SkillType {
   skill_name?: string;
   pricing: string;
   description?: string;
+  category?: string;
   email?: string;
   avatarUrl?: string;
   experienceLevel?: string;
@@ -42,6 +44,7 @@ export interface MaterialType {
   price: string;
   availability: string;
   description?: string;
+  category?: string;
   email?: string;
   avatarUrl?: string;
   duration?: string;

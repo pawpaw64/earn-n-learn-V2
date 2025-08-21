@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategorySelect } from "@/components/ui/category-select";
 import { toast } from "sonner";
 import { createJob, updateJob } from "@/services/jobs";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
@@ -17,6 +18,7 @@ const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Please provide a more detailed description"),
   type: z.string(),
+  category: z.string().min(1, "Please select a category"),
   payment: z.string().min(1, "Please specify compensation"),
   deadline: z.string().optional(),
   requirements: z.string().optional(),
@@ -40,6 +42,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       title: "",
       description: "",
       type: "",
+      category: "",
       payment: "",
       deadline: "",
       requirements: "",
@@ -54,6 +57,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
         title: itemToEdit.title || "",
         description: itemToEdit.description || "",
         type: itemToEdit.type || "",
+        category: itemToEdit.category || "",
         payment: itemToEdit.payment || "",
         deadline: itemToEdit.deadline || "",
         requirements: itemToEdit.requirements || "",
@@ -72,6 +76,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           title: values.title,
           description: values.description,
           type: values.type,
+          category: values.category,
           payment: values.payment,
           deadline: values.deadline,
           requirements: values.requirements || "",
@@ -119,6 +124,24 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
                   placeholder="Describe the job, requirements, and expectations..."
                   className="min-h-[120px]"
                   {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category</FormLabel>
+              <FormControl>
+                <CategorySelect
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select category"
                 />
               </FormControl>
               <FormMessage />
