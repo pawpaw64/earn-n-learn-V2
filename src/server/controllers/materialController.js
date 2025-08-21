@@ -70,7 +70,7 @@ export async function getMaterialById(req, res) {
 
 // Create new material
 export async function createMaterial(req, res) {
-  const { title, description, category, conditions, price, availability } = req.body;
+  const { title, description, conditions, price, availability } = req.body;
   
   if (!title || !description) {
     return res.status(400).json({ message: 'Please provide title and description' });
@@ -87,7 +87,6 @@ export async function createMaterial(req, res) {
       user_id: req.user.id,
       title,
       description,
-      category: category || 'freelance',
       conditions,
       price,
       availability,

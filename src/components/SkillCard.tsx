@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CategoryBadge } from "@/components/ui/category-badge";
 import { ArrowUpRight } from "lucide-react";
 
 interface SkillCardProps {
@@ -9,7 +8,6 @@ interface SkillCardProps {
   skill: string;
   description?: string; // Optional with default value
   pricing: string;
-  category?: string;
   experienceLevel?: string; // Optional with default value
   onContact: () => void;
   onViewDetails: () => void;
@@ -23,7 +21,6 @@ const SkillCard = ({
   skill = "Skill not specified",
   description = "No description provided",
   pricing = "Not specified",
-  category = "freelance",
   experienceLevel = "Beginner",
   onContact,
   onViewDetails,
@@ -50,7 +47,6 @@ const SkillCard = ({
         <p className="text-sm text-gray-600 mb-2">By {name}</p>
         </div>
         <div className="flex gap-2 self-start sm:self-auto">
-          <CategoryBadge category={category} size="sm" />
           <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             {experienceLevel}
           </Badge>

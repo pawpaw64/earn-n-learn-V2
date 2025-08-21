@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CategorySelect } from "@/components/ui/category-select";
 import { toast } from "sonner";
 import { createSkill, updateSkill } from "@/services/skills";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
@@ -18,7 +17,6 @@ import { SkillType } from "@/types/marketplace";
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
   description: z.string().min(10, "Please provide a more detailed description"),
-  category: z.string().min(1, "Please select a category"),
   pricingType: z.enum(["paid", "free", "trade"]),
   price: z.string().optional(),
   availability: z.string().min(1, "Please specify your availability"),
@@ -44,7 +42,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
     defaultValues: {
       skillName: "",
       description: "",
-      category: "",
       pricingType: "paid",
       price: "",
       availability: "",
@@ -60,7 +57,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       form.reset({
         skillName: itemToEdit.skill_name || "",
         description: itemToEdit.description || "",
-        category: itemToEdit.category || "",
         pricingType: itemToEdit.pricing?.includes('Free') ? "free" : 
                     itemToEdit.pricing?.includes('Trade') ? "trade" : "paid",
         price: itemToEdit.pricing || "",
@@ -80,7 +76,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       const skillData = {
         skill_name: values.skillName,
         description: values.description,
-        category: values.category,
         pricing: watchPricingType === 'paid' ? values.price : 
                 watchPricingType === 'free' ? 'Free' : 
                 'Skill Trade: ' + (values.tradeSkill || 'Open to offers'),
@@ -134,24 +129,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
                   placeholder="Describe your skill, experience level, and what you can offer..."
                   className="min-h-[120px]"
                   {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <FormControl>
-                <CategorySelect
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Select category"
                 />
               </FormControl>
               <FormMessage />

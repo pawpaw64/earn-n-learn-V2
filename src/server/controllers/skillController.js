@@ -34,7 +34,7 @@ export async function getSkillById(req, res) {
 
 // Create new skill listing
 export async function createSkill(req, res) {
-  const { skill_name, description, category, pricing, availability } = req.body;
+  const { skill_name, description, pricing, availability } = req.body;
   
   if (!skill_name || !description) {
     return res.status(400).json({ message: 'Please provide skill name and description' });
@@ -45,7 +45,6 @@ export async function createSkill(req, res) {
       user_id: req.user.id,
       skill_name,
       description,
-      category: category || 'freelance',
       pricing,
       availability
     });

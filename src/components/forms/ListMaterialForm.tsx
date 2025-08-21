@@ -8,14 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CategorySelect } from "@/components/ui/category-select";
 import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),
   condition: z.string(),
-  category: z.string().min(1, "Please select a category"),
   price: z.string(),
   type: z.enum(["sale", "rent", "borrow"]),
   availability: z.string().min(1, "Please specify availability"),
@@ -39,7 +37,6 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
     defaultValues: {
       materialName: "",
       condition: "Like New",
-      category: "",
       price: "",
       type: "sale",
       availability: "",
@@ -56,7 +53,6 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
       const materialData = {
         title: values.materialName,
         description: values.description,
-        category: values.category,
         condition: values.condition,
         price: values.price,
         availability: values.availability,
@@ -113,24 +109,6 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <FormControl>
-                <CategorySelect
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Select category"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

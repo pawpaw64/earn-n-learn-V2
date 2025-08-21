@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CategoryBadge } from "@/components/ui/category-badge";
 import { ArrowUpRight } from "lucide-react";
 
 interface JobCardProps {
@@ -8,7 +7,6 @@ interface JobCardProps {
   type: string;
   description: string;
   payment: string;
-  category?: string;
   onApply: () => void;
   onViewDetails: () => void;
 }
@@ -18,7 +16,6 @@ const JobCard = ({
   type = "General",
   description = "No description",
   payment = "Not specified",
-  category = "freelance",
   onApply,
   onViewDetails 
 }: JobCardProps) => {
@@ -52,12 +49,9 @@ const JobCard = ({
     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
         <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{title}</h3>
-        <div className="flex gap-2 self-start sm:self-auto">
-          <CategoryBadge category={category} size="sm" />
-          <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 font-medium">
-            {type}
-          </Badge>
-        </div>
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+          {type}
+        </Badge>
       </div>
       
       <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
