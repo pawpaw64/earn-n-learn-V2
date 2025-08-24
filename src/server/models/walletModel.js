@@ -583,20 +583,20 @@ class WalletModel {
   }
 
   // Update transaction status
-  static async updateTransactionStatus(transactionId, status) {
-    try {
-      const result = await execute(
-        'UPDATE transactions SET status = ? WHERE id = ?',
-        [status, transactionId]
-      );
-      
-      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-    } catch (error) {
-      console.error('Error updating transaction status:', error);
-      throw error;
-    }
+  
+static async updateTransactionStatus(referenceId, status) {
+  try {
+    const result = await execute(
+      'UPDATE transactions SET status = ? WHERE reference_id = ?',
+      [status, referenceId]
+    );
+    
+    return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error updating transaction status:', error);
+    throw error;
   }
-
+}
   // Store pending escrow for SSLCommerz processing
   static async storePendingEscrow(data) {
     const { transactionId, jobId, skillId, materialId, providerId, clientId, amount, description } = data;

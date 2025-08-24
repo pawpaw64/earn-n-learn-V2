@@ -70,3 +70,4 @@ CREATE TABLE IF NOT EXISTS escrow_transactions (
   FOREIGN KEY (skill_id) REFERENCES skill_marketplace(id) ON DELETE SET NULL,
   FOREIGN KEY (material_id) REFERENCES material_marketplace(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
+ALTER TABLE transactions MODIFY COLUMN reference_id VARCHAR(255);

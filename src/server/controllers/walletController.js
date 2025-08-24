@@ -109,7 +109,7 @@ export async function initiateTopUp(req, res) {
     }
 
     // Get user information
-    const user = await UserModel.getUserById(userId);
+    const user = await UserModel.getById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -186,7 +186,7 @@ export async function initiateWithdrawal(req, res) {
     }
 
     // Get user information
-    const user = await UserModel.getUserById(userId);
+    const user = await UserModel.getById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
