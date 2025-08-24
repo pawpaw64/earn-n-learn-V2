@@ -5,15 +5,25 @@ import * as walletController from '../controllers/walletController.js';
 
 const router = express.Router();
 
-// Apply auth middleware to all wallet routes
+// SSLCommerz callback routes (no auth middleware needed)
+router.post('/sslcommerz/success', walletController.sslcommerzSuccess);
+router.post('/sslcommerz/fail', walletController.sslcommerzFail);
+router.post('/sslcommerz/cancel', walletController.sslcommerzCancel);
+router.post('/sslcommerz/ipn', walletController.sslcommerzIPN);
+
+// Apply auth middleware to all other wallet routes
 router.use(authMiddleware);
 
 // Wallet details
 router.get('/details', walletController.getWalletDetails);
 
-// Top up and withdraw
-router.post('/topup', walletController.topUpWallet);
-router.post('/withdraw', walletController.withdrawFromWallet);
+// SSLCommerz payment routes
+router.post('/topup', walletController.initiateTopUp);
+router.post('/withdraw', walletController.initiateWithdrawal);
+
+// Legacy routes for backward compatibility
+router.post('/topup-legacy', walletController.topUpWallet);
+router.post('/withdraw-legacy', walletController.withdrawFromWallet);
 
 // Payment methods
 router.get('/payment-methods', walletController.getPaymentMethods);
@@ -38,6 +48,7 @@ router.delete('/savings-goals/:goalId', walletController.deleteSavingsGoal);
 // Escrow transactions
 router.get('/escrow', walletController.getEscrowTransactions);
 router.post('/escrow', walletController.createEscrowTransaction);
+router.post('/escrow/payment', walletController.createEscrowWithPayment);
 router.post('/escrow/:transactionId/release', walletController.releaseEscrowFunds);
 router.post('/escrow/:transactionId/dispute', walletController.disputeEscrowFunds);
 

@@ -7,15 +7,17 @@ import { TransactionHistory } from "@/components/wallet/TransactionHistory";
 import { FinancialDashboard } from "@/components/wallet/FinancialDashboard";
 import { SavingsGoals } from "@/components/wallet/SavingsGoals";
 import { EscrowTransactions } from "@/components/wallet/EscrowTransactions";
+import { PaymentSuccessNotification } from "@/components/wallet/PaymentSuccessNotification";
 import { Shield, CreditCard, History, DollarSign, TrendingUp, Calendar } from "lucide-react";
 
 export default function Wallet() {
   const [activeTab, setActiveTab] = useState("overview");
   
   return (
-        <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
-
-      <h1 className="text-3xl font-bold">Wallet</h1>
+    <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
+      <PaymentSuccessNotification />
+      
+      <h1 className="text-3xl font-bold">Wallet - Powered by SSLCommerz</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full ">
         <TabsList className="mb-6 grid grid-cols-3 md:grid-cols-6 gap-4 ">

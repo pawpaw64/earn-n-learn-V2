@@ -90,15 +90,21 @@ export const getWalletDetails = async (): Promise<WalletDetails> => {
   return response.data;
 };
 
-export const topUpWallet = async (amount: number, paymentMethod: string): Promise<any> => {
+export const topUpWallet = async (amount: number): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
-  const response = await axios.post(`${API_URL}/wallet/topup`, { amount, paymentMethod });
+  const response = await axios.post(`${API_URL}/wallet/topup`, { amount });
   return response.data;
 };
 
 export const withdrawFromWallet = async (amount: number, withdrawMethod: string): Promise<any> => {
   setAuthToken(localStorage.getItem('token'));
   const response = await axios.post(`${API_URL}/wallet/withdraw`, { amount, withdrawMethod });
+  return response.data;
+};
+
+export const createEscrowWithPayment = async (data: any): Promise<any> => {
+  setAuthToken(localStorage.getItem('token'));
+  const response = await axios.post(`${API_URL}/wallet/escrow/payment`, data);
   return response.data;
 };
 
