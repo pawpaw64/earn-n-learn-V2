@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ClientEscrowCard } from "./escrow/ClientEscrowCard";
 import { ProviderEscrowCard } from "./escrow/ProviderEscrowCard";
+import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 import { Users, Wallet2 } from "lucide-react";
 import axios from 'axios';
 
@@ -36,6 +37,49 @@ export function EscrowTransactions() {
   const [currentTransaction, setCurrentTransaction] = useState<EscrowTransaction | null>(null);
   const [disputeReason, setDisputeReason] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+
+  const getEscrowSteps = (status: string): Step[] => {
+    const steps = [
+      { title: "Escrow Deposited", description: "Funds secured" },
+      { title: "Job In Progress", description: "Work started" },
+      { title: "Job Completed", description: "Work finished" },
+      { title: "Payment Released", description: "Funds transferred" }
+    ];
+
+    switch (status) {
+      case 'funded':
+        return steps.map((step, index) => ({
+          ...step,
+          status: (index === 0 ? 'current' : 'pending') as Step['status']
+        }));
+      case 'in_progress':
+        return steps.map((step, index) => ({
+          ...step,
+          status: (index === 0 ? 'completed' : index === 1 ? 'current' : 'pending') as Step['status']
+        }));
+      case 'completed':
+        return steps.map((step, index) => ({
+          ...step,
+          status: (index <= 1 ? 'completed' : index === 2 ? 'current' : 'pending') as Step['status']
+        }));
+      case 'released':
+        return steps.map((step) => ({
+          ...step,
+          status: 'completed' as Step['status']
+        }));
+      case 'disputed':
+        return [
+          ...steps.slice(0, 2).map(step => ({ ...step, status: 'completed' as Step['status'] })),
+          { title: "Dispute Resolution", description: "Under review", status: 'current' as Step['status'] },
+          { title: "Resolution Complete", description: "Awaiting outcome", status: 'pending' as Step['status'] }
+        ];
+      default:
+        return steps.map((step, index) => ({
+          ...step,
+          status: (index === 0 ? 'current' : 'pending') as Step['status']
+        }));
+    }
+  };
   
   const fetchEscrowTransactions = async () => {
     setIsLoading(true);
@@ -163,29 +207,62 @@ export function EscrowTransactions() {
           </TabsList>
           
           <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {clientTransactions.map((transaction) => (
-                <ClientEscrowCard
-                  key={transaction.id}
-                  transaction={transaction}
-                  onRelease={(id) => {
-                    setCurrentTransaction(transaction);
-                    setIsReleaseDialogOpen(true);
-                  }}
-                  onDispute={(id) => {
-                    setCurrentTransaction(transaction);
-                    setIsDisputeDialogOpen(true);
-                  }}
-                />
+            <div className="space-y-6">
+              {transactions.map((transaction) => (
+                <Card key={transaction.id} className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
+                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">
+                          {transaction.isProvider ? 'Provider' : 'Client'}
+                        </p>
+                        <p className="text-sm font-medium">
+                          {transaction.isProvider ? transaction.clientName : transaction.providerName}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
+                    
+                    {!transaction.isProvider && (
+                      <div className="flex gap-2 pt-4">
+                        {(transaction.status === 'completed' || transaction.status === 'in_progress') && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentTransaction(transaction);
+                                setIsDisputeDialogOpen(true);
+                              }}
+                            >
+                              Dispute
+                            </Button>
+                            {transaction.status === 'completed' && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setCurrentTransaction(transaction);
+                                  setIsReleaseDialogOpen(true);
+                                }}
+                              >
+                                Release Payment
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
               ))}
-              {providerTransactions.map((transaction) => (
-                <ProviderEscrowCard
-                  key={transaction.id}
-                  transaction={transaction}
-                />
-              ))}
+              
               {transactions.length === 0 && (
-                <div className="col-span-full text-center py-8">
+                <div className="text-center py-8">
                   <p className="text-muted-foreground">No escrow transactions found</p>
                 </div>
               )}
@@ -193,23 +270,56 @@ export function EscrowTransactions() {
           </TabsContent>
           
           <TabsContent value="client" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
               {clientTransactions.map((transaction) => (
-                <ClientEscrowCard
-                  key={transaction.id}
-                  transaction={transaction}
-                  onRelease={(id) => {
-                    setCurrentTransaction(transaction);
-                    setIsReleaseDialogOpen(true);
-                  }}
-                  onDispute={(id) => {
-                    setCurrentTransaction(transaction);
-                    setIsDisputeDialogOpen(true);
-                  }}
-                />
+                <Card key={transaction.id} className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
+                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Provider</p>
+                        <p className="text-sm font-medium">{transaction.providerName}</p>
+                      </div>
+                    </div>
+                    
+                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
+                    
+                    <div className="flex gap-2 pt-4">
+                      {(transaction.status === 'completed' || transaction.status === 'in_progress') && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCurrentTransaction(transaction);
+                              setIsDisputeDialogOpen(true);
+                            }}
+                          >
+                            Dispute
+                          </Button>
+                          {transaction.status === 'completed' && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setCurrentTransaction(transaction);
+                                setIsReleaseDialogOpen(true);
+                              }}
+                            >
+                              Release Payment
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Card>
               ))}
+              
               {clientTransactions.length === 0 && (
-                <div className="col-span-full text-center py-8">
+                <div className="text-center py-8">
                   <p className="text-muted-foreground">No client transactions found</p>
                 </div>
               )}
@@ -217,15 +327,34 @@ export function EscrowTransactions() {
           </TabsContent>
           
           <TabsContent value="provider" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
               {providerTransactions.map((transaction) => (
-                <ProviderEscrowCard
-                  key={transaction.id}
-                  transaction={transaction}
-                />
+                <Card key={transaction.id} className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
+                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Client</p>
+                        <p className="text-sm font-medium">{transaction.clientName}</p>
+                      </div>
+                    </div>
+                    
+                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
+                    
+                    {transaction.description && (
+                      <div className="pt-2">
+                        <p className="text-sm text-muted-foreground">{transaction.description}</p>
+                      </div>
+                    )}
+                  </div>
+                </Card>
               ))}
+              
               {providerTransactions.length === 0 && (
-                <div className="col-span-full text-center py-8">
+                <div className="text-center py-8">
                   <p className="text-muted-foreground">No provider transactions found</p>
                 </div>
               )}

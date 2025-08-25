@@ -472,24 +472,6 @@ class WalletModel {
     }
   }
 
-  // UPDATE ESCROW STATUS
-  static async updateEscrowStatus(transactionId, status) {
-    try {
-      const result = await execute(
-        'UPDATE escrow_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
-        [status, transactionId]
-      );
-      
-      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-    } catch (error) {
-      console.error('Error updating escrow status:', {
-        error: error.message,
-        query: 'UPDATE escrow_transactions...',
-        parameters: [status, transactionId]
-      });
-      throw new Error('Failed to update escrow status');
-    }
-  }
 
   // Add savings goal
   static async addSavingsGoal(userId, data) {
@@ -611,7 +593,37 @@ static async updateTransactionStatus(referenceId, status) {
       
       return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
     } catch (error) {
-      console.error('Error storing pending escrow:', error);
+    console.error('Error storing pending escrow:', error);
+    throw error;
+  }
+}
+
+  // Update escrow status
+  static async updateEscrowStatus(transactionId, status) {
+    try {
+      const result = await execute(
+        'UPDATE escrow_transactions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [status, transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating escrow status:', error);
+      throw error;
+    }
+  }
+
+  // Get escrow by ID
+  static async getEscrowById(transactionId) {
+    try {
+      const result = await execute(
+        'SELECT * FROM escrow_transactions WHERE id = ?',
+        [transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.[0] : result[0];
+    } catch (error) {
+      console.error('Error getting escrow by ID:', error);
       throw error;
     }
   }

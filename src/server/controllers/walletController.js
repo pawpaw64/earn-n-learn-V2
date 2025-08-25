@@ -947,3 +947,59 @@ export async function createEscrowWithPayment(req, res) {
     res.status(500).json({ message: 'Failed to initialize escrow payment', error: error.message });
   }
 }
+
+// Mark escrow job as in progress
+export const markEscrowInProgress = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user.id;
+
+    // Verify the user is the provider
+    const escrow = await WalletModel.getEscrowById(transactionId);
+    if (!escrow || escrow.provider_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this escrow' });
+    }
+
+    const updated = await WalletModel.updateEscrowStatus(transactionId, 'in_progress');
+    
+    if (!updated) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Escrow marked as in progress' 
+    });
+  } catch (error) {
+    console.error('Error marking escrow in progress:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Mark escrow job as completed
+export const markEscrowCompleted = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user.id;
+
+    // Verify the user is the provider
+    const escrow = await WalletModel.getEscrowById(transactionId);
+    if (!escrow || escrow.provider_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this escrow' });
+    }
+
+    const updated = await WalletModel.updateEscrowStatus(transactionId, 'completed');
+    
+    if (!updated) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Escrow marked as completed' 
+    });
+  } catch (error) {
+    console.error('Error marking escrow completed:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

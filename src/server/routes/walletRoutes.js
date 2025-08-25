@@ -51,5 +51,7 @@ router.post('/escrow', walletController.createEscrowTransaction);
 router.post('/escrow/payment', walletController.createEscrowWithPayment);
 router.post('/escrow/:transactionId/release', walletController.releaseEscrowFunds);
 router.post('/escrow/:transactionId/dispute', walletController.disputeEscrowFunds);
+router.post('/escrow/:transactionId/in-progress', walletController.markEscrowInProgress);
+router.post('/escrow/:transactionId/completed', walletController.markEscrowCompleted);
 
 export default router;

@@ -1,17 +1,15 @@
 
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { WalletOverview } from "@/components/wallet/WalletOverview";
-import { PaymentMethods } from "@/components/wallet/PaymentMethods";
 import { TransactionHistory } from "@/components/wallet/TransactionHistory";
 import { FinancialDashboard } from "@/components/wallet/FinancialDashboard";
 import { SavingsGoals } from "@/components/wallet/SavingsGoals";
 import { EscrowTransactions } from "@/components/wallet/EscrowTransactions";
 import { PaymentSuccessNotification } from "@/components/wallet/PaymentSuccessNotification";
-import { Shield, CreditCard, History, DollarSign, TrendingUp, Calendar } from "lucide-react";
+import { History, DollarSign, TrendingUp, Calendar } from "lucide-react";
 
 export default function Wallet() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("financial");
   
   return (
     <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
@@ -20,22 +18,14 @@ export default function Wallet() {
       <h1 className="text-3xl font-bold">Wallet - Powered by SSLCommerz</h1>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full ">
-        <TabsList className="mb-6 grid grid-cols-3 md:grid-cols-6 gap-4 ">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4" />
-            <span className="hidden sm:inline">Payment Methods</span>
+        <TabsList className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 ">
+          <TabsTrigger value="financial" className="flex items-center gap-2">
+            <DollarSign className="w-4 h-4" />
+            <span className="hidden sm:inline">Financial</span>
           </TabsTrigger>
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <History className="w-4 h-4" />
             <span className="hidden sm:inline">Transactions</span>
-          </TabsTrigger>
-          <TabsTrigger value="financial" className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4" />
-            <span className="hidden sm:inline">Financial</span>
           </TabsTrigger>
           <TabsTrigger value="savings" className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
@@ -47,20 +37,12 @@ export default function Wallet() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-          <WalletOverview />
-        </TabsContent>
-        
-        <TabsContent value="payments">
-          <PaymentMethods />
+        <TabsContent value="financial">
+          <FinancialDashboard />
         </TabsContent>
         
         <TabsContent value="transactions">
           <TransactionHistory />
-        </TabsContent>
-        
-        <TabsContent value="financial">
-          <FinancialDashboard />
         </TabsContent>
         
         <TabsContent value="savings">
