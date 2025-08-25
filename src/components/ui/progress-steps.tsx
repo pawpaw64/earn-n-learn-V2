@@ -25,7 +25,7 @@ export function ProgressSteps({ steps, className }: ProgressStepsProps) {
                   "flex h-10 w-10 items-center justify-center rounded-full border-2",
                   {
                     "border-green-500 bg-green-500 text-white": step.status === 'completed',
-                    "border-blue-500 bg-blue-500 text-white": step.status === 'current',
+                    "border-black bg-black text-white": step.status === 'current',
                     "border-gray-300 bg-white text-gray-400": step.status === 'pending',
                   }
                 )}
@@ -42,7 +42,7 @@ export function ProgressSteps({ steps, className }: ProgressStepsProps) {
                     "text-sm font-medium",
                     {
                       "text-green-600": step.status === 'completed',
-                      "text-blue-600": step.status === 'current',
+                      "text-black": step.status === 'current',
                       "text-gray-500": step.status === 'pending',
                     }
                   )}

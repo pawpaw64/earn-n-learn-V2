@@ -1,15 +1,16 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { DollarSign, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 
 interface ProviderEscrowCardProps {
   transaction: any;
+  progressSteps: Step[];
 }
 
-export function ProviderEscrowCard({ transaction }: ProviderEscrowCardProps) {
+export function ProviderEscrowCard({ transaction, progressSteps }: ProviderEscrowCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'released': return 'bg-green-100 text-green-800 border-green-300';
@@ -74,6 +75,11 @@ export function ProviderEscrowCard({ transaction }: ProviderEscrowCardProps) {
               <span className="capitalize">{transaction.status.replace('_', ' ')}</span>
             </div>
           </div>
+        </div>
+        
+        {/* Progress Steps */}
+        <div className="pt-2">
+          <ProgressSteps steps={progressSteps} />
         </div>
         
         {transaction.description && (
