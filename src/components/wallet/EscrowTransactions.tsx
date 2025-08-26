@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,7 +79,7 @@ export function EscrowTransactions() {
         }));
     }
   };
-  
+
   const fetchEscrowTransactions = async () => {
     setIsLoading(true);
     try {
@@ -94,7 +93,7 @@ export function EscrowTransactions() {
       const response = await axios.get('http://localhost:8080/api/wallet/escrow', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setTransactions(response.data || []);
     } catch (error) {
       console.error('Error fetching escrow transactions:', error);
@@ -119,11 +118,11 @@ export function EscrowTransactions() {
       await axios.post(`http://localhost:8080/api/wallet/escrow/${id}/release`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       fetchEscrowTransactions();
       setIsReleaseDialogOpen(false);
       setCurrentTransaction(null);
-      
+
       toast({
         title: "Payment Released",
         description: "The payment has been released to the service provider."
@@ -147,7 +146,7 @@ export function EscrowTransactions() {
       });
       return;
     }
-    
+
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -159,12 +158,12 @@ export function EscrowTransactions() {
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       fetchEscrowTransactions();
       setIsDisputeDialogOpen(false);
       setCurrentTransaction(null);
       setDisputeReason('');
-      
+
       toast({
         title: "Dispute Filed",
         description: "Your dispute has been filed and will be reviewed by our team."
@@ -187,7 +186,7 @@ export function EscrowTransactions() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Escrow Transactions</h2>
       </div>
-      
+
       {isLoading ? (
         <div className="text-center py-8">
           <p className="text-muted-foreground">Loading escrow transactions...</p>
@@ -205,156 +204,78 @@ export function EscrowTransactions() {
               Provider ({providerTransactions.length})
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="all" className="mt-6">
-            <div className="space-y-6">
-              {transactions.map((transaction) => (
-                <Card key={transaction.id} className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
-                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">
-                          {transaction.isProvider ? 'Provider' : 'Client'}
-                        </p>
-                        <p className="text-sm font-medium">
-                          {transaction.isProvider ? transaction.clientName : transaction.providerName}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
-                    
-                    {!transaction.isProvider && (
-                      <div className="flex gap-2 pt-4">
-                        {(transaction.status === 'completed' || transaction.status === 'in_progress') && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setCurrentTransaction(transaction);
-                                setIsDisputeDialogOpen(true);
-                              }}
-                            >
-                              Dispute
-                            </Button>
-                            {transaction.status === 'completed' && (
-                              <Button
-                                size="sm"
-                                onClick={() => {
-                                  setCurrentTransaction(transaction);
-                                  setIsReleaseDialogOpen(true);
-                                }}
-                              >
-                                Release Payment
-                              </Button>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {clientTransactions.map((transaction) => (
+                <ClientEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  progressSteps={getEscrowSteps(transaction.status)}
+                  onRelease={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsReleaseDialogOpen(true);
+                  }}
+                  onDispute={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsDisputeDialogOpen(true);
+                  }}
+                />
               ))}
-              
+              {providerTransactions.map((transaction) => (
+                <ProviderEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  progressSteps={getEscrowSteps(transaction.status)}
+                />
+              ))}
+
               {transactions.length === 0 && (
-                <div className="text-center py-8">
+                <div className="col-span-full text-center py-8">
                   <p className="text-muted-foreground">No escrow transactions found</p>
                 </div>
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="client" className="mt-6">
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {clientTransactions.map((transaction) => (
-                <Card key={transaction.id} className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
-                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Provider</p>
-                        <p className="text-sm font-medium">{transaction.providerName}</p>
-                      </div>
-                    </div>
-                    
-                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
-                    
-                    <div className="flex gap-2 pt-4">
-                      {(transaction.status === 'completed' || transaction.status === 'in_progress') && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setCurrentTransaction(transaction);
-                              setIsDisputeDialogOpen(true);
-                            }}
-                          >
-                            Dispute
-                          </Button>
-                          {transaction.status === 'completed' && (
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setCurrentTransaction(transaction);
-                                setIsReleaseDialogOpen(true);
-                              }}
-                            >
-                              Release Payment
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </Card>
+                <ClientEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  progressSteps={getEscrowSteps(transaction.status)}
+                  onRelease={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsReleaseDialogOpen(true);
+                  }}
+                  onDispute={(id) => {
+                    setCurrentTransaction(transaction);
+                    setIsDisputeDialogOpen(true);
+                  }}
+                />
               ))}
-              
+
               {clientTransactions.length === 0 && (
-                <div className="text-center py-8">
+                <div className="col-span-full text-center py-8">
                   <p className="text-muted-foreground">No client transactions found</p>
                 </div>
               )}
             </div>
           </TabsContent>
-          
+
           <TabsContent value="provider" className="mt-6">
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {providerTransactions.map((transaction) => (
-                <Card key={transaction.id} className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold">{transaction.title}</h3>
-                        <p className="text-muted-foreground">${transaction.amount.toFixed(2)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">Client</p>
-                        <p className="text-sm font-medium">{transaction.clientName}</p>
-                      </div>
-                    </div>
-                    
-                    <ProgressSteps steps={getEscrowSteps(transaction.status)} />
-                    
-                    {transaction.description && (
-                      <div className="pt-2">
-                        <p className="text-sm text-muted-foreground">{transaction.description}</p>
-                      </div>
-                    )}
-                  </div>
-                </Card>
+                <ProviderEscrowCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  progressSteps={getEscrowSteps(transaction.status)}
+                />
               ))}
-              
+
               {providerTransactions.length === 0 && (
-                <div className="text-center py-8">
+                <div className="col-span-full text-center py-8">
                   <p className="text-muted-foreground">No provider transactions found</p>
                 </div>
               )}
@@ -362,7 +283,7 @@ export function EscrowTransactions() {
           </TabsContent>
         </Tabs>
       )}
-      
+
       {/* Release Payment Dialog */}
       <Dialog 
         open={isReleaseDialogOpen} 
@@ -379,7 +300,7 @@ export function EscrowTransactions() {
               This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
@@ -392,7 +313,7 @@ export function EscrowTransactions() {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button 
               variant="outline" 
@@ -411,7 +332,7 @@ export function EscrowTransactions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Dispute Dialog */}
       <Dialog 
         open={isDisputeDialogOpen} 
@@ -430,14 +351,14 @@ export function EscrowTransactions() {
               Please provide a reason for disputing the payment for {currentTransaction?.title}.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="py-4">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Amount:</span>
                 <span className="font-semibold">${currentTransaction?.amount.toFixed(2)}</span>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="disputeReason">Reason for Dispute</Label>
                 <Textarea
@@ -450,7 +371,7 @@ export function EscrowTransactions() {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button 
               variant="outline" 
