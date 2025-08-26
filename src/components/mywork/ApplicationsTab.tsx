@@ -40,7 +40,7 @@ export function ApplicationsTab({
   onEdit,
   onDelete,
 }: ApplicationsTabProps) {
-  const [applicationsTab, setApplicationsTab] = useState("job");
+  const [applicationsTab, setApplicationsTab] = useState("posted");
   const queryClient = useQueryClient();
 
   // Function to refetch all data
@@ -129,16 +129,14 @@ export function ApplicationsTab({
   return (
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
       <TabsList className="mb-4">
-        <TabsTrigger value="job">Job Applications</TabsTrigger>
-        <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
-        <TabsTrigger value="material">Material Contacts</TabsTrigger>
-        <TabsTrigger value="received">Received Inquiries</TabsTrigger>
+        <TabsTrigger value="posted">Posted Application</TabsTrigger>
+        <TabsTrigger value="received">Received Application</TabsTrigger>
       </TabsList>
 
-      {/* Job Applications Subtab */}
-      <TabsContent value="job">
+      {/* Posted Applications */}
+      <TabsContent value="posted">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Job Applications</h2>
+          <h2 className="text-lg font-semibold">Posted Application</h2>
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -147,116 +145,104 @@ export function ApplicationsTab({
           </Button>
         </div>
 
-        {isLoadingApps ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {applicationsArray.length > 0 ? (
-              applicationsArray.map((app) => (
-                <JobApplicationCard
-                  key={app.id}
-                  app={app}
-                  onViewDetails={onViewDetails}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No job applications found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Skill Inquiries Subtab */}
-      <TabsContent value="skill">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Skill Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        {isLoadingSkillContacts ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {skillContactsArray.length > 0 ? (
-              skillContactsArray.map((contact) => (
-                <ContactCard
-                  key={contact.id}
-                  contact={contact}
-                  type="skill"
-                  onViewDetails={onViewDetails}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No skill inquiries found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Material Inquiries Subtab */}
-      <TabsContent value="material">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Material Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        {isLoadingMaterialContacts ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {materialContactsArray.length > 0 ? (
-              materialContactsArray.map((contact) => (
-                <ContactCard
-                  key={contact.id}
-                  contact={contact}
-                  type="material"
-                  onViewDetails={onViewDetails}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No material inquiries found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Received Applications Subtab */}
-      <TabsContent value="received">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Received Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        <Tabs defaultValue="received" className="mt-4">
+        <Tabs defaultValue="job" className="mt-4">
           <TabsList className="mb-4">
-            <TabsTrigger value="received">Job Inquiries</TabsTrigger>
-            <TabsTrigger value="skills">Skill Inquiries</TabsTrigger>
-            <TabsTrigger value="materials">Material Inquiries</TabsTrigger>
+            <TabsTrigger value="job">Job Applications</TabsTrigger>
+            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
+            <TabsTrigger value="material">Materials Contacts</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="received">
+          <TabsContent value="job">
+            {isLoadingApps ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {applicationsArray.length > 0 ? (
+                  applicationsArray.map((app) => (
+                    <JobApplicationCard
+                      key={app.id}
+                      app={app}
+                      onViewDetails={onViewDetails}
+                      onStatusChange={handleStatusChange}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No job applications found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="skill">
+            {isLoadingSkillContacts ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {skillContactsArray.length > 0 ? (
+                  skillContactsArray.map((contact) => (
+                    <ContactCard
+                      key={contact.id}
+                      contact={contact}
+                      type="skill"
+                      onViewDetails={onViewDetails}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No skill inquiries found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="material">
+            {isLoadingMaterialContacts ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {materialContactsArray.length > 0 ? (
+                  materialContactsArray.map((contact) => (
+                    <ContactCard
+                      key={contact.id}
+                      contact={contact}
+                      type="material"
+                      onViewDetails={onViewDetails}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No material inquiries found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </TabsContent>
+
+      {/* Received Applications */}
+      <TabsContent value="received">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Received Application</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+
+        <Tabs defaultValue="job" className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="job">Job Applications </TabsTrigger>
+            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
+            <TabsTrigger value="material">Materils Contacts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="job">
             <ReceivedApplicationsTable
               applications={jobApplicationsArray}
               isLoading={isLoadingJobApps}
@@ -265,7 +251,7 @@ export function ApplicationsTab({
             />
           </TabsContent>
 
-          <TabsContent value="skills">
+          <TabsContent value="skill">
             <ReceivedContactsTable
               contacts={receivedSkillContactsArray}
               type="skill"
@@ -275,7 +261,7 @@ export function ApplicationsTab({
             />
           </TabsContent>
 
-          <TabsContent value="materials">
+          <TabsContent value="material">
             <ReceivedContactsTable
               contacts={receivedMaterialContactsArray}
               type="material"
