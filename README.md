@@ -5,6 +5,7 @@ Follow these steps:
 
 ```sh
 # Step 1: you need to have Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
 # Step 2: Clone the repository using the project's Git URL.
 git clone <YOUR_GIT_URL>
 
@@ -13,6 +14,8 @@ cd <YOUR_PROJECT_NAME>
 
 # Step 3: Install the necessary dependencies.
 npm i
+npm i mysql2
+npm i jsonwebtoken
 
 # Step 4: Create the database with mysql with the schemas
 
