@@ -103,7 +103,7 @@ export default function PointsOverview() {
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">Tasks Completed</span>
+                                    <span className="text-sm font-medium">Project/Work Completed</span>
                                     <span className="text-sm text-muted-foreground">{points.tasks_completed_points} points</span>
                                 </div>
                                 <Progress
@@ -136,7 +136,7 @@ export default function PointsOverview() {
 
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-medium">Lending Activity</span>
+                                    <span className="text-sm font-medium">Material Exchange</span>
                                     <span className="text-sm text-muted-foreground">{points.lending_activity_points} points</span>
                                 </div>
                                 <Progress
