@@ -147,16 +147,16 @@ const handleMarkAllAsRead = async () => {
 
   return (
     <div className="sticky top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px-8">
-      <Sheet>
-        <SheetTrigger className="md:hidden">
-          <Button size="icon" variant="outline">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-64 sm:w-72">
-          <DashboardSidebar />
-        </SheetContent>
-      </Sheet>
+     <Sheet>
+  <SheetTrigger asChild className="md:hidden">
+    <Button size="icon" variant="outline">
+      <Menu className="h-5 w-5" />
+    </Button>
+  </SheetTrigger>
+  <SheetContent side="left" className="w-64 sm:w-72">
+    <DashboardSidebar />
+  </SheetContent>
+</Sheet>
       <div className="hidden md:flex" />
       
       <div className="flex-1 gap-2 flex md:flex items-center">

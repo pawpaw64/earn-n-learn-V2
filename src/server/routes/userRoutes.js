@@ -7,9 +7,11 @@ import {
   getUserById,
   updateProfile,
   uploadAvatar,
- uploadAvatarMiddleware,
+  uploadAvatarMiddleware,
   addUserSkill,
   removeUserSkill,
+  getPredefinedSkills,
+  getSkillCategories,
   addPortfolioItem,
   removePortfolioItem,
   addUserWebsite,
@@ -33,6 +35,8 @@ router.post('/upload-avatar', auth, uploadAvatarMiddleware, uploadAvatar);
 // Skills management routes
 router.post('/skills', auth, addUserSkill);
 router.delete('/skills/:skillId', auth, removeUserSkill);
+router.get('/skills/predefined', getPredefinedSkills);
+router.get('/skills/categories', getSkillCategories);
 
 // Portfolio management routes
 router.post('/portfolio', auth, addPortfolioItem);

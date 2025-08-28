@@ -258,18 +258,30 @@ export async function uploadAvatar(req, res) {
     res.status(500).json({ message: 'Avatar upload failed' });
   }
 }
-// Add user skill
+// Add user skill with enhanced fields
 export async function addUserSkill(req, res) {
   console.log('Adding user skill... [userController.js.addUserSkill]');
   try {
-    const { name, description, acquiredFrom } = req.body;
+    const { name, description, acquiredFrom, proficiencyLevel, experienceYears, certifications, isCustom } = req.body;
     const userId = req.user.id;
 
     if (!name) {
       return res.status(400).json({ message: 'Skill name is required' });
     }
 
-    const skillId = await UserModel.addUserSkill(userId, { name, description, acquiredFrom });
+    // If it's a custom skill, add it to predefined skills for future suggestions
+    if (isCustom) {
+      await UserModel.addCustomSkillToPredefined(name, 'Custom');
+    }
+
+    const skillId = await UserModel.addUserSkill(userId, { 
+      name, 
+      description, 
+      acquiredFrom, 
+      proficiencyLevel, 
+      experienceYears, 
+      certifications 
+    });
     
     res.status(201).json({ 
       message: 'Skill added successfully',
@@ -278,6 +290,37 @@ export async function addUserSkill(req, res) {
     });
   } catch (error) {
     console.error('Add skill error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get predefined skills for suggestions
+export async function getPredefinedSkills(req, res) {
+  try {
+    const { search, category } = req.query;
+    const skills = await UserModel.getPredefinedSkills(search, category);
+    
+    res.json({ 
+      skills,
+      success: true
+    });
+  } catch (error) {
+    console.error('Get predefined skills error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+// Get skill categories
+export async function getSkillCategories(req, res) {
+  try {
+    const categories = await UserModel.getSkillCategories();
+    
+    res.json({ 
+      categories,
+      success: true
+    });
+  } catch (error) {
+    console.error('Get skill categories error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 }

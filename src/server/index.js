@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import http from 'http';
 import { Server } from 'socket.io';
+import { testConnection } from './config/db.js';
 import userRoutes from './routes/userRoutes.js';
 import jobRoutes from './routes/jobRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
@@ -135,7 +136,28 @@ app.get('/', (req, res) => {
 
 // Start the server
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Database URL: ${process.env.DB_URL}`);
-});
+
+// Initialize database and server
+async function startServer() {
+  try {
+    // Test database connection
+    const isConnected = await testConnection();
+    if (isConnected) {
+      console.log('✅ Database connected successfully');
+    } else {
+      console.error('❌ Database connection failed');
+    }
+    
+    // Start server
+    server.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+      console.log(`Database URL: ${process.env.DB_URL}`);
+    });
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

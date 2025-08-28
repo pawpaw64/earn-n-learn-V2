@@ -27,21 +27,23 @@ import {
   updateUserProfile,
   uploadProfileImage,
   ProfileData,
-  addUserSkill,
-  removeUserSkill,
   addPortfolioItem as addPortfolioItemService,
   removePortfolioItem,
   addUserWebsite,
   removeUserWebsite,
 } from "@/services/profile";
 import { getUserIdFromToken } from "@/services/auth";
+import EnhancedSkillsSection from "@/components/profile/EnhancedSkillsSection";
 
 // Define interfaces for the profile data structure
 interface Skill {
   id: string;
   name: string;
   description?: string;
-  acquiredFrom?: string;
+  acquired_from?: string;
+  proficiency_level?: string;
+  experience_years?: number;
+  certifications?: string;
   user_id: string;
 }
 
@@ -105,7 +107,6 @@ export default function Profile() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditingBasic, setIsEditingBasic] = useState(false);
-  const [newSkill, setNewSkill] = useState<Partial<Skill>>({});
   const [newPortfolio, setNewPortfolio] = useState<Partial<PortfolioItem>>({});
   const [newWebsite, setNewWebsite] = useState<Partial<Website>>({});
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -241,65 +242,28 @@ export default function Profile() {
     }
   };
 
-  // Add new skill with backend call
-  const addSkill = async () => {
-    if (!newSkill.name) {
-      toast.error("Skill name is required");
-      return;
-    }
-
+  // Reload profile data (used by EnhancedSkillsSection)
+  const reloadProfileData = async () => {
     try {
-      const response = await addUserSkill({
-        name: newSkill.name,
-        description: newSkill.description,
-        acquiredFrom: newSkill.acquiredFrom,
-      });
+      let profileData: ProfileData | null = null;
+      
+      if (userId && userId !== currentUserId?.toString()) {
+        profileData = await fetchUserById(userId);
+      } else {
+        profileData = await fetchUserProfile();
+      }
 
-      if (response.success) {
-        // Reload profile data to get updated skills
-        const profileData = await fetchUserProfile();
-        if (profileData) {
-          const { user, skills, portfolio, websites } = profileData;
-          setProfile({
-            ...user,
-            skills: skills || [],
-            portfolio: portfolio || [],
-            websites: websites || [],
-          });
-        }
-
-        setNewSkill({});
-        toast.success("Skill added successfully!");
+      if (profileData) {
+        const { user, skills, portfolio, websites } = profileData;
+        setProfile({
+          ...user,
+          skills: skills || [],
+          portfolio: portfolio || [],
+          websites: websites || [],
+        });
       }
     } catch (error) {
-      console.error("Error adding skill:", error);
-      toast.error("Failed to add skill");
-    }
-  };
-
-  // Remove skill with backend call
-  const removeSkill = async (id: string) => {
-    try {
-      const response = await removeUserSkill(id);
-
-      if (response.success) {
-        // Reload profile data to get updated skills
-        const profileData = await fetchUserProfile();
-        if (profileData) {
-          const { user, skills, portfolio, websites } = profileData;
-          setProfile({
-            ...user,
-            skills: skills || [],
-            portfolio: portfolio || [],
-            websites: websites || [],
-          });
-        }
-
-        toast.success("Skill removed successfully!");
-      }
-    } catch (error) {
-      console.error("Error removing skill:", error);
-      toast.error("Failed to remove skill");
+      console.error("Error reloading profile:", error);
     }
   };
 
@@ -665,127 +629,12 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* Skills Section */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Skills</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {profile.skills.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {profile.skills.map((skill) => (
-                  <div
-                    key={skill.id}
-                    className="flex justify-between items-start p-4 border rounded-lg hover:shadow transition-shadow">
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-gray-900">
-                        {skill.name}
-                      </h3>
-                      {skill.description && (
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {skill.description}
-                        </p>
-                      )}
-                      {skill.acquiredFrom && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          <span className="font-medium">Acquired from:</span>{" "}
-                          {skill.acquiredFrom}
-                        </p>
-                      )}
-                    </div>
-                    {isOwnProfile && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeSkill(skill.id)}
-                        className="text-gray-500 hover:text-red-500">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 py-4 text-center">
-                No skills added yet.
-              </p>
-            )}
-
-            {/* Add Skill Dialog - Only show for own profile */}
-            {isOwnProfile && (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full">
-                    <Plus className="h-4 w-4 mr-2" /> Add Skill
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New Skill</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 mt-2">
-                    <div>
-                      <label
-                        htmlFor="skillName"
-                        className="block text-sm font-medium">
-                        Skill Name
-                      </label>
-                      <Input
-                        id="skillName"
-                        value={newSkill.name || ""}
-                        onChange={(e) =>
-                          setNewSkill({ ...newSkill, name: e.target.value })
-                        }
-                        placeholder="e.g., JavaScript, Design, Project Management"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="skillDescription"
-                        className="block text-sm font-medium">
-                        Description
-                      </label>
-                      <Textarea
-                        id="skillDescription"
-                        value={newSkill.description || ""}
-                        onChange={(e) =>
-                          setNewSkill({
-                            ...newSkill,
-                            description: e.target.value,
-                          })
-                        }
-                        placeholder="Describe your skill level or experience"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="skillAcquiredFrom"
-                        className="block text-sm font-medium">
-                        Acquired From
-                      </label>
-                      <Input
-                        id="skillAcquiredFrom"
-                        value={newSkill.acquiredFrom || ""}
-                        onChange={(e) =>
-                          setNewSkill({
-                            ...newSkill,
-                            acquiredFrom: e.target.value,
-                          })
-                        }
-                        placeholder="e.g., University course, Online course, Self-taught"
-                      />
-                    </div>
-                    <Button onClick={addSkill} className="w-full">
-                      Add Skill
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Enhanced Skills Section */}
+      <EnhancedSkillsSection 
+        skills={profile.skills} 
+        onSkillsUpdate={reloadProfileData}
+        isOwnProfile={isOwnProfile}
+      />
       {/* Portfolio Section */}
       <Card className="mb-8">
         <CardHeader>
