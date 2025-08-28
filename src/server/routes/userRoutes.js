@@ -1,4 +1,3 @@
-
 import { Router } from 'express';
 import { 
   register, 
@@ -15,7 +14,8 @@ import {
   addPortfolioItem,
   removePortfolioItem,
   addUserWebsite,
-  removeUserWebsite} from '../controllers/userController.js';
+  removeUserWebsite
+} from '../controllers/userController.js';
 import auth from '../middleware/authMiddleware.js';
 
 const router = Router();
@@ -45,4 +45,5 @@ router.delete('/portfolio/:itemId', auth, removePortfolioItem);
 // Websites management routes
 router.post('/websites', auth, addUserWebsite);
 router.delete('/websites/:websiteId', auth, removeUserWebsite);
+
 export default router;
