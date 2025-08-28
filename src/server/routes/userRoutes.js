@@ -1,19 +1,18 @@
-
 import { Router } from 'express';
-import { 
-  register, 
-  login, 
-  getMe, 
-  getUserById,
-  updateProfile,
-  uploadAvatar,
- uploadAvatarMiddleware,
-  addUserSkill,
-  removeUserSkill,
-  addPortfolioItem,
-  removePortfolioItem,
-  addUserWebsite,
-  removeUserWebsite} from '../controllers/userController.js';
+import {
+    register,
+    login,
+    getMe,
+    getUserById,
+    updateProfile,
+    uploadAvatar,
+    uploadAvatarMiddleware,
+    addUserSkill,
+    removeUserSkill,
+    addPortfolioItem,
+    removePortfolioItem,
+    addUserWebsite,
+    removeUserWebsite} from '../controllers/userController.js';
 import auth from '../middleware/authMiddleware.js';
 
 const router = Router();
