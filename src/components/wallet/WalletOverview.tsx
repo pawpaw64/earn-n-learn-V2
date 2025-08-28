@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
-import { TopUpDialog } from './TopUpDialog';
+import { SSLCommerzTopUpDialog } from './SSLCommerzTopUpDialog';
 import { WithdrawDialog } from './WithdrawDialog';
 import axios from 'axios';
 
@@ -81,23 +81,23 @@ export function WalletOverview() {
         return;
       }
 
-      await axios.post('http://localhost:8080/api/wallet/topup', 
-        { amount, paymentMethod: 'card' },
+      const response = await axios.post('http://localhost:8080/api/wallet/topup', 
+        { amount },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
-      fetchWalletData();
-      
-      toast({
-        title: "Success",
-        description: `Added $${amount.toFixed(2)} to your wallet.`,
-      });
+
+      if (response.data.success && response.data.gatewayUrl) {
+        // Redirect to SSLCommerz payment gateway
+        window.location.href = response.data.gatewayUrl;
+      } else {
+        throw new Error('Failed to initialize payment gateway');
+      }
       
     } catch (error) {
       console.error('Top up error:', error);
       toast({
         title: "Error",
-        description: "Failed to top up your wallet. Please try again.",
+        description: "Failed to initialize payment. Please try again.",
         variant: "destructive"
       });
     }
@@ -231,7 +231,7 @@ export function WalletOverview() {
       </Card>
 
       {/* Dialogs */}
-      <TopUpDialog 
+      <SSLCommerzTopUpDialog 
         isOpen={isTopUpOpen} 
         onClose={() => setIsTopUpOpen(false)} 
         onTopUp={handleTopUp} 

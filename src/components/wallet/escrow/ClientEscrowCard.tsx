@@ -1,18 +1,19 @@
-
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { DollarSign, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { ProgressSteps, Step } from "@/components/ui/progress-steps";
 
 interface ClientEscrowCardProps {
   transaction: any;
+  progressSteps: Step[];
   onRelease: (id: string) => void;
   onDispute: (id: string) => void;
 }
 
-export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEscrowCardProps) {
+export function ClientEscrowCard({ transaction, progressSteps, onRelease, onDispute }: ClientEscrowCardProps) {
   const canRelease = ['funded', 'in_progress', 'completed'].includes(transaction.status);
   const canDispute = ['funded', 'in_progress', 'completed'].includes(transaction.status);
 
@@ -67,6 +68,11 @@ export function ClientEscrowCard({ transaction, onRelease, onDispute }: ClientEs
               <span className="capitalize">{transaction.status.replace('_', ' ')}</span>
             </div>
           </div>
+        </div>
+        
+        {/* Progress Steps */}
+        <div className="pt-2">
+          <ProgressSteps steps={progressSteps} />
         </div>
         
         {transaction.description && (

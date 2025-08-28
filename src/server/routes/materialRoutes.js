@@ -21,6 +21,7 @@ router.get('/:id', getMaterialById);
 router.post('/', auth, uploadMaterialImageMiddleware, createMaterial);
 router.put('/:id', auth, uploadMaterialImageMiddleware, updateMaterial);
 router.delete('/:id', auth, deleteMaterial);
+router.get('/user/posted', auth, getUserMaterials);
 router.get('/user/materials', auth, getUserMaterials);
 
 // Image upload route

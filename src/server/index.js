@@ -88,6 +88,18 @@ app.use(express.urlencoded({ extended: true }));
 // Static file serving
 app.use('/uploads', express.static('uploads'));
 
+// Serve built React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('public'));
+  
+  // Handle React routing, return index.html for non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api/')) {
+      res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+    }
+  });
+}
+
 // Ensure upload directories exist
 import fs from 'fs';
 import path from 'path';

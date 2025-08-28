@@ -18,10 +18,6 @@ import {
   fetchSkillContacts,
   fetchMaterialContacts,
 } from "@/services/contacts";
-import { fetchMyPosts } from "@/services";
-import { JobPostCard } from "@/components/JobPostCard";
-import { SkillPostCard } from "@/components/SkillPostCard";
-import { MaterialPostCard } from "@/components/MaterialPostCard";
 
 interface ApplicationsTabProps {
   onViewDetails: (item: any, type: string) => Promise<void>;
@@ -29,7 +25,7 @@ interface ApplicationsTabProps {
     id: number,
     type: string,
     status: string
-  ) => Promise<boolean>;
+  ) => Promise<void>;
   onEdit: (item: any, type: string) => void;
   onDelete: (id: number, type: string) => Promise<boolean>;
 }
@@ -44,9 +40,7 @@ export function ApplicationsTab({
   onEdit,
   onDelete,
 }: ApplicationsTabProps) {
-  const [applicationsTab, setApplicationsTab] = useState("job");
-  const [activeContactsTab, setActiveContactsTab] = useState("myposts");
-  const [myPostsTab, setMyPostsTab] = useState("jobs");
+  const [applicationsTab, setApplicationsTab] = useState("posted");
   const queryClient = useQueryClient();
 
   // Function to refetch all data
@@ -57,7 +51,6 @@ export function ApplicationsTab({
     queryClient.invalidateQueries({ queryKey: ["materialContacts"] });
     queryClient.invalidateQueries({ queryKey: ["receivedSkillContacts"] });
     queryClient.invalidateQueries({ queryKey: ["receivedMaterialContacts"] });
-    queryClient.invalidateQueries({ queryKey: ["myPosts"] });
   };
 
   // Fetch all data
@@ -105,33 +98,15 @@ export function ApplicationsTab({
     staleTime: 30000,
   });
 
-  const {
-    data: myPosts = { jobs: [], skills: [], materials: [] },
-    isLoading: isLoadingMyPosts,
-  } = useQuery({
-    queryKey: ["myPosts"],
-    queryFn: fetchMyPosts,
-    staleTime: 30000,
-  });
 
   // Handle status changes with automatic refetch
   const handleStatusChange = async (
     id: number,
     type: string,
     status: string
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     if (onStatusChange) {
-      return await onStatusChange(id, type, status);
-    }
-    return false;
-  };
-
-  const handleDeletePost = async (id: number, type: string) => {
-    if (onDelete) {
-      const success = await onDelete(id, type);
-      if (success) {
-        queryClient.invalidateQueries({ queryKey: ["myPosts"] });
-      }
+      await onStatusChange(id, type, status);
     }
   };
 
@@ -154,16 +129,14 @@ export function ApplicationsTab({
   return (
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
       <TabsList className="mb-4">
-        <TabsTrigger value="job">Job Applications</TabsTrigger>
-        <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
-        <TabsTrigger value="material">Material Contacts</TabsTrigger>
-        <TabsTrigger value="received">My Posts/ Received Inquiries</TabsTrigger>
+        <TabsTrigger value="posted">Posted Application</TabsTrigger>
+        <TabsTrigger value="received">Received Application</TabsTrigger>
       </TabsList>
 
-      {/* Job Applications Subtab */}
-      <TabsContent value="job">
+      {/* Posted Applications */}
+      <TabsContent value="posted">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Job Applications</h2>
+          <h2 className="text-lg font-semibold">Posted Application</h2>
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -172,120 +145,104 @@ export function ApplicationsTab({
           </Button>
         </div>
 
-        {isLoadingApps ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {applicationsArray.length > 0 ? (
-              applicationsArray.map((app) => (
-                <JobApplicationCard
-                  key={app.id}
-                  app={app}
-                  onViewDetails={onViewDetails}
-                  onStatusChange={handleStatusChange}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No job applications found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Skill Inquiries Subtab */}
-      <TabsContent value="skill">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Skill Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        {isLoadingSkillContacts ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {skillContactsArray.length > 0 ? (
-              skillContactsArray.map((contact) => (
-                <ContactCard
-                  key={contact.id}
-                  contact={contact}
-                  type="skill"
-                  onViewDetails={onViewDetails}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No skill inquiries found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Material Inquiries Subtab */}
-      <TabsContent value="material">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Material Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        {isLoadingMaterialContacts ? (
-          <LoadingSkeleton />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {materialContactsArray.length > 0 ? (
-              materialContactsArray.map((contact) => (
-                <ContactCard
-                  key={contact.id}
-                  contact={contact}
-                  type="material"
-                  onViewDetails={onViewDetails}
-                />
-              ))
-            ) : (
-              <div className="col-span-2 text-center py-10 text-muted-foreground">
-                No material inquiries found
-              </div>
-            )}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Received Applications Subtab */}
-      <TabsContent value="received">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">My post/Recieved Inquiries</h2>
-          <Button
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={() => refetchAll()}>
-            <RefreshCcw className="w-4 h-4" /> Refresh
-          </Button>
-        </div>
-
-        <Tabs
-          value={activeContactsTab}
-          onValueChange={setActiveContactsTab}
-          className="mt-4">
+        <Tabs defaultValue="job" className="mt-4">
           <TabsList className="mb-4">
-            <TabsTrigger value="myposts">My Posts</TabsTrigger>
-            <TabsTrigger value="received">Job Inquiries</TabsTrigger>
-            <TabsTrigger value="skills">Skill Inquiries</TabsTrigger>
-            <TabsTrigger value="materials">Material Inquiries</TabsTrigger>
+            <TabsTrigger value="job">Job Applications</TabsTrigger>
+            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
+            <TabsTrigger value="material">Materials Contacts</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="received">
+          <TabsContent value="job">
+            {isLoadingApps ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {applicationsArray.length > 0 ? (
+                  applicationsArray.map((app) => (
+                    <JobApplicationCard
+                      key={app.id}
+                      app={app}
+                      onViewDetails={onViewDetails}
+                      onStatusChange={handleStatusChange}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No job applications found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="skill">
+            {isLoadingSkillContacts ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {skillContactsArray.length > 0 ? (
+                  skillContactsArray.map((contact) => (
+                    <ContactCard
+                      key={contact.id}
+                      contact={contact}
+                      type="skill"
+                      onViewDetails={onViewDetails}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No skill inquiries found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="material">
+            {isLoadingMaterialContacts ? (
+              <LoadingSkeleton />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {materialContactsArray.length > 0 ? (
+                  materialContactsArray.map((contact) => (
+                    <ContactCard
+                      key={contact.id}
+                      contact={contact}
+                      type="material"
+                      onViewDetails={onViewDetails}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-2 text-center py-10 text-muted-foreground">
+                    No material inquiries found
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </TabsContent>
+
+      {/* Received Applications */}
+      <TabsContent value="received">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Received Application</h2>
+          <Button
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={() => refetchAll()}>
+            <RefreshCcw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
+
+        <Tabs defaultValue="job" className="mt-4">
+          <TabsList className="mb-4">
+            <TabsTrigger value="job">Job Applications </TabsTrigger>
+            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
+            <TabsTrigger value="material">Materils Contacts</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="job">
             <ReceivedApplicationsTable
               applications={jobApplicationsArray}
               isLoading={isLoadingJobApps}
@@ -294,7 +251,7 @@ export function ApplicationsTab({
             />
           </TabsContent>
 
-          <TabsContent value="skills">
+          <TabsContent value="skill">
             <ReceivedContactsTable
               contacts={receivedSkillContactsArray}
               type="skill"
@@ -304,7 +261,7 @@ export function ApplicationsTab({
             />
           </TabsContent>
 
-          <TabsContent value="materials">
+          <TabsContent value="material">
             <ReceivedContactsTable
               contacts={receivedMaterialContactsArray}
               type="material"
@@ -312,94 +269,6 @@ export function ApplicationsTab({
               onViewDetails={onViewDetails}
               onStatusChange={handleStatusChange}
             />
-          </TabsContent>
-
-          <TabsContent value="myposts">
-            <Tabs
-              value={myPostsTab}
-              onValueChange={setMyPostsTab}
-              className="mt-4">
-              <TabsList>
-                <TabsTrigger value="jobs">Job Posts</TabsTrigger>
-                <TabsTrigger value="skills">Skills Posts</TabsTrigger>
-                <TabsTrigger value="materials">Materials Posts</TabsTrigger>
-
-              </TabsList>
-              {/* Jobs Tab */}
-              <TabsContent value="jobs">
-                {isLoadingMyPosts ? (
-                  <LoadingSkeleton />
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts.jobs && myPosts.jobs.length > 0 ? (
-                      myPosts.jobs.map((job: any) => (
-                        <JobPostCard
-                          key={job.id}
-                          job={job}
-                          onView={() => onViewDetails(job, "job")}
-                          onEdit={() => onEdit(job, "job")}
-                          onDelete={() => handleDeletePost(job.id, "job")}
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any jobs.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-
-              {/* Skills Tab */}
-              <TabsContent value="skills">
-                {isLoadingMyPosts ? (
-                  <LoadingSkeleton />
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts.skills && myPosts.skills.length > 0 ? (
-                      myPosts.skills.map((skill: any) => (
-                        <SkillPostCard
-                          key={skill.id}
-                          skill={skill}
-                          onView={() => onViewDetails(skill, "skill")}
-                          onEdit={() => onEdit(skill, "skill")}
-                          onDelete={() => handleDeletePost(skill.id, "skill")}
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any skills.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-              <TabsContent value="materials">
-                {isLoadingMyPosts ? (
-                  <LoadingSkeleton />
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pt-4">
-                    {myPosts.materials && myPosts.materials.length > 0 ? (
-                      myPosts.materials.map((material: any) => (
-                        <MaterialPostCard
-                          key={material.id}
-                          material={material}
-                          onView={() => onViewDetails(material, "material")}
-                          onEdit={() => onEdit(material, "material")}
-                          onDelete={() =>
-                            handleDeletePost(material.id, "material")
-                          }
-                        />
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-10 text-muted-foreground">
-                        You have not posted any skills.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
           </TabsContent>
         </Tabs>
       </TabsContent>

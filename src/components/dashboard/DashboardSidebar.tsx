@@ -1,3 +1,4 @@
+
 import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
@@ -42,9 +43,9 @@ const DashboardSidebar = () => {
   return (
     <Sidebar className="">
       <SidebarContent className="px-0 py-[33px]">
-        <div className="px-4 py- text-emerald-600 font-bold text-2xl">
+        <Link to="/dashboard/browse" className="px-4 py-2 text-emerald-600 font-bold text-2xl hover:text-emerald-700 transition-colors cursor-pointer">
           Earn-n-Learn
-        </div>
+        </Link>
 
         <SidebarGroup>
           <SidebarGroupContent>

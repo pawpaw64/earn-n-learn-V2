@@ -108,7 +108,7 @@ export const useWorkDetails = ({
     }
   };
   
-const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<{ success: boolean; projectId?: number }> => {
+const handleStatusChange = async (id: number, type: string, newStatus: string): Promise<void> => {
   try {
     setIsProcessing(true);
 
@@ -124,13 +124,13 @@ const handleStatusChange = async (id: number, type: string, newStatus: string): 
 
           });
           
-          return { success: true, projectId: project.id };
+          // return { success: true, projectId: project.id };
         } catch (projectError) {
           console.error('Project creation failed:', projectError);
           toast.error('Project creation failed', {
       
           });
-          return { success: false };
+          // return { success: false };
         }
       }else if (newStatus === 'Escrowed' ) {
         await updateApplicationStatus(id, newStatus);
@@ -143,10 +143,10 @@ const handleStatusChange = async (id: number, type: string, newStatus: string): 
     } else if (type === 'material_contact') {
       await updateMaterialContactStatus(id, newStatus);
     }
-    return { success: true };
+    // return { success: true };
     } catch (error) {
     console.error('Error updating status:', error);
-    return { success: false };
+    // return { success: false };
   } finally {
     setIsProcessing(false);
 

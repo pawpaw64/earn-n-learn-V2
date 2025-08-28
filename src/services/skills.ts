@@ -51,3 +51,14 @@ export const getSkillDetails = async (id: number): Promise<any> => {
   const response = await axios.get(`${API_URL}/skills/${id}`);
   return response.data;
 };
+
+export const fetchSkillsByUser = async (): Promise<SkillType[]> => {
+  setAuthToken(localStorage.getItem('token'));
+  try {
+    const response = await axios.get(`${API_URL}/skills/user/posted`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user skills:", error);
+    return [];
+  }
+};

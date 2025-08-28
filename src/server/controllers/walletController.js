@@ -1,5 +1,7 @@
 
 import WalletModel from '../models/walletModel.js';
+import { sslcommerz, getSSLCommerzConfig } from '../config/sslcommerz.js';
+import UserModel from '../models/userModel.js';
 
 // Get financial data for dashboard
 export async function getFinancialData(req, res) {
@@ -94,16 +96,22 @@ export async function getWalletDetails(req, res) {
   }
 }
 
-// Top up wallet
-export async function topUpWallet(req, res) {
+// Initialize SSLCommerz payment for top up
+export async function initiateTopUp(req, res) {
   try {
     const userId = req.user.id;
-    const { amount, paymentMethod } = req.body;
+    const { amount } = req.body;
     
-    console.log('Top up request:', { userId, amount, paymentMethod });
+    console.log('SSLCommerz top up request:', { userId, amount });
     
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    // Get user information
+    const user = await UserModel.getById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
     
     // Ensure wallet exists
@@ -111,42 +119,61 @@ export async function topUpWallet(req, res) {
     if (!wallet) {
       await WalletModel.createWallet(userId);
     }
+
+    // Generate unique transaction ID
+    const transactionId = `TOPUP_${userId}_${Date.now()}`;
     
-    // Update the wallet balance
-    const updated = await WalletModel.updateBalance(userId, parseFloat(amount));
-    if (!updated) {
-      return res.status(500).json({ message: 'Failed to update wallet balance' });
-    }
-    
-    // Record the transaction
+    // Store pending transaction
     await WalletModel.addTransaction(userId, {
-      description: `Top up via ${paymentMethod || 'card'}`,
+      description: `Top up via SSLCommerz - ${transactionId}`,
       amount: parseFloat(amount),
       type: 'deposit',
-      status: 'completed'
+      status: 'pending',
+      referenceId: transactionId,
+      referenceType: 'sslcommerz_topup'
     });
-    
-    // Get the updated wallet
-    wallet = await WalletModel.getWallet(userId);
-    
-    res.json({
-      message: 'Top up successful',
-      balance: parseFloat(wallet.balance)
+
+    // Get SSLCommerz configuration
+    const sslcommerzData = getSSLCommerzConfig(transactionId, amount, {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address
     });
+
+    // Initialize payment with SSLCommerz
+    const apiResponse = await sslcommerz.init(sslcommerzData);
+    
+    if (apiResponse?.GatewayPageURL) {
+      res.json({
+        success: true,
+        message: 'Payment gateway initialized',
+        gatewayUrl: apiResponse.GatewayPageURL,
+        transactionId: transactionId
+      });
+    } else {
+      throw new Error('Failed to initialize payment gateway');
+    }
     
   } catch (error) {
-    console.error('Top up wallet error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('SSLCommerz initialization error:', error);
+    res.status(500).json({ message: 'Failed to initialize payment', error: error.message });
   }
 }
 
-// Withdraw from wallet
-export async function withdrawFromWallet(req, res) {
+// Top up wallet (legacy method for backward compatibility)
+export async function topUpWallet(req, res) {
+  // Redirect to SSLCommerz initialization
+  return initiateTopUp(req, res);
+}
+
+// Initialize SSLCommerz payment for withdrawal
+export async function initiateWithdrawal(req, res) {
   try {
     const userId = req.user.id;
     const { amount, withdrawMethod } = req.body;
     
-    console.log('Withdraw request:', { userId, amount, withdrawMethod });
+    console.log('SSLCommerz withdrawal request:', { userId, amount, withdrawMethod });
     
     if (!amount || amount <= 0) {
       return res.status(400).json({ message: 'Invalid amount' });
@@ -157,33 +184,65 @@ export async function withdrawFromWallet(req, res) {
     if (!wallet || parseFloat(wallet.balance) < parseFloat(amount)) {
       return res.status(400).json({ message: 'Insufficient balance' });
     }
+
+    // Get user information
+    const user = await UserModel.getById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate unique transaction ID
+    const transactionId = `WITHDRAW_${userId}_${Date.now()}`;
+    
+    // Store pending withdrawal transaction
+    await WalletModel.addTransaction(userId, {
+      description: `Withdrawal via SSLCommerz - ${transactionId}`,
+      amount: parseFloat(amount),
+      type: 'withdrawal',
+      status: 'pending',
+      referenceId: transactionId,
+      referenceType: 'sslcommerz_withdrawal'
+    });
+
+    // Get SSLCommerz configuration for withdrawal processing
+    const sslcommerzData = getSSLCommerzConfig(transactionId, amount, {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address
+    });
+
+    // For withdrawals, we'll process directly since SSLCommerz is mainly for incoming payments
+    // In a real system, you'd integrate with a separate withdrawal service
     
     // Update the wallet balance (subtract the amount)
     const updated = await WalletModel.updateBalance(userId, -parseFloat(amount));
     if (!updated) {
       return res.status(500).json({ message: 'Failed to update wallet balance' });
     }
-    
-    // Record the transaction
-    await WalletModel.addTransaction(userId, {
-      description: `Withdrawal to ${withdrawMethod || 'bank account'}`,
-      amount: parseFloat(amount),
-      type: 'withdrawal',
-      status: 'completed'
-    });
+
+    // Update transaction status to completed
+    await WalletModel.updateTransactionStatus(transactionId, 'completed');
     
     // Get the updated wallet
     const updatedWallet = await WalletModel.getWallet(userId);
     
     res.json({
-      message: 'Withdrawal successful',
-      balance: parseFloat(updatedWallet.balance)
+      success: true,
+      message: 'Withdrawal processed successfully',
+      balance: parseFloat(updatedWallet.balance),
+      transactionId: transactionId
     });
     
   } catch (error) {
-    console.error('Withdraw from wallet error:', error);
+    console.error('SSLCommerz withdrawal error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
+}
+
+// Withdraw from wallet (legacy method for backward compatibility)
+export async function withdrawFromWallet(req, res) {
+  return initiateWithdrawal(req, res);
 }
 
 // Get payment methods
@@ -699,3 +758,248 @@ export async function disputeEscrowFunds(req, res) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
+// SSLCommerz Success Callback
+export async function sslcommerzSuccess(req, res) {
+  try {
+    const { tran_id, val_id, amount, card_type, status, bank_tran_id } = req.body;
+    
+    console.log('SSLCommerz Success Callback:', { tran_id, val_id, amount, status });
+    
+    if (status !== 'VALID') {
+      console.log('Invalid payment status:', status);
+      return res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+    }
+
+    // Validate the payment with SSLCommerz
+    const validation = await sslcommerz.validate({ val_id });
+    
+    if (validation.status !== 'VALID' || validation.tran_id !== tran_id) {
+      console.log('Payment validation failed:', validation);
+      return res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+    }
+
+    // Extract user ID from transaction ID
+    const userId = parseInt(tran_id.split('_')[1]);
+    
+    // Update the transaction status to completed
+    await WalletModel.updateTransactionStatusByReference(tran_id, 'completed');
+    
+    // Update wallet balance
+    await WalletModel.updateBalance(userId, parseFloat(amount));
+    
+    console.log('Payment processed successfully:', { tran_id, amount, userId });
+    
+    // Redirect to success page
+    res.redirect(`http://localhost:3000/dashboard/wallet?payment=success&amount=${amount}`);
+    
+  } catch (error) {
+    console.error('SSLCommerz success callback error:', error);
+    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
+  }
+}
+
+// SSLCommerz Fail Callback
+export async function sslcommerzFail(req, res) {
+  try {
+    const { tran_id, error } = req.body;
+    
+    console.log('SSLCommerz Fail Callback:', { tran_id, error });
+    
+    // Update the transaction status to failed
+    await WalletModel.updateTransactionStatusByReference(tran_id, 'failed');
+    
+    res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+    
+  } catch (error) {
+    console.error('SSLCommerz fail callback error:', error);
+    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
+  }
+}
+
+// SSLCommerz Cancel Callback
+export async function sslcommerzCancel(req, res) {
+  try {
+    const { tran_id } = req.body;
+    
+    console.log('SSLCommerz Cancel Callback:', { tran_id });
+    
+    // Update the transaction status to failed
+    await WalletModel.updateTransactionStatusByReference(tran_id, 'failed');
+    
+    res.redirect('http://localhost:3000/dashboard/wallet?payment=cancelled');
+    
+  } catch (error) {
+    console.error('SSLCommerz cancel callback error:', error);
+    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
+  }
+}
+
+// SSLCommerz IPN (Instant Payment Notification) Callback
+export async function sslcommerzIPN(req, res) {
+  try {
+    const { tran_id, val_id, amount, status } = req.body;
+    
+    console.log('SSLCommerz IPN Callback:', { tran_id, val_id, amount, status });
+    
+    if (status === 'VALID') {
+      // Validate the payment with SSLCommerz
+      const validation = await sslcommerz.validate({ val_id });
+      
+      if (validation.status === 'VALID' && validation.tran_id === tran_id) {
+        // Extract user ID from transaction ID
+        const userId = parseInt(tran_id.split('_')[1]);
+        
+        // Update the transaction status to completed
+        await WalletModel.updateTransactionStatusByReference(tran_id, 'completed');
+        
+        // Update wallet balance
+        await WalletModel.updateBalance(userId, parseFloat(amount));
+        
+        console.log('IPN: Payment processed successfully:', { tran_id, amount, userId });
+      }
+    }
+    
+    res.status(200).send('OK');
+    
+  } catch (error) {
+    console.error('SSLCommerz IPN callback error:', error);
+    res.status(500).send('Error');
+  }
+}
+
+// Create escrow transaction with SSLCommerz payment
+export async function createEscrowWithPayment(req, res) {
+  try {
+    const clientId = req.user.id;
+    const { 
+      providerId, jobId, skillId, materialId, 
+      amount, description 
+    } = req.body;
+    
+    if (!providerId || !amount || amount <= 0) {
+      return res.status(400).json({ message: 'Invalid escrow details' });
+    }
+    
+    if (!jobId && !skillId && !materialId) {
+      return res.status(400).json({ message: 'Job, skill, or material ID is required' });
+    }
+
+    // Get user information
+    const user = await UserModel.getUserById(clientId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate unique transaction ID for escrow
+    const transactionId = `ESCROW_${clientId}_${Date.now()}`;
+    
+    // Store pending escrow transaction
+    await WalletModel.addTransaction(clientId, {
+      description: `Escrow payment via SSLCommerz - ${transactionId}`,
+      amount: parseFloat(amount),
+      type: 'escrow',
+      status: 'pending',
+      referenceId: transactionId,
+      referenceType: 'sslcommerz_escrow'
+    });
+
+    // Get SSLCommerz configuration
+    const sslcommerzData = getSSLCommerzConfig(transactionId, amount, {
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address
+    });
+
+    // Override product information for escrow
+    sslcommerzData.product_name = 'Escrow Payment';
+    sslcommerzData.product_category = 'Escrow';
+
+    // Initialize payment with SSLCommerz
+    const apiResponse = await sslcommerz.init(sslcommerzData);
+    
+    if (apiResponse?.GatewayPageURL) {
+      // Store escrow details temporarily (you might want to use a separate table for this)
+      await WalletModel.storePendingEscrow({
+        transactionId,
+        jobId, 
+        skillId, 
+        materialId, 
+        providerId, 
+        clientId, 
+        amount: parseFloat(amount), 
+        description
+      });
+
+      res.json({
+        success: true,
+        message: 'Escrow payment gateway initialized',
+        gatewayUrl: apiResponse.GatewayPageURL,
+        transactionId: transactionId
+      });
+    } else {
+      throw new Error('Failed to initialize payment gateway for escrow');
+    }
+    
+  } catch (error) {
+    console.error('SSLCommerz escrow initialization error:', error);
+    res.status(500).json({ message: 'Failed to initialize escrow payment', error: error.message });
+  }
+}
+
+// Mark escrow job as in progress
+export const markEscrowInProgress = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user.id;
+
+    // Verify the user is the provider
+    const escrow = await WalletModel.getEscrowById(transactionId);
+    if (!escrow || escrow.provider_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this escrow' });
+    }
+
+    const updated = await WalletModel.updateEscrowStatus(transactionId, 'in_progress');
+    
+    if (!updated) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Escrow marked as in progress' 
+    });
+  } catch (error) {
+    console.error('Error marking escrow in progress:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Mark escrow job as completed
+export const markEscrowCompleted = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+    const userId = req.user.id;
+
+    // Verify the user is the provider
+    const escrow = await WalletModel.getEscrowById(transactionId);
+    if (!escrow || escrow.provider_id !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this escrow' });
+    }
+
+    const updated = await WalletModel.updateEscrowStatus(transactionId, 'completed');
+    
+    if (!updated) {
+      return res.status(404).json({ message: 'Escrow transaction not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Escrow marked as completed' 
+    });
+  } catch (error) {
+    console.error('Error marking escrow completed:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 
 interface MyApplicationActionButtonsProps {
   item: any;
-  onStatusChange?: (id: number, type: string, status: string) => Promise<boolean>;
+  onStatusChange?: (id: number, type: string, status: string) => Promise<void>;
 }
 
 /**

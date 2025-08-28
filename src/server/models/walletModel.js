@@ -472,24 +472,6 @@ class WalletModel {
     }
   }
 
-  // UPDATE ESCROW STATUS
-  static async updateEscrowStatus(transactionId, status) {
-    try {
-      const result = await execute(
-        'UPDATE escrow_transactions SET status = ?, updated_at = NOW() WHERE id = ?',
-        [status, transactionId]
-      );
-      
-      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
-    } catch (error) {
-      console.error('Error updating escrow status:', {
-        error: error.message,
-        query: 'UPDATE escrow_transactions...',
-        parameters: [status, transactionId]
-      });
-      throw new Error('Failed to update escrow status');
-    }
-  }
 
   // Add savings goal
   static async addSavingsGoal(userId, data) {
@@ -565,6 +547,115 @@ class WalletModel {
         parameters: [name, targetAmount, currentAmount, deadline, goalId, userId]
       });
       throw new Error('Failed to edit savings goal');
+    }
+  }
+  // Update transaction status by reference ID
+  static async updateTransactionStatusByReference(referenceId, status) {
+    try {
+      const result = await execute(
+        'UPDATE transactions SET status = ? WHERE reference_id = ?',
+        [status, referenceId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating transaction status by reference:', error);
+      throw error;
+    }
+  }
+
+  // Update transaction status
+  
+static async updateTransactionStatus(referenceId, status) {
+  try {
+    const result = await execute(
+      'UPDATE transactions SET status = ? WHERE reference_id = ?',
+      [status, referenceId]
+    );
+    
+    return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+  } catch (error) {
+    console.error('Error updating transaction status:', error);
+    throw error;
+  }
+}
+  // Store pending escrow for SSLCommerz processing
+  static async storePendingEscrow(data) {
+    const { transactionId, jobId, skillId, materialId, providerId, clientId, amount, description } = data;
+    
+    try {
+      const result = await execute(
+        `INSERT INTO pending_escrow_transactions 
+        (transaction_id, job_id, skill_id, material_id, provider_id, client_id, amount, description) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [transactionId, jobId || null, skillId || null, materialId || null, providerId, clientId, amount, description || '']
+      );
+      
+      return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
+    } catch (error) {
+    console.error('Error storing pending escrow:', error);
+    throw error;
+  }
+}
+
+  // Update escrow status
+  static async updateEscrowStatus(transactionId, status) {
+    try {
+      const result = await execute(
+        'UPDATE escrow_transactions SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [status, transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error updating escrow status:', error);
+      throw error;
+    }
+  }
+
+  // Get escrow by ID
+  static async getEscrowById(transactionId) {
+    try {
+      const result = await execute(
+        'SELECT * FROM escrow_transactions WHERE id = ?',
+        [transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.[0] : result[0];
+    } catch (error) {
+      console.error('Error getting escrow by ID:', error);
+      throw error;
+    }
+  }
+
+  // Get pending escrow by transaction ID
+  static async getPendingEscrow(transactionId) {
+    try {
+      const result = await execute(
+        'SELECT * FROM pending_escrow_transactions WHERE transaction_id = ?',
+        [transactionId]
+      );
+      
+      const rows = Array.isArray(result) ? result : result.rows || [];
+      return rows[0] || null;
+    } catch (error) {
+      console.error('Error getting pending escrow:', error);
+      throw error;
+    }
+  }
+
+  // Delete pending escrow after processing
+  static async deletePendingEscrow(transactionId) {
+    try {
+      const result = await execute(
+        'DELETE FROM pending_escrow_transactions WHERE transaction_id = ?',
+        [transactionId]
+      );
+      
+      return Array.isArray(result) ? result[0]?.affectedRows > 0 : result.affectedRows > 0;
+    } catch (error) {
+      console.error('Error deleting pending escrow:', error);
+      throw error;
     }
   }
 }
