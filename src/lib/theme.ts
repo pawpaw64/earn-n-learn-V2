@@ -21,14 +21,14 @@ function removeDarkStylesheet() {
 
 export function enableDarkMode() {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.add('dark-mode');
+  document.documentElement.classList.add('dark');
   addDarkStylesheet();
   try { localStorage.setItem('theme', 'dark'); } catch {}
 }
 
 export function disableDarkMode() {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.remove('dark-mode');
+  document.documentElement.classList.remove('dark');
   removeDarkStylesheet();
   try { localStorage.setItem('theme', 'light'); } catch {}
 }
