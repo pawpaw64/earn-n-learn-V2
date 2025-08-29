@@ -381,58 +381,58 @@
   box-shadow: 4px 0 12px rgba(5, 150, 105, 0.15);
 }
 
-.dashboard-list-item:hover * { color: var(--black); }
+.dark-mode .dashboard-list-item:hover * { color: var(--black); }
 
 /* ===== Landing Page (Index.tsx) - colors only ===== */
 /* Main container */
-.min-h-screen.bg-gray-50 {
+.dark-mode .min-h-screen.bg-gray-50 {
   background-color: #0e1116 !important;
 }
 
 /* Hero section backgrounds */
-.bg-gray-50 { background-color: #0e1116 !important; }
+.dark-mode .bg-gray-50 { background-color: #0e1116 !important; }
 
 /* Features section background */
-.bg-white { background-color: #0f1620 !important; }
+.dark-mode .bg-white { background-color: #0f1620 !important; }
 
 /* Feature cards */
-.bg-emerald-50 { background-color: rgba(16, 29, 20, 0.6) !important; }
-.bg-blue-50 { background-color: rgba(14, 20, 30, 0.6) !important; }
-.bg-purple-50 { background-color: rgba(18, 14, 28, 0.6) !important; }
+.dark-mode .bg-emerald-50 { background-color: rgba(16, 29, 20, 0.6) !important; }
+.dark-mode .bg-blue-50 { background-color: rgba(14, 20, 30, 0.6) !important; }
+.dark-mode .bg-purple-50 { background-color: rgba(18, 14, 28, 0.6) !important; }
 
 /* Gradient backgrounds */
-.bg-gradient-to-b.from-gray-50.to-emerald-50 {
+.dark-mode .bg-gradient-to-b.from-gray-50.to-emerald-50 {
   background: linear-gradient(to bottom, #0e1116, rgba(16, 29, 20, 0.6)) !important;
 }
 
-.bg-gradient-to-b.from-emerald-50.to-white {
+.dark-mode .bg-gradient-to-b.from-emerald-50.to-white {
   background: linear-gradient(to bottom, rgba(16, 29, 20, 0.6), #0f1620) !important;
 }
 
 /* Text colors */
-.text-gray-900 { color: var(--black) !important; }
-.text-gray-600 { color: #cbd5e1 !important; }
-.text-gray-400 { color: #94a3b8 !important; }
+.dark-mode .text-gray-900 { color: var(--black) !important; }
+.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+.dark-mode .text-gray-400 { color: #94a3b8 !important; }
 
 /* Footer */
-.bg-gray-900 { background-color: #0a0e14 !important; }
-.text-white { color: var(--black) !important; }
-.text-gray-400 { color: #94a3b8 !important; }
-.border-gray-800 { border-color: var(--dashboard-border) !important; }
+.dark-mode .bg-gray-900 { background-color: #0a0e14 !important; }
+.dark-mode .text-white { color: var(--black) !important; }
+.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+.dark-mode .border-gray-800 { border-color: var(--dashboard-border) !important; }
 
 /* Emerald accent colors preservation */
-.text-emerald-400 { color: var(--dashboard-emerald) !important; }
-.text-emerald-600 { color: var(--dashboard-emerald) !important; }
-.bg-emerald-600 { background-color: var(--dashboard-emerald) !important; }
-.hover\:bg-emerald-700:hover { background-color: #047857 !important; }
+.dark-mode .text-emerald-400 { color: var(--dashboard-emerald) !important; }
+.dark-mode .text-emerald-600 { color: var(--dashboard-emerald) !important; }
+.dark-mode .bg-emerald-600 { background-color: var(--dashboard-emerald) !important; }
+.dark-mode .hover\:bg-emerald-700:hover { background-color: #047857 !important; }
 
 /* Button variants */
-.text-green-400 { color: var(--dashboard-emerald-light) !important; }
-.border-white { border-color: var(--dashboard-border) !important; }
-.hover\:bg-white:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+.dark-mode .text-green-400 { color: var(--dashboard-emerald-light) !important; }
+.dark-mode .border-white { border-color: var(--dashboard-border) !important; }
+.dark-mode .hover\:bg-white:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
 
 /* Icon colors for features */
-.text-emerald-600 { color: var(--dashboard-emerald) !important; }
-.text-blue-600 { color: var(--dashboard-emerald-light) !important; }
-.text-purple-600 { color: #a78bfa !important; }
+.dark-mode .text-emerald-600 { color: var(--dashboard-emerald) !important; }
+.dark-mode .text-blue-600 { color: var(--dashboard-emerald-light) !important; }
+.dark-mode .text-purple-600 { color: #a78bfa !important; }
 
