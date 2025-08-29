@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Bell, Moon } from "lucide-react";
 import { fetchUserSettings, updateUserSettings, UserSettings } from "@/services/settings";
+import { applyDarkMode, isDarkModeEnabled } from "@/lib/theme";
 import { toast } from "sonner";
 
 export default function ProfileSettings() {
@@ -17,7 +18,9 @@ export default function ProfileSettings() {
             setLoading(true);
             try {
                 const data = await fetchUserSettings();
-                setSettings(data);
+                // Sync with localStorage dark mode state
+                const localDarkMode = isDarkModeEnabled();
+                setSettings({ ...data, dark_mode: localDarkMode });
             } catch (error) {
                 console.error("Error loading settings:", error);
                 toast.error("Failed to load settings");
@@ -28,6 +31,15 @@ export default function ProfileSettings() {
 
         loadSettings();
     }, []);
+
+    const handleDarkModeToggle = (checked: boolean) => {
+        // Update local state
+        setSettings({ ...settings!, dark_mode: checked });
+        // Apply dark mode immediately
+        applyDarkMode(checked);
+        // Show feedback
+        toast.success(checked ? "Dark mode enabled" : "Dark mode disabled");
+    };
 
     const handleSaveNotificationSettings = async () => {
         if (!settings) return;
@@ -187,9 +199,7 @@ export default function ProfileSettings() {
                         <Switch
                             id="dark-mode"
                             checked={settings.dark_mode}
-                            onCheckedChange={(checked) =>
-                                setSettings({ ...settings, dark_mode: checked })
-                            }
+                            onCheckedChange={handleDarkModeToggle}
                         />
                     </div>
 
