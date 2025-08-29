@@ -4,10 +4,11 @@
   - Override colors via CSS variables and minimal color props
   - No layout, typography, or spacing changes
   - Load this after main.css to activate dark mode
+  - Only applies when .dark-mode class is on document element
 */
 
 /* Core palette overrides */
-:root {
+.dark-mode {
   color-scheme: dark;
   --white: #0e1116;            /* soft near-black surfaces */
   --black: #e5e7eb;            /* off-white text */
@@ -45,200 +46,200 @@
 }
 
 /* Base elements using identical selectors */
-html { color: var(--black); }
-body { background-color: #0e1116; color: var(--black); }
+.dark-mode html { color: var(--black); }
+.dark-mode body { background-color: #0e1116; color: var(--black); }
 
 /* Main content wrapper */
-main.flex-1.px-4.py-2.mx-0 {
+.dark-mode main.flex-1.px-4.py-2.mx-0 {
   background-color: #0e1116;
 }
 
 /* Dashboard header bar */
-.sticky.top-0.z-10.flex.h-16.justify-between.w-full.items-center.gap-4.border-b.bg-background.px-4.md\:px-6.lg\:px-8 {
+.dark-mode .sticky.top-0.z-10.flex.h-16.justify-between.w-full.items-center.gap-4.border-b.bg-background.px-4.md\:px-6.lg\:px-8 {
   background-color: #0e1116 !important;
   border-bottom-color: var(--dashboard-border) !important;
 }
 
 /* Page wrappers */
-.dashboard-page-wrapper,
-.browse-gradient-page {
+.dark-mode .dashboard-page-wrapper,
+.dark-mode .browse-gradient-page {
   color: var(--black);
   background: linear-gradient(120deg, rgba(12, 17, 25, 0.95) 0%, rgba(16, 185, 129, 0.06) 50%, rgba(12, 17, 25, 0.95) 100%);
 }
 
 /* Panels & containers */
-.browse-panel,
-.dashboard-container,
-.dashboard-content {
+.dark-mode .browse-panel,
+.dark-mode .dashboard-container,
+.dark-mode .dashboard-content {
   background: linear-gradient(135deg, rgba(12, 17, 25, 0.9), rgba(10, 14, 20, 0.9));
   border-color: var(--dashboard-border);
 }
 
 /* Sections */
-.dashboard-section {
+.dark-mode .dashboard-section {
   background: rgba(14, 20, 28, 0.9);
   border-color: var(--dashboard-border);
 }
 
 /* Dashboard content area container */
-.dashboard-content-area {
+.dark-mode .dashboard-content-area {
   background: #0f1620;
   border-color: var(--dashboard-border);
   color: var(--black);
 }
 
 /* ===== Sidebar (colors only) ===== */
-.sidebar-content {
+.dark-mode .sidebar-content {
   color: var(--black);
 }
 
-[data-sidebar="sidebar"] {
+.dark-mode [data-sidebar="sidebar"] {
   background-color: #0e1116 !important;
   border-right: 1px solid var(--dashboard-border);
 }
 
-.sidebar-xrg,
-[data-sidebar="content"] {
+.dark-mode .sidebar-xrg,
+.dark-mode [data-sidebar="content"] {
   background-color: #0e1116 !important;
 }
 
-.sidebar-xrg::-webkit-scrollbar,
-[data-sidebar="content"]::-webkit-scrollbar {
+.dark-mode .sidebar-xrg::-webkit-scrollbar,
+.dark-mode [data-sidebar="content"]::-webkit-scrollbar {
   background: inherit;
 }
 
-.sidebar-xrg::-webkit-scrollbar-thumb,
-[data-sidebar="content"]::-webkit-scrollbar-thumb {
+.dark-mode .sidebar-xrg::-webkit-scrollbar-thumb,
+.dark-mode [data-sidebar="content"]::-webkit-scrollbar-thumb {
   background: var(--grey-1);
 }
 
-.sidebar-xrg,
-[data-sidebar="content"] {
+.dark-mode .sidebar-xrg,
+.dark-mode [data-sidebar="content"] {
   scrollbar-color: var(--grey-1) transparent;
 }
 
-[data-sidebar="sidebar"] [data-sidebar="menu-button"] {
+.dark-mode [data-sidebar="sidebar"] [data-sidebar="menu-button"] {
   background-color: transparent !important;
   color: var(--black) !important;
   border-color: transparent !important;
 }
 
-[data-sidebar="sidebar"] [data-sidebar="menu-button"]:hover {
+.dark-mode [data-sidebar="sidebar"] [data-sidebar="menu-button"]:hover {
   background-color: rgba(16, 185, 129, 0.10) !important; /* emerald tint */
   color: var(--dashboard-emerald) !important;
   border-color: rgba(16, 185, 129, 0.20) !important;
 }
 
-[data-sidebar="sidebar"] [data-sidebar="menu-button"][data-active="true"] {
+.dark-mode [data-sidebar="sidebar"] [data-sidebar="menu-button"][data-active="true"] {
   background-color: var(--dashboard-emerald) !important;
   color: #0e1116 !important;
   border-color: rgba(16, 185, 129, 0.30) !important;
   box-shadow: 0 2px 8px rgba(5, 150, 105, 0.30) !important;
 }
 
-.sidebar-logo,
-[data-sidebar="group-label"] {
+.dark-mode .sidebar-logo,
+.dark-mode [data-sidebar="group-label"] {
   color: var(--dashboard-emerald);
   border-bottom-color: var(--dashboard-border);
 }
 
-.sheet-content { background-color: #0e1116 !important; }
+.dark-mode .sheet-content { background-color: #0e1116 !important; }
 
 /* ===== Dashboard Tabs (colors only) ===== */
-.dashboard-tabs-list {
+.dark-mode .dashboard-tabs-list {
   background: linear-gradient(135deg, rgba(14, 20, 28, 0.9), rgba(10, 14, 20, 0.9));
 }
 
-.dashboard-tabs-list::before { background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.12), transparent); }
+.dark-mode .dashboard-tabs-list::before { background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.12), transparent); }
 
-.dashboard-tabs-trigger {
+.dark-mode .dashboard-tabs-trigger {
   color: var(--black);
   background: transparent;
   border-color: transparent;
 }
 
-.dashboard-tabs-trigger:hover {
+.dark-mode .dashboard-tabs-trigger:hover {
   color: var(--dashboard-emerald);
 }
 
-.dashboard-tabs-trigger[data-state="active"] {
+.dark-mode .dashboard-tabs-trigger[data-state="active"] {
   background: rgba(16, 185, 129, 0.12);
   color: var(--dashboard-emerald);
   border-color: var(--dashboard-emerald);
 }
 
-.dashboard-tabs-trigger[data-state="active"]:hover {
+.dark-mode .dashboard-tabs-trigger[data-state="active"]:hover {
   color: var(--dashboard-emerald-light);
 }
 
 /* ===== Post Opportunities Tabs (colors only) ===== */
-.post-opportunities-tabs {
+.dark-mode .post-opportunities-tabs {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.post-opportunities-tab {
+.dark-mode .post-opportunities-tab {
   background: transparent;
   color: var(--black);
 }
 
-.post-opportunities-tab[data-state="active"] {
+.dark-mode .post-opportunities-tab[data-state="active"] {
   background: #0f1620;
   color: var(--dashboard-emerald);
   box-shadow: 0 1px 3px rgba(5, 150, 105, 0.2);
 }
 
-.post-opportunities-tab:hover:not([data-state="active"]) {
+.dark-mode .post-opportunities-tab:hover:not([data-state="active"]) {
   background: rgba(255, 255, 255, 0.08);
 }
 
 /* ===== User-Friendly Tabs (colors only) ===== */
-.user-friendly-tabs {
+.dark-mode .user-friendly-tabs {
   background: #0f1620 !important;
   border-color: var(--dashboard-border) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
 }
 
-.user-friendly-tab {
+.dark-mode .user-friendly-tab {
   background: transparent !important;
   color: rgba(229, 231, 235, 0.75) !important;
 }
 
-.user-friendly-tab:hover {
+.dark-mode .user-friendly-tab:hover {
   background: rgba(16, 185, 129, 0.10) !important;
   color: var(--dashboard-emerald) !important;
 }
 
-.user-friendly-tab[data-state="active"] {
+.dark-mode .user-friendly-tab[data-state="active"] {
   background: #0e1116 !important;
   color: var(--dashboard-emerald) !important;
   box-shadow: 0 2px 4px rgba(5, 150, 105, 0.18), 0 1px 2px rgba(0, 0, 0, 0.28) !important;
   border-color: rgba(16, 185, 129, 0.25) !important;
 }
 
-.user-friendly-tab[data-state="active"]::before {
+.dark-mode .user-friendly-tab[data-state="active"]::before {
   background: linear-gradient(90deg, var(--dashboard-emerald), #34d399) !important;
 }
 
 /* ===== Chat Window (colors only) ===== */
 /* Utility backgrounds commonly used in chat UI */
-.bg-white { background-color: #0f1620 !important; }
-.bg-gray-50 { background-color: #0e1116 !important; }
-.bg-gray-100 { background-color: #111922 !important; }
+.dark-mode .bg-white { background-color: #0f1620 !important; }
+.dark-mode .bg-gray-50 { background-color: #0e1116 !important; }
+.dark-mode .bg-gray-100 { background-color: #111922 !important; }
 
 /* Utility text colors used in empty states and meta text */
-.text-gray-900 { color: #e5e7eb !important; }
-.text-gray-700 { color: #d1d5db !important; }
-.text-gray-600 { color: #cbd5e1 !important; }
-.text-gray-500 { color: #9ca3af !important; }
-.text-gray-400 { color: #94a3b8 !important; }
+.dark-mode .text-gray-900 { color: #e5e7eb !important; }
+.dark-mode .text-gray-700 { color: #d1d5db !important; }
+.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+.dark-mode .text-gray-500 { color: #9ca3af !important; }
+.dark-mode .text-gray-400 { color: #94a3b8 !important; }
 
 /* Borders for separators in chat header/input areas */
-.border-b { border-bottom-color: var(--dashboard-border) !important; }
-.border-t { border-top-color: var(--dashboard-border) !important; }
-.border-r { border-right-color: var(--dashboard-border) !important; }
+.dark-mode .border-b { border-bottom-color: var(--dashboard-border) !important; }
+.dark-mode .border-t { border-top-color: var(--dashboard-border) !important; }
+.dark-mode .border-r { border-right-color: var(--dashboard-border) !important; }
 
 /* Profile scope variables and colors */
-.profile-ui {
+.dark-mode .profile-ui {
   --profile-card-bg: #0f1620;                 /* card surface in dark */
   --profile-card-border: var(--dashboard-border);
   --profile-card-shadow: var(--dashboard-shadow);
@@ -247,191 +248,191 @@ main.flex-1.px-4.py-2.mx-0 {
   background-color: #0e1116;
 }
 
-.profile-ui h1,
-.profile-ui h2,
-.profile-ui h3 { color: var(--black); }
+.dark-mode .profile-ui h1,
+.dark-mode .profile-ui h2,
+.dark-mode .profile-ui h3 { color: var(--black); }
 
-.profile-ui .text-muted-foreground { color: rgba(229, 231, 235, 0.7); }
+.dark-mode .profile-ui .text-muted-foreground { color: rgba(229, 231, 235, 0.7); }
 
 /* Tabs in profile keep same selectors */
-.profile-ui [role="tablist"],
-.profile-ui [role="tab"] {
+.dark-mode .profile-ui [role="tablist"],
+.dark-mode .profile-ui [role="tab"] {
   background: transparent;
   border-color: var(--dashboard-border);
   color: var(--black);
 }
 
-.profile-ui [role="tab"][data-state="active"] {
+.dark-mode .profile-ui [role="tab"][data-state="active"] {
   color: var(--profile-accent);
   border-bottom-color: var(--profile-accent);
 }
 
 /* Form controls in profile (colors only) */
-.profile-ui input,
-.profile-ui textarea,
-.profile-ui select {
+.dark-mode .profile-ui input,
+.dark-mode .profile-ui textarea,
+.dark-mode .profile-ui select {
   background: rgba(255, 255, 255, 0.03);
   border-color: var(--dashboard-border);
   color: var(--black);
 }
 
-.profile-ui input:focus,
-.profile-ui textarea:focus,
-.profile-ui select:focus {
+.dark-mode .profile-ui input:focus,
+.dark-mode .profile-ui textarea:focus,
+.dark-mode .profile-ui select:focus {
   border-color: var(--dashboard-emerald);
   box-shadow: 0 0 0 3px var(--dashboard-emerald-bg);
 }
 
 /* ===== Cards: fix hover text readability ===== */
-.dashboard-card,
-.market-card,
-.job-card,
-.skill-card,
-.material-card {
+.dark-mode .dashboard-card,
+.dark-mode .market-card,
+.dark-mode .job-card,
+.dark-mode .skill-card,
+.dark-mode .material-card {
   background: #0f1620;
   border-color: var(--dashboard-border);
   color: var(--black);
 }
 
-.dashboard-card:hover,
-.market-card:hover,
-.job-card:hover,
-.skill-card:hover,
-.material-card:hover {
+.dark-mode .dashboard-card:hover,
+.dark-mode .market-card:hover,
+.dark-mode .job-card:hover,
+.dark-mode .skill-card:hover,
+.dark-mode .material-card:hover {
   background: linear-gradient(135deg, #111a25 0%, rgba(16, 185, 129, 0.08) 100%);
   border-color: rgba(16, 185, 129, 0.25);
   color: var(--black);
 }
 
-.dashboard-card:hover .dashboard-card-title,
-.dashboard-card:hover .dashboard-card-description,
-.market-card:hover h3,
-.market-card:hover p,
-.job-card:hover *,
-.skill-card:hover *,
-.material-card:hover * {
+.dark-mode .dashboard-card:hover .dashboard-card-title,
+.dark-mode .dashboard-card:hover .dashboard-card-description,
+.dark-mode .market-card:hover h3,
+.dark-mode .market-card:hover p,
+.dark-mode .job-card:hover *,
+.dark-mode .skill-card:hover *,
+.dark-mode .material-card:hover * {
   color: var(--black) !important;
 }
 
-.market-card:hover .text-emerald-600 {
+.dark-mode .market-card:hover .text-emerald-600 {
   color: var(--dashboard-emerald-light) !important;
 }
 
 /* ===== Listing sections (colors only) ===== */
 /* Jobs section - yellow themed */
-.bg-yellow-50\/60 { background-color: rgba(16, 29, 20, 0.8) !important; }
-.border-yellow-200 { border-color: rgba(16, 185, 129, 0.15) !important; }
-.text-yellow-800 { color: var(--dashboard-emerald) !important; }
+.dark-mode .bg-yellow-50\/60 { background-color: rgba(16, 29, 20, 0.8) !important; }
+.dark-mode .border-yellow-200 { border-color: rgba(16, 185, 129, 0.15) !important; }
+.dark-mode .text-yellow-800 { color: var(--dashboard-emerald) !important; }
 
 /* Skills section - blue themed */
-.bg-blue-50\/90 { background-color: rgba(14, 20, 30, 0.9) !important; }
-.border-blue-200 { border-color: rgba(52, 211, 153, 0.15) !important; }
-.text-blue-800 { color: var(--dashboard-emerald-light) !important; }
+.dark-mode .bg-blue-50\/90 { background-color: rgba(14, 20, 30, 0.9) !important; }
+.dark-mode .border-blue-200 { border-color: rgba(52, 211, 153, 0.15) !important; }
+.dark-mode .text-blue-800 { color: var(--dashboard-emerald-light) !important; }
 
 /* Materials section - purple themed */
-.bg-purple-50\/90 { background-color: rgba(18, 14, 28, 0.9) !important; }
-.border-purple-200 { border-color: rgba(96, 165, 250, 0.15) !important; }
-.text-purple-800 { color: #9ca3af !important; }
+.dark-mode .bg-purple-50\/90 { background-color: rgba(18, 14, 28, 0.9) !important; }
+.dark-mode .border-purple-200 { border-color: rgba(96, 165, 250, 0.15) !important; }
+.dark-mode .text-purple-800 { color: #9ca3af !important; }
 
 /* ===== Recommendation sections (colors only) ===== */
 /* Gradient backgrounds */
-.bg-gradient-to-r.from-purple-50.to-blue-50 {
+.dark-mode .bg-gradient-to-r.from-purple-50.to-blue-50 {
   background: linear-gradient(to right, rgba(18, 14, 28, 0.8), rgba(14, 20, 30, 0.8)) !important;
 }
 
-.bg-gradient-to-r.from-emerald-50.to-blue-50 {
+.dark-mode .bg-gradient-to-r.from-emerald-50.to-blue-50 {
   background: linear-gradient(to right, rgba(16, 29, 20, 0.8), rgba(14, 20, 30, 0.8)) !important;
 }
 
 /* Recommendation cards */
-.bg-white.rounded-lg.shadow-md {
+.dark-mode .bg-white.rounded-lg.shadow-md {
   background: #0f1620 !important;
   border: 1px solid var(--dashboard-border);
   color: var(--black);
 }
 
 /* Text muted foreground */
-.text-muted-foreground { color: #94a3b8 !important; }
+.dark-mode .text-muted-foreground { color: #94a3b8 !important; }
 
 /* Badge variants */
-.bg-white.text-emerald-700 {
+.dark-mode .bg-white.text-emerald-700 {
   background: rgba(16, 185, 129, 0.12) !important;
   color: var(--dashboard-emerald) !important;
 }
 
 /* General gray text variations */
-.text-gray-900 { color: var(--black) !important; }
-.text-gray-600 { color: #cbd5e1 !important; }
+.dark-mode .text-gray-900 { color: var(--black) !important; }
+.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
 
 /* Lists and general panels */
-.dashboard-list {
+.dark-mode .dashboard-list {
   background: #0f1620;
   border-color: var(--dashboard-border);
 }
 
-.dashboard-list-item {
+.dark-mode .dashboard-list-item {
   border-color: var(--dashboard-border);
   color: var(--black);
 }
 
-.dashboard-list-item:hover {
+.dark-mode .dashboard-list-item:hover {
   background: linear-gradient(90deg, rgba(16, 185, 129, 0.08), rgba(4, 120, 87, 0.10), rgba(16, 185, 129, 0.08));
   border-color: var(--emerald-600);
   box-shadow: 4px 0 12px rgba(5, 150, 105, 0.15);
 }
 
-.dashboard-list-item:hover * { color: var(--black); }
+.dark-mode .dashboard-list-item:hover * { color: var(--black); }
 
 /* ===== Landing Page (Index.tsx) - colors only ===== */
 /* Main container */
-.min-h-screen.bg-gray-50 {
+.dark-mode .min-h-screen.bg-gray-50 {
   background-color: #0e1116 !important;
 }
 
 /* Hero section backgrounds */
-.bg-gray-50 { background-color: #0e1116 !important; }
+.dark-mode .bg-gray-50 { background-color: #0e1116 !important; }
 
 /* Features section background */
-.bg-white { background-color: #0f1620 !important; }
+.dark-mode .bg-white { background-color: #0f1620 !important; }
 
 /* Feature cards */
-.bg-emerald-50 { background-color: rgba(16, 29, 20, 0.6) !important; }
-.bg-blue-50 { background-color: rgba(14, 20, 30, 0.6) !important; }
-.bg-purple-50 { background-color: rgba(18, 14, 28, 0.6) !important; }
+.dark-mode .bg-emerald-50 { background-color: rgba(16, 29, 20, 0.6) !important; }
+.dark-mode .bg-blue-50 { background-color: rgba(14, 20, 30, 0.6) !important; }
+.dark-mode .bg-purple-50 { background-color: rgba(18, 14, 28, 0.6) !important; }
 
 /* Gradient backgrounds */
-.bg-gradient-to-b.from-gray-50.to-emerald-50 {
+.dark-mode .bg-gradient-to-b.from-gray-50.to-emerald-50 {
   background: linear-gradient(to bottom, #0e1116, rgba(16, 29, 20, 0.6)) !important;
 }
 
-.bg-gradient-to-b.from-emerald-50.to-white {
+.dark-mode .bg-gradient-to-b.from-emerald-50.to-white {
   background: linear-gradient(to bottom, rgba(16, 29, 20, 0.6), #0f1620) !important;
 }
 
 /* Text colors */
-.text-gray-900 { color: var(--black) !important; }
-.text-gray-600 { color: #cbd5e1 !important; }
-.text-gray-400 { color: #94a3b8 !important; }
+.dark-mode .text-gray-900 { color: var(--black) !important; }
+.dark-mode .text-gray-600 { color: #cbd5e1 !important; }
+.dark-mode .text-gray-400 { color: #94a3b8 !important; }
 
 /* Footer */
-.bg-gray-900 { background-color: #0a0e14 !important; }
-.text-white { color: var(--black) !important; }
-.text-gray-400 { color: #94a3b8 !important; }
-.border-gray-800 { border-color: var(--dashboard-border) !important; }
+.dark-mode .bg-gray-900 { background-color: #0a0e14 !important; }
+.dark-mode .text-white { color: var(--black) !important; }
+.dark-mode .text-gray-400 { color: #94a3b8 !important; }
+.dark-mode .border-gray-800 { border-color: var(--dashboard-border) !important; }
 
 /* Emerald accent colors preservation */
-.text-emerald-400 { color: var(--dashboard-emerald) !important; }
-.text-emerald-600 { color: var(--dashboard-emerald) !important; }
-.bg-emerald-600 { background-color: var(--dashboard-emerald) !important; }
-.hover\:bg-emerald-700:hover { background-color: #047857 !important; }
+.dark-mode .text-emerald-400 { color: var(--dashboard-emerald) !important; }
+.dark-mode .text-emerald-600 { color: var(--dashboard-emerald) !important; }
+.dark-mode .bg-emerald-600 { background-color: var(--dashboard-emerald) !important; }
+.dark-mode .hover\:bg-emerald-700:hover { background-color: #047857 !important; }
 
 /* Button variants */
-.text-green-400 { color: var(--dashboard-emerald-light) !important; }
-.border-white { border-color: var(--dashboard-border) !important; }
-.hover\:bg-white:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+.dark-mode .text-green-400 { color: var(--dashboard-emerald-light) !important; }
+.dark-mode .border-white { border-color: var(--dashboard-border) !important; }
+.dark-mode .hover\:bg-white:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
 
 /* Icon colors for features */
-.text-emerald-600 { color: var(--dashboard-emerald) !important; }
-.text-blue-600 { color: var(--dashboard-emerald-light) !important; }
-.text-purple-600 { color: #a78bfa !important; }
+.dark-mode .text-emerald-600 { color: var(--dashboard-emerald) !important; }
+.dark-mode .text-blue-600 { color: var(--dashboard-emerald-light) !important; }
+.dark-mode .text-purple-600 { color: #a78bfa !important; }
 
