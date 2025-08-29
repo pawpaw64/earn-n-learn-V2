@@ -28,13 +28,12 @@ CREATE TABLE IF NOT EXISTS skills (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     acquired_from VARCHAR(100),
-    proficiency_level VARCHAR(50) DEFAULT 'Beginner',
-    experience_years INT DEFAULT 0,
-    certifications TEXT,
+    proficiency_level VARCHAR(50) DEFAULT 'Beginner',  
+    experience_years INT DEFAULT 0,                   
+    certifications TEXT,                             
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
 -- Predefined skills table for suggestions
 CREATE TABLE IF NOT EXISTS predefined_skills (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -7,6 +7,7 @@ import { MyPostsSection } from "@/components/browse/MyPostsSection";
 import useBrowseData from "@/hooks/useBrowseData";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate } from "react-router-dom";
+import RecommendationsSection from "@/components/browse/RecommendationsSection";
 
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
@@ -55,6 +56,12 @@ export default function Browse() {
         </TabsList>
         
         <TabsContent value="explore" className="space-y-6">
+          <RecommendationsSection 
+            onApply={(id) => console.log('Apply to job:', id)}
+            onContact={(id, type) => console.log('Contact for:', type, id)}
+            onViewDetails={handleViewDetails}
+          />
+          
           <SearchFilters 
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}

@@ -19,6 +19,7 @@ import projectRoutes from './routes/projectRoutes.js';
 import campusRoutes from './routes/campusRoutes.js';
 import pointsRoutes from './routes/pointsRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import recommendationRoutes from './routes/recommendationRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -131,6 +132,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/campus', campusRoutes);
 app.use('/api', pointsRoutes);
 app.use('/api', settingsRoutes);
+app.use('/api/recommendations', recommendationRoutes);
 
 // Root route
 app.get('/', (req, res) => {

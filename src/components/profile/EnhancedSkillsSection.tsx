@@ -244,7 +244,7 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
                           <SelectValue placeholder="Category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
                           {skillCategories.map(category => (
                             <SelectItem key={category} value={category}>{category}</SelectItem>
                           ))}

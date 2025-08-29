@@ -40,6 +40,7 @@ import PointsOverview from "@/components/profile/PointsOverview";
 import Achievements from "@/components/profile/Achievements";
 import Leaderboard from "@/pages/dashboard/Leaderboard";
 import ProfileSettings from "@/components/profile/ProfileSettings";
+import EnhancedSkillsSection from "@/components/profile/EnhancedSkillsSection";
 
 // Define interfaces for the profile data structure
 interface Skill {
@@ -433,6 +434,27 @@ export default function Profile() {
         }
     };
 
+    // Handle skills update for EnhancedSkillsSection
+    const handleSkillsUpdate = async () => {
+        try {
+            const profileData = isOwnProfile 
+                ? await fetchUserProfile() 
+                : await fetchUserById(userId || '');
+                
+            if (profileData) {
+                const { user, skills, portfolio, websites } = profileData;
+                setProfile({
+                    ...user,
+                    skills: skills || [],
+                    portfolio: portfolio || [],
+                    websites: websites || [],
+                });
+            }
+        } catch (error) {
+            console.error("Error refreshing profile data:", error);
+        }
+    };
+
     // Reset form when canceling edit
     const handleCancelEdit = () => {
         reset({
@@ -637,119 +659,12 @@ export default function Profile() {
                     {/* Achievements */}
                     <Achievements />
 
-                    {/* Skills Section */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Skills</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-3">
-                                {profile.skills.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {profile.skills.map((skill) => (
-                                            <div
-                                                key={skill.id}
-                                                className="flex justify-between items-start p-4 border rounded-lg hover:shadow transition-shadow">
-                                                <div className="space-y-1">
-                                                    <h3 className="font-medium">{skill.name}</h3>
-                                                    {skill.description && (
-                                                        <p className="text-sm text-muted-foreground line-clamp-2">
-                                                            {skill.description}
-                                                        </p>
-                                                    )}
-                                                    {skill.acquiredFrom && (
-                                                        <p className="text-xs text-muted-foreground mt-1">
-                                                            <span className="font-medium">Acquired from:</span>{" "}
-                                                            {skill.acquiredFrom}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                {isOwnProfile && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => removeSkill(skill.id)}
-                                                        className="text-muted-foreground hover:text-destructive">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-muted-foreground py-4 text-center">
-                                        No skills added yet.
-                                    </p>
-                                )}
-
-                                {/* Add Skill Dialog - Only show for own profile */}
-                                {isOwnProfile && (
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" className="w-full">
-                                                <Plus className="h-4 w-4 mr-2" /> Add Skill
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Add New Skill</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4 mt-2">
-                                                <div>
-                                                    <label htmlFor="skillName" className="block text-sm font-medium">
-                                                        Skill Name
-                                                    </label>
-                                                    <Input
-                                                        id="skillName"
-                                                        value={newSkill.name || ""}
-                                                        onChange={(e) =>
-                                                            setNewSkill({ ...newSkill, name: e.target.value })
-                                                        }
-                                                        placeholder="e.g., JavaScript, Design, Project Management"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label htmlFor="skillDescription" className="block text-sm font-medium">
-                                                        Description
-                                                    </label>
-                                                    <Textarea
-                                                        id="skillDescription"
-                                                        value={newSkill.description || ""}
-                                                        onChange={(e) =>
-                                                            setNewSkill({
-                                                                ...newSkill,
-                                                                description: e.target.value,
-                                                            })
-                                                        }
-                                                        placeholder="Describe your skill level or experience"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label htmlFor="skillAcquiredFrom" className="block text-sm font-medium">
-                                                        Acquired From
-                                                    </label>
-                                                    <Input
-                                                        id="skillAcquiredFrom"
-                                                        value={newSkill.acquiredFrom || ""}
-                                                        onChange={(e) =>
-                                                            setNewSkill({
-                                                                ...newSkill,
-                                                                acquiredFrom: e.target.value,
-                                                            })
-                                                        }
-                                                        placeholder="e.g., University course, Online course, Self-taught"
-                                                    />
-                                                </div>
-                                                <Button onClick={addSkill} className="w-full">
-                                                    Add Skill
-                                                </Button>
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                    {/* Enhanced Skills Section */}
+                    <EnhancedSkillsSection 
+                        skills={profile.skills}
+                        onSkillsUpdate={handleSkillsUpdate}
+                        isOwnProfile={isOwnProfile}
+                    />
 
                     {/* Portfolio Section */}
                     <Card>
