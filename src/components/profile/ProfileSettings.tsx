@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Bell, Moon } from "lucide-react";
 import { fetchUserSettings, updateUserSettings, UserSettings } from "@/services/settings";
 import { toast } from "sonner";
+import { applyDarkMode } from "@/lib/theme";
 
 export default function ProfileSettings() {
     const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -28,6 +29,13 @@ export default function ProfileSettings() {
 
         loadSettings();
     }, []);
+
+    // Apply theme live when toggled
+    useEffect(() => {
+        if (settings) {
+            applyDarkMode(!!settings.dark_mode);
+        }
+    }, [settings?.dark_mode]);
 
     const handleSaveNotificationSettings = async () => {
         if (!settings) return;
@@ -187,9 +195,10 @@ export default function ProfileSettings() {
                         <Switch
                             id="dark-mode"
                             checked={settings.dark_mode}
-                            onCheckedChange={(checked) =>
-                                setSettings({ ...settings, dark_mode: checked })
-                            }
+                            onCheckedChange={(checked) => {
+                                setSettings({ ...settings, dark_mode: checked });
+                                applyDarkMode(checked);
+                            }}
                         />
                     </div>
 
