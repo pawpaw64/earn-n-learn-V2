@@ -1,34 +1,56 @@
-// Theme utility for dark mode toggle functionality
+const DARK_LINK_ID = 'dark-theme-stylesheet';
+
+// Resolve the built URL for the stylesheet so Vite can include it
+const darkHref = new URL('../styles/dark.css', import.meta.url).toString();
+
+function addDarkStylesheet() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById(DARK_LINK_ID)) return;
+  const link = document.createElement('link');
+  link.id = DARK_LINK_ID;
+  link.rel = 'stylesheet';
+  link.href = darkHref;
+  document.head.appendChild(link);
+}
+
+function removeDarkStylesheet() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById(DARK_LINK_ID);
+  if (el) el.remove();
+}
 
 export function enableDarkMode() {
-  // Add dark-mode class to document element
+  if (typeof document === 'undefined') return;
   document.documentElement.classList.add('dark-mode');
-  // Store dark mode preference
-  localStorage.setItem('darkMode', 'true');
+  addDarkStylesheet();
+  try { localStorage.setItem('theme', 'dark'); } catch {}
 }
 
 export function disableDarkMode() {
-  // Remove dark-mode class from document element
+  if (typeof document === 'undefined') return;
   document.documentElement.classList.remove('dark-mode');
-  // Remove dark mode preference
-  localStorage.setItem('darkMode', 'false');
+  removeDarkStylesheet();
+  try { localStorage.setItem('theme', 'light'); } catch {}
 }
 
 export function applyDarkMode(enabled: boolean) {
-  if (enabled) {
-    enableDarkMode();
-  } else {
-    disableDarkMode();
-  }
+  if (enabled) enableDarkMode();
+  else disableDarkMode();
 }
 
 export function applyDarkModeFromStorage() {
-  // Check localStorage for dark mode preference
-  const isDarkMode = localStorage.getItem('darkMode') === 'true';
-  applyDarkMode(isDarkMode);
-  return isDarkMode;
+  try {
+    const stored = localStorage.getItem('theme');
+    applyDarkMode(stored === 'dark');
+  } catch {
+    // ignore
+  }
 }
 
 export function isDarkModeEnabled(): boolean {
-  return localStorage.getItem('darkMode') === 'true';
+  try {
+    return localStorage.getItem('theme') === 'dark';
+  } catch {
+    return false;
+  }
 }
