@@ -128,9 +128,13 @@ export function ApplicationsTab({
 
   return (
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
-      <TabsList className="mb-4">
-        <TabsTrigger value="posted">Posted Application</TabsTrigger>
-        <TabsTrigger value="received">Received Application</TabsTrigger>
+      <TabsList className="user-friendly-tabs grid grid-cols-2 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+        <TabsTrigger value="posted" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+          📤 Posted
+        </TabsTrigger>
+        <TabsTrigger value="received" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+          📥 Received
+        </TabsTrigger>
       </TabsList>
 
       {/* Posted Applications */}
@@ -146,10 +150,16 @@ export function ApplicationsTab({
         </div>
 
         <Tabs defaultValue="job" className="mt-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="job">Job Applications</TabsTrigger>
-            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
-            <TabsTrigger value="material">Materials Contacts</TabsTrigger>
+          <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              💼 Jobs
+            </TabsTrigger>
+            <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              🎯 Skills
+            </TabsTrigger>
+            <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              📚 Materials
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="job">
@@ -236,10 +246,16 @@ export function ApplicationsTab({
         </div>
 
         <Tabs defaultValue="job" className="mt-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="job">Job Applications </TabsTrigger>
-            <TabsTrigger value="skill">Skill Contacts</TabsTrigger>
-            <TabsTrigger value="material">Materils Contacts</TabsTrigger>
+          <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              💼 Jobs
+            </TabsTrigger>
+            <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              🎯 Skills
+            </TabsTrigger>
+            <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              📚 Materials
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="job">

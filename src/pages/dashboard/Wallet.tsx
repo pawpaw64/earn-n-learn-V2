@@ -20,22 +20,26 @@ export default function Wallet() {
         <h1 className="dashboard-header text-3xl font-bold">Wallet - Powered by SSLCommerz</h1>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="dashboard-tabs w-full ">
-          <TabsList className="dashboard-tabs-list mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 ">
-            <TabsTrigger value="financial" className="dashboard-tabs-trigger flex items-center gap-2">
+          <TabsList className="dashboard-tabs-list user-friendly-tabs cols-4 mb-8 grid grid-cols-2 md:grid-cols-4 gap-1 p-1 bg-gray-50 rounded-xl border shadow-sm">
+            <TabsTrigger value="financial" className="dashboard-tabs-trigger user-friendly-tab">
               <DollarSign className="w-4 h-4" />
               <span className="hidden sm:inline">Financial</span>
+              <span className="sm:hidden">Cash</span>
             </TabsTrigger>
-            <TabsTrigger value="transactions" className="dashboard-tabs-trigger flex items-center gap-2">
+            <TabsTrigger value="transactions" className="dashboard-tabs-trigger user-friendly-tab">
               <History className="w-4 h-4" />
               <span className="hidden sm:inline">Transactions</span>
+              <span className="sm:hidden">History</span>
             </TabsTrigger>
-            <TabsTrigger value="savings" className="dashboard-tabs-trigger flex items-center gap-2">
+            <TabsTrigger value="savings" className="dashboard-tabs-trigger user-friendly-tab">
               <TrendingUp className="w-4 h-4" />
               <span className="hidden sm:inline">Savings</span>
+              <span className="sm:hidden">Save</span>
             </TabsTrigger>
-            <TabsTrigger value="escrow" className="dashboard-tabs-trigger flex items-center gap-2">
+            <TabsTrigger value="escrow" className="dashboard-tabs-trigger user-friendly-tab">
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Escrow</span>
+              <span className="sm:hidden">Hold</span>
             </TabsTrigger>
           </TabsList>
 

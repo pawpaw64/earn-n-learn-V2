@@ -145,23 +145,23 @@ export function ProjectActions({ project }: ProjectActionsProps) {
       <h3 className="text-lg font-semibold">Project Actions</h3>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 ">
-          <TabsTrigger value="overview" className="px-2">
-      <FileText className="w-4 h-4 mr-1" />
-      Overview
-    </TabsTrigger>
-    <TabsTrigger value="progress" className="px-2">
-      <BarChart3 className="w-4 h-4 mr-1" />
-      Progress
-    </TabsTrigger>
-    <TabsTrigger value="tasks" className="px-2">
-      <UserPlus className="w-4 h-4 mr-1" />
-      Tasks
-    </TabsTrigger>
-    <TabsTrigger value="resources" className="px-2">
-      <Share2 className="w-4 h-4 mr-1" />
-      Resources
-    </TabsTrigger>
+        <TabsList className="user-friendly-tabs grid w-full grid-cols-4 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+          <TabsTrigger value="overview" className="user-friendly-tab flex items-center justify-center gap-1 px-2 py-3 rounded-lg transition-all duration-200 font-medium text-xs">
+            <FileText className="w-4 h-4" />
+            <span className="hidden sm:inline">Overview</span>
+          </TabsTrigger>
+          <TabsTrigger value="progress" className="user-friendly-tab flex items-center justify-center gap-1 px-2 py-3 rounded-lg transition-all duration-200 font-medium text-xs">
+            <BarChart3 className="w-4 h-4" />
+            <span className="hidden sm:inline">Progress</span>
+          </TabsTrigger>
+          <TabsTrigger value="tasks" className="user-friendly-tab flex items-center justify-center gap-1 px-2 py-3 rounded-lg transition-all duration-200 font-medium text-xs">
+            <UserPlus className="w-4 h-4" />
+            <span className="hidden sm:inline">Tasks</span>
+          </TabsTrigger>
+          <TabsTrigger value="resources" className="user-friendly-tab flex items-center justify-center gap-1 px-2 py-3 rounded-lg transition-all duration-200 font-medium text-xs">
+            <Share2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Resources</span>
+          </TabsTrigger>
           
         </TabsList>
 

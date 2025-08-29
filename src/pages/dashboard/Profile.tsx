@@ -461,7 +461,7 @@ export default function Profile() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="profile-ui space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Your Profile</h1>
                 {!isOwnProfile && (
@@ -474,18 +474,21 @@ export default function Profile() {
             </div>
 
             <Tabs defaultValue="profile" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="profile" className="flex items-center gap-2">
+                <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+                    <TabsTrigger value="profile" className="user-friendly-tab">
                         <User className="h-4 w-4" />
-                        Profile Info
+                        <span className="hidden sm:inline">Profile Info</span>
+                        <span className="sm:hidden">Profile</span>
                     </TabsTrigger>
-                    <TabsTrigger value="leaderboard" className="flex items-center gap-2">
+                    <TabsTrigger value="leaderboard" className="user-friendly-tab">
                         <Trophy className="h-4 w-4" />
-                        Leaderboard
+                        <span className="hidden sm:inline">Leaderboard</span>
+                        <span className="sm:hidden">Leaders</span>
                     </TabsTrigger>
-                    <TabsTrigger value="settings" className="flex items-center gap-2">
+                    <TabsTrigger value="settings" className="user-friendly-tab">
                         <Settings className="h-4 w-4" />
-                        Settings
+                        <span className="hidden sm:inline">Settings</span>
+                        <span className="sm:hidden">Config</span>
                     </TabsTrigger>
                 </TabsList>
 

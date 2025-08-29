@@ -42,10 +42,16 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
       </CardHeader>
       <CardContent>
         <Tabs value={activePostTab} onValueChange={setActivePostTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="job">Post a Job</TabsTrigger>
-            <TabsTrigger value="skill">Share a Skill</TabsTrigger>
-            <TabsTrigger value="material">List Materials</TabsTrigger>
+          <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="job" className="user-friendly-tab">
+              💼 Post Job
+            </TabsTrigger>
+            <TabsTrigger value="skill" className="user-friendly-tab">
+              🎯 Share Skill
+            </TabsTrigger>
+            <TabsTrigger value="material" className="user-friendly-tab">
+              📚 List Material
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="job">
             <PostJobFormWrapper initialData={initialData} />

@@ -41,10 +41,10 @@ export default function MyWork() {
       <div className="dashboard-content-area space-y-6">
         <h1 className="dashboard-header text-3xl font-bold">My Work</h1>
         <Tabs defaultValue="applications" className="dashboard-tabs w-full">
-          <TabsList className="dashboard-tabs-list mb-6 w-full flex gap-2">
+          <TabsList className="dashboard-tabs-list user-friendly-tabs cols-2 mb-8 w-full grid grid-cols-2 gap-1 p-1 bg-gray-50 rounded-xl border shadow-sm">
             <TabsTrigger 
               value="applications" 
-              className="dashboard-tabs-trigger flex-1 flex items-center justify-center gap-2 text-sm font-medium"
+              className="dashboard-tabs-trigger user-friendly-tab"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <rect width="20" height="16" x="2" y="4" rx="2"/>
@@ -53,17 +53,19 @@ export default function MyWork() {
                 <path d="M16 16h.01"/>
                 <path d="M12 16h.01"/>
               </svg>
-              Applications
+              <span className="hidden sm:inline">Applications</span>
+              <span className="sm:hidden">Apps</span>
             </TabsTrigger>
             <TabsTrigger 
               value="projects" 
-              className="dashboard-tabs-trigger flex-1 flex items-center justify-center gap-2  text-sm font-medium"
+              className="dashboard-tabs-trigger user-friendly-tab"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              My Works
+              <span className="hidden sm:inline">My Works</span>
+              <span className="sm:hidden">Works</span>
             </TabsTrigger>
            
           </TabsList>
