@@ -30,15 +30,17 @@ async function initDatabase() {
     const messageSchemaPath = join(__dirname, 'message_schema.sql');
     const projectSchemaPath = join(__dirname, 'project_schema.sql');
     const campusSchemaPath = join(__dirname, 'campus_schema.sql');
+    const predefinedSkillsPath = join(__dirname, 'predefined-skills-data.sql');
     
     const schema = readFileSync(schemaPath, 'utf8');
     const walletSchema = readFileSync(walletSchemaPath, 'utf8');
     const messageSchema = readFileSync(messageSchemaPath, 'utf8');
     const projectSchema = readFileSync(projectSchemaPath, 'utf8');
     const campusSchema = readFileSync(campusSchemaPath, 'utf8');
+    const predefinedSkillsData = readFileSync(predefinedSkillsPath, 'utf8');
 
     // Combine schemas
-    const fullSchema = schema + walletSchema + messageSchema + projectSchema + campusSchema;
+    const fullSchema = schema + walletSchema + messageSchema + projectSchema + campusSchema + predefinedSkillsData;
 
     // Split schema into separate SQL statements
     const statements = fullSchema

@@ -1,18 +1,21 @@
 import { Router } from 'express';
-import {
-    register,
-    login,
-    getMe,
-    getUserById,
-    updateProfile,
-    uploadAvatar,
-    uploadAvatarMiddleware,
-    addUserSkill,
-    removeUserSkill,
-    addPortfolioItem,
-    removePortfolioItem,
-    addUserWebsite,
-    removeUserWebsite} from '../controllers/userController.js';
+import { 
+  register, 
+  login, 
+  getMe, 
+  getUserById,
+  updateProfile,
+  uploadAvatar,
+  uploadAvatarMiddleware,
+  addUserSkill,
+  removeUserSkill,
+  getPredefinedSkills,
+  getSkillCategories,
+  addPortfolioItem,
+  removePortfolioItem,
+  addUserWebsite,
+  removeUserWebsite
+} from '../controllers/userController.js';
 import auth from '../middleware/authMiddleware.js';
 
 const router = Router();
@@ -32,6 +35,8 @@ router.post('/upload-avatar', auth, uploadAvatarMiddleware, uploadAvatar);
 // Skills management routes
 router.post('/skills', auth, addUserSkill);
 router.delete('/skills/:skillId', auth, removeUserSkill);
+router.get('/skills/predefined', getPredefinedSkills);
+router.get('/skills/categories', getSkillCategories);
 
 // Portfolio management routes
 router.post('/portfolio', auth, addPortfolioItem);
@@ -40,4 +45,5 @@ router.delete('/portfolio/:itemId', auth, removePortfolioItem);
 // Websites management routes
 router.post('/websites', auth, addUserWebsite);
 router.delete('/websites/:websiteId', auth, removeUserWebsite);
+
 export default router;

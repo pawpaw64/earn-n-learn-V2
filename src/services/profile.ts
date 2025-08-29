@@ -104,7 +104,15 @@ export const uploadProfileImage = async (imageFile: File) => {
 };
 
 // Skills management
-export const addUserSkill = async (skillData: { name: string; description?: string; acquiredFrom?: string }) => {
+export const addUserSkill = async (skillData: { 
+    name: string; 
+    description?: string; 
+    acquiredFrom?: string;
+    proficiencyLevel?: string;
+    experienceYears?: number;
+    certifications?: string;
+    isCustom?: boolean;
+}) => {
     setAuthToken(localStorage.getItem('token'));
     const response = await axios.post(`${API_URL}/users/skills`, skillData);
     return response.data;

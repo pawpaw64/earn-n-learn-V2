@@ -9,6 +9,7 @@ import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate } from "react-router-dom";
 import "../../styles/dashboard-global.css";
 
+import RecommendationsSection from "@/components/browse/RecommendationsSection";
 
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
@@ -85,7 +86,12 @@ export default function Browse() {
           </TabsList>
           
           <TabsContent value="explore" className="space-y-6">
-            <SearchFilters 
+           <RecommendationsSection 
+            onApply={(id) => console.log('Apply to job:', id)}
+            onContact={(id, type) => console.log('Contact for:', type, id)}
+            onViewDetails={handleViewDetails}
+          />
+           <SearchFilters 
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               categoryFilter={categoryFilter}
@@ -121,8 +127,6 @@ export default function Browse() {
               onViewDetails={handleViewDetails}
             />
           </TabsContent>
-
-    
         </Tabs>
       </div>
     </div>

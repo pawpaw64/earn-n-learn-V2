@@ -143,19 +143,91 @@ class UserModel {
     }
     // Add user skill
     static async addUserSkill(userId, skillData) {
-        const { name, description, acquiredFrom } = skillData;
-        console.log('Adding skill:', { userId, name, description, acquiredFrom });
+        const { name, description, acquiredFrom, proficiencyLevel, experienceYears, certifications } = skillData;
+        console.log('Adding skill:', { userId, name, description, acquiredFrom, proficiencyLevel, experienceYears, certifications });
 
         try {
             const result = await execute(
-                'INSERT INTO skills (user_id, name, description, acquired_from) VALUES (?, ?, ?, ?)',
-                [userId, name, description || null, acquiredFrom || null]
+                'INSERT INTO skills (user_id, name, description, acquired_from, proficiency_level, experience_years, certifications) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [userId, name, description || null, acquiredFrom || null, proficiencyLevel || 'Beginner', experienceYears || 0, certifications || null]
             );
 
             return result.insertId || result[0]?.insertId || result.rows?.[0]?.insertId;
         } catch (error) {
             console.error('Database error in addUserSkill:', error);
             throw new Error(error.message);
+        }
+    }
+
+    // Get predefined skills for suggestions
+    static async getPredefinedSkills(search = '', category = '') {
+        try {
+            let query = 'SELECT name, category, description FROM predefined_skills';
+            const params = [];
+
+            const conditions = [];
+            if (search) {
+                conditions.push('name LIKE ?');
+                params.push(`%${search}%`);
+            }
+            if (category) {
+                conditions.push('category = ?');
+                params.push(category);
+            }
+
+            if (conditions.length > 0) {
+                query += ' WHERE ' + conditions.join(' AND ');
+            }
+
+            query += ' ORDER BY usage_count DESC, name ASC LIMIT 20';
+
+            const result = await execute(query, params);
+            return Array.isArray(result) ? result : result.rows || [];
+        } catch (error) {
+            console.error('Database error in getPredefinedSkills:', error);
+            throw new Error(error.message);
+        }
+    }
+
+    // Get skill categories
+    static async getSkillCategories() {
+        try {
+            const result = await execute(
+                'SELECT DISTINCT category FROM predefined_skills ORDER BY category ASC'
+            );
+            
+            const rows = Array.isArray(result) ? result : result.rows || [];
+            return rows.map(row => row.category);
+        } catch (error) {
+            console.error('Database error in getSkillCategories:', error);
+            throw new Error(error.message);
+        }
+    }
+
+    // Add custom skill to predefined skills
+    static async addCustomSkillToPredefined(name, category) {
+        try {
+            // Check if skill already exists
+            const existing = await execute(
+                'SELECT id FROM predefined_skills WHERE name = ?',
+                [name]
+            );
+
+            if (Array.isArray(existing) && existing.length === 0) {
+                await execute(
+                    'INSERT INTO predefined_skills (name, category, description) VALUES (?, ?, ?)',
+                    [name, category, `User-contributed skill: ${name}`]
+                );
+            } else {
+                // Update usage count
+                await execute(
+                    'UPDATE predefined_skills SET usage_count = usage_count + 1 WHERE name = ?',
+                    [name]
+                );
+            }
+        } catch (error) {
+            console.error('Database error in addCustomSkillToPredefined:', error);
+            // Don't throw error as this is optional
         }
     }
 
