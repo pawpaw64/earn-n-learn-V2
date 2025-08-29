@@ -6,6 +6,7 @@ import { ChatType, GroupType } from '@/types/messages';
 import { ChatSidebar } from '@/components/messages/ChatSidebar';
 import { ChatWindow } from '@/components/messages/ChatWindow';
 import { useSearchParams } from 'react-router-dom';
+import "../../styles/dashboard-global.css";
 
 export default function Messages() {
   const [activeChat, setActiveChat] = useState<{ 
@@ -111,22 +112,23 @@ export default function Messages() {
   }, [queryClient, activeChat]);
   
   return (
-      <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
-
-      <h1 className="text-3xl font-bold">Messages</h1>
-      
-      <div className="border rounded-lg shadow-sm bg-card h-[calc(100vh-12rem)] flex">
-        <ChatSidebar 
-          onSelectChat={handleSelectChat}
-          activeChat={activeChat || undefined}
-        />
+    <div className="dashboard-page-wrapper">
+      <div className="dashboard-content-area space-y-6">
+        <h1 className="dashboard-header text-3xl font-bold">Messages</h1>
         
-        <ChatWindow 
-          chatId={activeChat?.id || 0}
-          chatType={activeChat?.type || 'direct'}
-          chatName={activeChat?.name}
-          chatAvatar={activeChat?.avatar}
-        />
+        <div className="border rounded-lg shadow-sm bg-card h-[calc(100vh-12rem)] flex">
+          <ChatSidebar 
+            onSelectChat={handleSelectChat}
+            activeChat={activeChat || undefined}
+          />
+          
+          <ChatWindow 
+            chatId={activeChat?.id || 0}
+            chatType={activeChat?.type || 'direct'}
+            chatName={activeChat?.name}
+            chatAvatar={activeChat?.avatar}
+          />
+        </div>
       </div>
     </div>
   );

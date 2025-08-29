@@ -114,15 +114,18 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
                 </div>
               ) : (
                 <Tabs defaultValue="active" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="active">
-                      Active ({clientProjects.filter(p => p.status === 'active').length})
+                  <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+                    <TabsTrigger value="active" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Active ({clientProjects.filter(p => p.status === 'active').length})</span>
+                      <span className="sm:hidden">Active</span>
                     </TabsTrigger>
-                    <TabsTrigger value="completed">
-                      Completed ({clientProjects.filter(p => p.status === 'completed').length})
+                    <TabsTrigger value="completed" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Completed ({clientProjects.filter(p => p.status === 'completed').length})</span>
+                      <span className="sm:hidden">Done</span>
                     </TabsTrigger>
-                    <TabsTrigger value="other">
-                      Other ({clientProjects.filter(p => !['active', 'completed'].includes(p.status)).length})
+                    <TabsTrigger value="other" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Other ({clientProjects.filter(p => !['active', 'completed'].includes(p.status)).length})</span>
+                      <span className="sm:hidden">Other</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -174,15 +177,18 @@ export function ProjectsTab({ onViewDetails, onStatusChange }: ProjectsTabProps)
                 </div>
               ) : (
                 <Tabs defaultValue="active" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="active">
-                      Active ({providerProjects.filter(p => p.status === 'active').length})
+                  <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+                    <TabsTrigger value="active" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Active ({providerProjects.filter(p => p.status === 'active').length})</span>
+                      <span className="sm:hidden">Active</span>
                     </TabsTrigger>
-                    <TabsTrigger value="completed">
-                      Completed ({providerProjects.filter(p => p.status === 'completed').length})
+                    <TabsTrigger value="completed" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Completed ({providerProjects.filter(p => p.status === 'completed').length})</span>
+                      <span className="sm:hidden">Done</span>
                     </TabsTrigger>
-                    <TabsTrigger value="other">
-                      Other ({providerProjects.filter(p => !['active', 'completed'].includes(p.status)).length})
+                    <TabsTrigger value="other" className="user-friendly-tab">
+                      <span className="hidden sm:inline">Other ({providerProjects.filter(p => !['active', 'completed'].includes(p.status)).length})</span>
+                      <span className="sm:hidden">Other</span>
                     </TabsTrigger>
                   </TabsList>
 

@@ -296,10 +296,16 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="jobs">Jobs ({jobs.length})</TabsTrigger>
-            <TabsTrigger value="skills">Skills ({skills.length})</TabsTrigger>
-            <TabsTrigger value="materials">Materials ({materials.length})</TabsTrigger>
+          <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="jobs" className="user-friendly-tab">
+              💼 Jobs ({jobs.length})
+            </TabsTrigger>
+            <TabsTrigger value="skills" className="user-friendly-tab">
+              🎯 Skills ({skills.length})
+            </TabsTrigger>
+            <TabsTrigger value="materials" className="user-friendly-tab">
+              📚 Materials ({materials.length})
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="jobs" className="space-y-4 mt-6">

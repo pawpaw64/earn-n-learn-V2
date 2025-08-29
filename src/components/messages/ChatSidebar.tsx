@@ -56,12 +56,12 @@ export function ChatSidebar({ onSelectChat, activeChat }: ChatSidebarProps) {
       </div>
       
       <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="grid grid-cols-2 mx-4 mt-2 flex-shrink-0">
-          <TabsTrigger value="chats" className="flex items-center gap-2">
+  <TabsList className="user-friendly-tabs cols-2 mx-4 mt-2 flex-shrink-0 p-1 bg-gray-50 rounded-xl border shadow-sm">
+          <TabsTrigger value="chats" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
             <MessageCircle className="h-4 w-4" />
             <span>Chats</span>
           </TabsTrigger>
-          <TabsTrigger value="groups" className="flex items-center gap-2">
+          <TabsTrigger value="groups" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
             <Users className="h-4 w-4" />
             <span>Groups</span>
           </TabsTrigger>

@@ -126,12 +126,12 @@ export const PostFeed = () => {
 
       {/* Filter Tabs */}
       <Tabs value={activeFilter} onValueChange={setActiveFilter}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">All Posts</TabsTrigger>
-          <TabsTrigger value="question">Questions</TabsTrigger>
-          <TabsTrigger value="discussion">Discussions</TabsTrigger>
-          <TabsTrigger value="announcement">Announcements</TabsTrigger>
-          <TabsTrigger value="poll">Polls</TabsTrigger>
+        <TabsList className="user-friendly-tabs cols-5 grid w-full grid-cols-5 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+          <TabsTrigger value="all" className="user-friendly-tab">All</TabsTrigger>
+          <TabsTrigger value="question" className="user-friendly-tab">Q&A</TabsTrigger>
+          <TabsTrigger value="discussion" className="user-friendly-tab">Talk</TabsTrigger>
+          <TabsTrigger value="announcement" className="user-friendly-tab">News</TabsTrigger>
+          <TabsTrigger value="poll" className="user-friendly-tab">Poll</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeFilter} className="space-y-4">

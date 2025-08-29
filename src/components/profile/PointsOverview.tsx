@@ -84,9 +84,9 @@ export default function PointsOverview() {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="overview">Overview</TabsTrigger>
-                        <TabsTrigger value="history">History</TabsTrigger>
+                    <TabsList className="user-friendly-tabs grid w-full grid-cols-2 p-1 bg-gray-50 rounded-xl border shadow-sm mb-4">
+                        <TabsTrigger value="overview" className="user-friendly-tab flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">Overview</TabsTrigger>
+                        <TabsTrigger value="history" className="user-friendly-tab flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">History</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="space-y-6">

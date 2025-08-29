@@ -193,15 +193,19 @@ export function EscrowTransactions() {
         </div>
       ) : (
         <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All Transactions</TabsTrigger>
-            <TabsTrigger value="client" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              Client ({clientTransactions.length})
+          <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="all" className="user-friendly-tab">
+              <span>All Transactions</span>
             </TabsTrigger>
-            <TabsTrigger value="provider" className="flex items-center gap-2">
+            <TabsTrigger value="client" className="user-friendly-tab">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Client ({clientTransactions.length})</span>
+              <span className="sm:hidden">Client</span>
+            </TabsTrigger>
+            <TabsTrigger value="provider" className="user-friendly-tab">
               <Wallet2 className="w-4 h-4" />
-              Provider ({providerTransactions.length})
+              <span className="hidden sm:inline">Provider ({providerTransactions.length})</span>
+              <span className="sm:hidden">Provider</span>
             </TabsTrigger>
           </TabsList>
 

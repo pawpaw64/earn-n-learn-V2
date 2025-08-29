@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import DashboardSidebar from "./DashboardSidebar";
+import "../../styles/dashboard-global.css";
 
 const DashboardHeader = () => {
   const navigate = useNavigate();

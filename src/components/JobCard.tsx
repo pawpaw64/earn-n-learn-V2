@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
+import "../styles/dashboard-global.css";
+
 
 interface JobCardProps {
   title: string;
@@ -46,10 +48,10 @@ const JobCard = ({
   const formattedPayment = formatPayment(payment);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow w-full">
+    <div className="job-card w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
-        <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{title}</h3>
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
+        <h3 className="job-card-title text-lg font-semibold text-gray-900 line-clamp-2">{title}</h3>
+        <Badge variant="secondary" className="job-card-badge bg-emerald-100 text-emerald-800 font-medium self-start sm:self-auto">
           {type}
         </Badge>
       </div>
@@ -57,7 +59,7 @@ const JobCard = ({
       <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
       
       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-        <span className="text-emerald-600 font-medium whitespace-nowrap">
+        <span className="job-card-price text-emerald-600 font-medium whitespace-nowrap">
           {formattedPayment}
         </span>
         
@@ -65,7 +67,7 @@ const JobCard = ({
           <Button
             variant="outline"
             onClick={onViewDetails}
-            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
+            className="dashboard-button-outline border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
             size="sm"
           >
             <span className="hidden sm:inline">Details</span>
@@ -73,7 +75,7 @@ const JobCard = ({
           </Button>
           <Button
             onClick={onApply}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
+            className="dashboard-button bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
             size="sm"
           >
             Apply Now

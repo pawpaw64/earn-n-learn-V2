@@ -2,6 +2,7 @@
 import { LayoutGrid, School2, Wallet, MessageSquare, User, Settings, Trophy, Calendar, Briefcase } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
 import { Link, useLocation } from "react-router-dom";
+import "../../styles/dashboard-global.css";
 
 const mainMenuItems = [
   {
@@ -55,6 +56,7 @@ const DashboardSidebar = () => {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.href}
+                    className={`dashboard-menu-item ${location.pathname === item.href ? 'active' : ''}`}
                   >
                     <Link to={item.href}>
                       <item.icon />
