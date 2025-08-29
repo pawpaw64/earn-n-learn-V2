@@ -62,7 +62,7 @@ const MaterialCard = ({
       <div className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
           <div>
-            <h3 className="material-card-title text-lg font-semibold text-gray-900">{material}</h3>  
+            <h3 className="material-card-title text-lg font-semibold text-gray-900 line-clamp-2">{material}</h3>  
             <p className="text-sm text-gray-600 mb-2">By {name}</p>        
           </div>
           <div className="flex gap-2 self-start sm:self-auto">
