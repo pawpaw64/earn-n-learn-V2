@@ -7,6 +7,8 @@ import { MyPostsSection } from "@/components/browse/MyPostsSection";
 import useBrowseData from "@/hooks/useBrowseData";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate } from "react-router-dom";
+import "../../styles/dashboard-global.css";
+
 
 export default function Browse() {
   const [mainTab, setMainTab] = useState("explore");
@@ -44,56 +46,58 @@ export default function Browse() {
     filteredMaterials
   } = useBrowseData();
   return (
-    <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
-      <h1 className="text-3xl font-bold">Campus Marketplace</h1>
-      
-      <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6 text-black rounded-lg">
-          <TabsTrigger value="explore">Explore Opportunities</TabsTrigger>
-          <TabsTrigger value="post">Post Opportunities</TabsTrigger>
-          <TabsTrigger value="my-posts">My Posts</TabsTrigger>
-        </TabsList>
+    <div className="dashboard-page-wrapper">
+      <div className="dashboard-content-area space-y-6">
+        <h1 className="dashboard-header text-3xl font-bold">Campus Marketplace</h1>
         
-        <TabsContent value="explore" className="space-y-6">
-          <SearchFilters 
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-          />
+        <Tabs value={mainTab} onValueChange={setMainTab} className="dashboard-tabs w-full">
+          <TabsList className="dashboard-tabs-list grid w-full grid-cols-3 mb-6 text-black rounded-lg">
+            <TabsTrigger value="explore" className="dashboard-tabs-trigger">Explore Opportunities</TabsTrigger>
+            <TabsTrigger value="post" className="dashboard-tabs-trigger">Post Opportunities</TabsTrigger>
+            <TabsTrigger value="my-posts" className="dashboard-tabs-trigger">My Posts</TabsTrigger>
+          </TabsList>
           
-          <ListingsSection 
-            jobs={jobs}
-            skills={skills}
-            materials={materials}
-            filteredJobs={filteredJobs}
-            filteredSkills={filteredSkills}
-            filteredMaterials={filteredMaterials}
-          />
-        </TabsContent>
-        
-        <TabsContent value="post" className="space-y-6">
-          <PostingSection 
-            activePostTab={postTab}
-            setActivePostTab={setPostTab}
-          />
-        </TabsContent>
-        
-        <TabsContent value="my-posts" className="space-y-6">
-          <MyPostsSection 
-            onEdit={(item, type) => {
-              handleEdit(item, type);
-              setMainTab("post"); // Switch to post tab for editing
-            }}
-            onDelete={handleDelete}
-            onViewDetails={handleViewDetails}
-          />
-        </TabsContent>
+          <TabsContent value="explore" className="space-y-6">
+            <SearchFilters 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+            />
+            
+            <ListingsSection 
+              jobs={jobs}
+              skills={skills}
+              materials={materials}
+              filteredJobs={filteredJobs}
+              filteredSkills={filteredSkills}
+              filteredMaterials={filteredMaterials}
+            />
+          </TabsContent>
+          
+          <TabsContent value="post" className="space-y-6">
+            <PostingSection 
+              activePostTab={postTab}
+              setActivePostTab={setPostTab}
+            />
+          </TabsContent>
+          
+          <TabsContent value="my-posts" className="space-y-6">
+            <MyPostsSection 
+              onEdit={(item, type) => {
+                handleEdit(item, type);
+                setMainTab("post"); // Switch to post tab for editing
+              }}
+              onDelete={handleDelete}
+              onViewDetails={handleViewDetails}
+            />
+          </TabsContent>
 
-  
-      </Tabs>
+    
+        </Tabs>
+      </div>
     </div>
   );
 }

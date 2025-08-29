@@ -9,6 +9,7 @@ import { InvoicesTab } from "@/components/mywork/InvoicesTab";
 import { DetailsDialog } from "@/components/mywork/DetailsDialog";
 import { ProjectsTab } from "@/components/projects/ProjectsTab";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
+import "../../styles/dashboard-global.css";
 
 export default function MyWork() {
   const navigate = useNavigate();
@@ -36,68 +37,69 @@ export default function MyWork() {
   };
 
   return (
-       <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
+    <div className="dashboard-page-wrapper">
+      <div className="dashboard-content-area space-y-6">
+        <h1 className="dashboard-header text-3xl font-bold">My Work</h1>
+        <Tabs defaultValue="applications" className="dashboard-tabs w-full">
+          <TabsList className="dashboard-tabs-list mb-6 w-full flex gap-2">
+            <TabsTrigger 
+              value="applications" 
+              className="dashboard-tabs-trigger flex-1 flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="M20 8H4"/>
+                <path d="M8 16h.01"/>
+                <path d="M16 16h.01"/>
+                <path d="M12 16h.01"/>
+              </svg>
+              Applications
+            </TabsTrigger>
+            <TabsTrigger 
+              value="projects" 
+              className="dashboard-tabs-trigger flex-1 flex items-center justify-center gap-2  text-sm font-medium"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              My Works
+            </TabsTrigger>
+           
+          </TabsList>
 
-      <h1 className="text-3xl font-bold">My Work</h1>
-      <Tabs defaultValue="applications" className="w-full">
-        <TabsList className="mb-6 w-full flex gap-2">
-          <TabsTrigger 
-            value="applications" 
-            className="flex-1 flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <rect width="20" height="16" x="2" y="4" rx="2"/>
-              <path d="M20 8H4"/>
-              <path d="M8 16h.01"/>
-              <path d="M16 16h.01"/>
-              <path d="M12 16h.01"/>
-            </svg>
-            Applications
-          </TabsTrigger>
-          <TabsTrigger 
-            value="projects" 
-            className="flex-1 flex items-center justify-center gap-2  text-sm font-medium"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-            My Works
-          </TabsTrigger>
-         
-        </TabsList>
+          {/* Projects Tab Content */}
+          <TabsContent value="projects">
+            <ProjectsTab   
+              onViewDetails={handleViewDetails}
+              onStatusChange={handleStatusChangeWrapper} 
+            />
+          </TabsContent>
 
-        {/* Projects Tab Content */}
-        <TabsContent value="projects">
-          <ProjectsTab   
-            onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChangeWrapper} 
-          />
-        </TabsContent>
+          {/* Applications Tab Content */}
+          <TabsContent value="applications">
+            <ApplicationsTab 
+              onViewDetails={handleViewDetails}
+              onStatusChange={handleStatusChangeWrapper}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+            />
+          </TabsContent>
 
-        {/* Applications Tab Content */}
-        <TabsContent value="applications">
-          <ApplicationsTab 
-            onViewDetails={handleViewDetails}
-            onStatusChange={handleStatusChangeWrapper}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </TabsContent>
+          <TabsContent value="invoices">
+            <InvoicesTab onViewDetails={handleViewDetails} />
+          </TabsContent>
+        </Tabs>
 
-        <TabsContent value="invoices">
-          <InvoicesTab onViewDetails={handleViewDetails} />
-        </TabsContent>
-      </Tabs>
-
-      {/* Details Dialog */}
-      <DetailsDialog
-        isOpen={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
-        detailsItem={detailsItem}
-        detailsType={detailsType}
-        onStatusChange={handleStatusChangeWrapper}
-      />
+        {/* Details Dialog */}
+        <DetailsDialog
+          isOpen={isDetailsOpen}
+          onOpenChange={setIsDetailsOpen}
+          detailsItem={detailsItem}
+          detailsType={detailsType}
+          onStatusChange={handleStatusChangeWrapper}
+        />
+      </div>
     </div>
   );
 }

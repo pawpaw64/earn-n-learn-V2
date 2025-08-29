@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award, User } from "lucide-react";
 import { fetchLeaderboard, LeaderboardItem } from "@/services/points";
-
+import "../../styles/dashboard-global.css";
 export default function Leaderboard() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardItem[]>([]);
     const [loading, setLoading] = useState(true);

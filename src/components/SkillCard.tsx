@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight } from "lucide-react";
+import "../styles/dashboard-global.css";
 
 interface SkillCardProps {
   name: string;
@@ -40,14 +41,14 @@ const SkillCard = ({
   const formattedPricing = formatPricing(pricing);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow w-full">
+    <div className="skill-card w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
         <div>
-        <h3 className="text-lg font-semibold text-gray-900">{skill}</h3>          
+        <h3 className="skill-card-title text-lg font-semibold text-gray-900">{skill}</h3>          
         <p className="text-sm text-gray-600 mb-2">By {name}</p>
         </div>
         <div className="flex gap-2 self-start sm:self-auto">
-          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          <Badge variant="secondary" className="skill-card-badge bg-blue-100 text-blue-800">
             {experienceLevel}
           </Badge>
         </div>
@@ -56,7 +57,7 @@ const SkillCard = ({
       <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
 
       <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-        <span className="text-emerald-600 font-medium whitespace-nowrap">
+        <span className="skill-card-price text-emerald-600 font-medium whitespace-nowrap">
           {formattedPricing}
         </span>
 
@@ -64,7 +65,7 @@ const SkillCard = ({
           <Button
             variant="outline"
             onClick={onViewDetails}
-            className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
+            className="dashboard-button-outline border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
             size="sm"
           >
             <span className="hidden sm:inline">Details</span>
@@ -72,7 +73,7 @@ const SkillCard = ({
           </Button>
           <Button
             onClick={onContact}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
+            className="dashboard-button bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
             size="sm"
           >
             Contact

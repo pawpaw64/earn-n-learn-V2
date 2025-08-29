@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
+import "../../styles/dashboard-global.css";
 import { User, Pencil, Plus, Image, Trash2, Link, Trophy, Settings } from "lucide-react";
 import {
     Card,
