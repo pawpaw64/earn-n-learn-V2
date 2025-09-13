@@ -4,20 +4,75 @@ import SkillModel from '../models/skillModel.js';
 import MaterialModel from '../models/materialModel.js';
 
 class RecommendationController {
-  // Calculate skill match percentage between user skills and item requirements
+  // Enhanced skill matching with case-insensitive and fuzzy matching
   static calculateSkillMatch(userSkills, itemSkills) {
     if (!userSkills?.length || !itemSkills?.length) return 0;
     
-    const userSkillsLower = userSkills.map(s => s.name?.toLowerCase() || s.skill_name?.toLowerCase());
-    const itemSkillsLower = itemSkills.map(s => s.toLowerCase());
+    const userSkillsLower = userSkills.map(s => {
+      const skillName = s.name?.toLowerCase() || s.skill_name?.toLowerCase() || '';
+      return skillName.trim();
+    }).filter(Boolean);
+    
+    const itemSkillsLower = itemSkills.map(s => s.toLowerCase().trim()).filter(Boolean);
     
     const matches = itemSkillsLower.filter(skill => 
-      userSkillsLower.some(userSkill => 
-        userSkill.includes(skill) || skill.includes(userSkill)
-      )
+      userSkillsLower.some(userSkill => {
+        // Exact match
+        if (userSkill === skill) return true;
+        // Partial match (both directions)
+        if (userSkill.includes(skill) || skill.includes(userSkill)) return true;
+        // Fuzzy match for similar skills (e.g., "js" and "javascript")
+        return this.isSimilarSkill(userSkill, skill);
+      })
     );
     
     return Math.round((matches.length / itemSkillsLower.length) * 100);
+  }
+
+  // Helper method for fuzzy skill matching
+  static isSimilarSkill(skill1, skill2) {
+    const synonyms = {
+      'javascript': ['js', 'node', 'nodejs'],
+      'python': ['py'],
+      'typescript': ['ts'],
+      'react': ['reactjs'],
+      'vue': ['vuejs'],
+      'angular': ['angularjs'],
+      'css': ['css3', 'styling'],
+      'html': ['html5', 'markup'],
+    };
+
+    for (const [main, alts] of Object.entries(synonyms)) {
+      if ((skill1.includes(main) || alts.some(alt => skill1.includes(alt))) &&
+          (skill2.includes(main) || alts.some(alt => skill2.includes(alt)))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Calculate category match score (higher weight in final recommendation)
+  static calculateCategoryMatch(userCategories, itemCategory) {
+    if (!userCategories?.length || !itemCategory) return 0;
+    
+    // Direct category match gets highest score
+    if (userCategories.includes(itemCategory)) {
+      return 100;
+    }
+    
+    // Related categories get medium score
+    const relatedCategories = this.getRelatedCategories(itemCategory);
+    if (relatedCategories.some(cat => userCategories.includes(cat))) {
+      return 60;
+    }
+    
+    return 0;
+  }
+
+  // Final recommendation score combining category and skill matches
+  static calculateFinalScore(categoryMatch, skillMatch) {
+    // Category matching has 70% weight, skill matching has 30% weight
+    return Math.round((categoryMatch * 0.7) + (skillMatch * 0.3));
   }
 
   // Extract skills from text descriptions
@@ -30,38 +85,52 @@ class RecommendationController {
     ).map(skill => skill.name);
   }
 
-  // Get job recommendations
+  // Enhanced job recommendations with two-stage filtering
   static async getJobRecommendations(req, res) {
     try {
       const userId = req.user.id;
       
-      // Get user skills
+      // Get user data
       const userSkills = await UserModel.getUserSkills(userId);
       const predefinedSkills = await UserModel.getPredefinedSkills();
+      
+      if (!userSkills?.length) {
+        return res.json([]);
+      }
+      
+      // Stage 1: Determine user's primary categories
+      const userCategories = [...new Set(userSkills.map(s => s.category).filter(Boolean))];
       
       // Get all jobs excluding user's own
       const jobs = await JobModel.getAllExcludingUser(userId);
       
-      // Calculate match percentages
+      // Stage 2: Calculate recommendations with two-stage filtering
       const recommendations = jobs.map(job => {
-        // Extract skills from job description and requirements
+        // Category matching (Stage 1)
+        const categoryMatch = this.calculateCategoryMatch(userCategories, job.category);
+        
+        // Skill matching within category (Stage 2)
         const jobSkills = [
           ...this.extractSkillsFromText(job.description, predefinedSkills),
           ...this.extractSkillsFromText(job.requirements, predefinedSkills)
         ];
+        const skillMatch = this.calculateSkillMatch(userSkills, jobSkills);
         
-        const matchPercentage = this.calculateSkillMatch(userSkills, jobSkills);
+        // Final weighted score
+        const finalScore = this.calculateFinalScore(categoryMatch, skillMatch);
         
         return {
           ...job,
-          matchPercentage,
+          matchPercentage: finalScore,
+          categoryMatch,
+          skillMatch,
           type: 'job'
         };
       });
       
-      // Sort by match percentage and return top 10
+      // Sort by final score and return top 10
       const topRecommendations = recommendations
-        .filter(rec => rec.matchPercentage > 0)
+        .filter(rec => rec.matchPercentage > 10) // Minimum threshold
         .sort((a, b) => b.matchPercentage - a.matchPercentage)
         .slice(0, 10);
       
@@ -72,50 +141,58 @@ class RecommendationController {
     }
   }
 
-  // Get skill recommendations
+  // Enhanced skill recommendations with category-first approach
   static async getSkillRecommendations(req, res) {
     try {
       const userId = req.user.id;
       
-      // Get user skills and predefined skills
+      // Get user data
       const userSkills = await UserModel.getUserSkills(userId);
-      const predefinedSkills = await UserModel.getPredefinedSkills();
       const allSkills = await SkillModel.getAllExcludingUser(userId);
       
-      // Get skill categories user already has
+      if (!userSkills?.length) {
+        return res.json([]);
+      }
+      
+      // Stage 1: Determine user's primary categories
       const userCategories = [...new Set(userSkills.map(s => s.category).filter(Boolean))];
       
-      // Find complementary skills
+      // Stage 2: Calculate recommendations
       const recommendations = allSkills.map(skill => {
-        // Check if skill is in same category as user's skills
-        const skillInfo = predefinedSkills.find(ps => 
-          ps.name.toLowerCase() === skill.skill.toLowerCase()
-        );
+        // Category matching (primary factor)
+        const categoryMatch = this.calculateCategoryMatch(userCategories, skill.category);
         
-        let matchPercentage = 0;
+        // Skill complementarity (secondary factor)
+        const userSkillNames = userSkills.map(s => s.name?.toLowerCase()).filter(Boolean);
+        const hasThisSkill = userSkillNames.includes(skill.skill?.toLowerCase());
         
-        if (skillInfo && userCategories.includes(skillInfo.category)) {
-          matchPercentage = 75; // High match for same category
-        } else if (skillInfo) {
-          // Check for related categories
-          const relatedCategories = this.getRelatedCategories(skillInfo.category);
-          if (relatedCategories.some(cat => userCategories.includes(cat))) {
-            matchPercentage = 50; // Medium match for related categories
-          } else {
-            matchPercentage = 25; // Low match for different categories
-          }
+        // Don't recommend skills the user already has
+        if (hasThisSkill) {
+          return { ...skill, matchPercentage: 0, type: 'skill' };
         }
+        
+        // Calculate skill complementarity within category
+        let skillComplementarity = 0;
+        if (categoryMatch > 0) {
+          // Higher score for skills that complement existing skills in the same category
+          skillComplementarity = 40;
+        }
+        
+        // Final weighted score
+        const finalScore = this.calculateFinalScore(categoryMatch, skillComplementarity);
         
         return {
           ...skill,
-          matchPercentage,
+          matchPercentage: finalScore,
+          categoryMatch,
+          skillComplementarity,
           type: 'skill'
         };
       });
       
-      // Sort by match percentage and return top 10
+      // Sort by final score and return top 10
       const topRecommendations = recommendations
-        .filter(rec => rec.matchPercentage > 0)
+        .filter(rec => rec.matchPercentage > 10)
         .sort((a, b) => b.matchPercentage - a.matchPercentage)
         .slice(0, 10);
       
@@ -126,35 +203,49 @@ class RecommendationController {
     }
   }
 
-  // Get material recommendations
+  // Enhanced material recommendations with category-first approach
   static async getMaterialRecommendations(req, res) {
     try {
       const userId = req.user.id;
       
-      // Get user skills
+      // Get user data
       const userSkills = await UserModel.getUserSkills(userId);
       const predefinedSkills = await UserModel.getPredefinedSkills();
+      
+      if (!userSkills?.length) {
+        return res.json([]);
+      }
+      
+      // Stage 1: Determine user's primary categories
+      const userCategories = [...new Set(userSkills.map(s => s.category).filter(Boolean))];
       
       // Get all materials excluding user's own
       const materials = await MaterialModel.getAllExcludingUser(userId);
       
-      // Calculate match percentages
+      // Stage 2: Calculate recommendations
       const recommendations = materials.map(material => {
-        // Extract skills from material description
-        const materialSkills = this.extractSkillsFromText(material.description, predefinedSkills);
+        // Category matching (primary factor)
+        const categoryMatch = this.calculateCategoryMatch(userCategories, material.category);
         
-        const matchPercentage = this.calculateSkillMatch(userSkills, materialSkills);
+        // Skill relevance within category (secondary factor)
+        const materialSkills = this.extractSkillsFromText(material.description, predefinedSkills);
+        const skillMatch = this.calculateSkillMatch(userSkills, materialSkills);
+        
+        // Final weighted score
+        const finalScore = this.calculateFinalScore(categoryMatch, skillMatch);
         
         return {
           ...material,
-          matchPercentage,
+          matchPercentage: finalScore,
+          categoryMatch,
+          skillMatch,
           type: 'material'
         };
       });
       
-      // Sort by match percentage and return top 10
+      // Sort by final score and return top 10
       const topRecommendations = recommendations
-        .filter(rec => rec.matchPercentage > 0)
+        .filter(rec => rec.matchPercentage > 10)
         .sort((a, b) => b.matchPercentage - a.matchPercentage)
         .slice(0, 10);
       
@@ -184,6 +275,9 @@ static async getAllRecommendations(req, res) {
     
     const predefinedSkills = await UserModel.getPredefinedSkills();
     
+    // Stage 1: Determine user's primary categories
+    const userCategories = [...new Set(userSkills.map(s => s.category).filter(Boolean))];
+    
     // Get all items
     const [jobs, skills, materials] = await Promise.all([
       JobModel.getAllExcludingUser(userId),
@@ -191,48 +285,45 @@ static async getAllRecommendations(req, res) {
       MaterialModel.getAllExcludingUser(userId)
     ]);
     
-    // Calculate job recommendations - use arrow functions
+    // Enhanced job recommendations with two-stage filtering
     const jobRecommendations = jobs.map(job => {
+      const categoryMatch = RecommendationController.calculateCategoryMatch(userCategories, job.category);
       const jobSkills = [
         ...RecommendationController.extractSkillsFromText(job.description, predefinedSkills),
         ...RecommendationController.extractSkillsFromText(job.requirements, predefinedSkills)
       ];
-      const matchPercentage = RecommendationController.calculateSkillMatch(userSkills, jobSkills);
-      return { ...job, matchPercentage, type: 'job' };
-    }).filter(rec => rec.matchPercentage > 0)
+      const skillMatch = RecommendationController.calculateSkillMatch(userSkills, jobSkills);
+      const finalScore = RecommendationController.calculateFinalScore(categoryMatch, skillMatch);
+      return { ...job, matchPercentage: finalScore, categoryMatch, skillMatch, type: 'job' };
+    }).filter(rec => rec.matchPercentage > 10)
       .sort((a, b) => b.matchPercentage - a.matchPercentage)
       .slice(0, 5);
     
-    // Calculate skill recommendations
-    const userCategories = [...new Set(userSkills.map(s => s.category).filter(Boolean))];
+    // Enhanced skill recommendations with category-first approach
     const skillRecommendations = skills.map(skill => {
-      const skillInfo = predefinedSkills.find(ps => 
-        ps.name.toLowerCase() === skill.skill.toLowerCase()
-      );
+      const categoryMatch = RecommendationController.calculateCategoryMatch(userCategories, skill.category);
+      const userSkillNames = userSkills.map(s => s.name?.toLowerCase()).filter(Boolean);
+      const hasThisSkill = userSkillNames.includes(skill.skill?.toLowerCase());
       
-      let matchPercentage = 0;
-      if (skillInfo && userCategories.includes(skillInfo.category)) {
-        matchPercentage = 75;
-      } else if (skillInfo) {
-        const relatedCategories = RecommendationController.getRelatedCategories(skillInfo.category);
-        if (relatedCategories.some(cat => userCategories.includes(cat))) {
-          matchPercentage = 50;
-        } else {
-          matchPercentage = 25;
-        }
+      if (hasThisSkill) {
+        return { ...skill, matchPercentage: 0, type: 'skill' };
       }
       
-      return { ...skill, matchPercentage, type: 'skill' };
-    }).filter(rec => rec.matchPercentage > 0)
+      const skillComplementarity = categoryMatch > 0 ? 40 : 0;
+      const finalScore = RecommendationController.calculateFinalScore(categoryMatch, skillComplementarity);
+      return { ...skill, matchPercentage: finalScore, categoryMatch, skillComplementarity, type: 'skill' };
+    }).filter(rec => rec.matchPercentage > 10)
       .sort((a, b) => b.matchPercentage - a.matchPercentage)
       .slice(0, 5);
     
-    // Calculate material recommendations
+    // Enhanced material recommendations with category-first approach
     const materialRecommendations = materials.map(material => {
+      const categoryMatch = RecommendationController.calculateCategoryMatch(userCategories, material.category);
       const materialSkills = RecommendationController.extractSkillsFromText(material.description, predefinedSkills);
-      const matchPercentage = RecommendationController.calculateSkillMatch(userSkills, materialSkills);
-      return { ...material, matchPercentage, type: 'material' };
-    }).filter(rec => rec.matchPercentage > 0)
+      const skillMatch = RecommendationController.calculateSkillMatch(userSkills, materialSkills);
+      const finalScore = RecommendationController.calculateFinalScore(categoryMatch, skillMatch);
+      return { ...material, matchPercentage: finalScore, categoryMatch, skillMatch, type: 'material' };
+    }).filter(rec => rec.matchPercentage > 10)
       .sort((a, b) => b.matchPercentage - a.matchPercentage)
       .slice(0, 5);
     
@@ -246,18 +337,14 @@ static async getAllRecommendations(req, res) {
     res.status(500).json({ error: 'Failed to fetch recommendations' });
   }
 }
-  // Helper method to get related categories
+  // Helper method to get related categories (updated for new 5-category system)
   static getRelatedCategories(category) {
     const categoryRelations = {
-      'Programming': ['Web Development', 'Mobile Development', 'Data Science'],
-      'Web Development': ['Programming', 'UI/UX Design'],
-      'Mobile Development': ['Programming', 'UI/UX Design'],
-      'Data Science': ['Programming', 'Analytics'],
-      'UI/UX Design': ['Web Development', 'Mobile Development', 'Graphic Design'],
-      'Graphic Design': ['UI/UX Design', 'Creative'],
-      'Digital Marketing': ['Analytics', 'Business'],
-      'Business': ['Digital Marketing', 'Analytics'],
-      'Analytics': ['Data Science', 'Digital Marketing', 'Business']
+      'Academic Help': ['Coding', 'Design'], // Academic overlaps with technical skills
+      'Coding': ['Academic Help', 'Freelance'], // Coding can be academic or freelance
+      'Design': ['Academic Help', 'Marketing', 'Freelance'], // Design spans multiple areas
+      'Marketing': ['Design', 'Freelance'], // Marketing often needs design and is freelance work
+      'Freelance': ['Coding', 'Design', 'Marketing'] // Freelance encompasses many skill types
     };
     
     return categoryRelations[category] || [];
