@@ -28,7 +28,7 @@ const Index = () => {
             <Header />
 
             {/* Hero Section with Image Slider */}
-            <section className="pt-16">
+            <section>
                 <ImageSlider slides={sliderImages}>
                     <div className="max-w-4xl mx-auto px-4">
                         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight animated-gradient-text">
