@@ -1,3 +1,4 @@
+
 import { execute } from '../config/db.js';
 // Helper function to format Date
 
@@ -176,9 +177,6 @@ class JobModel {
 
   // Update job
   static async update(id, jobData) {
-<<<<<<< HEAD
-    const { title, description, type, payment, deadline, requirements, location, status } = jobData;
-=======
   const { title, description, type, payment, deadline, requirements, location, category, status } = jobData;
   
   try {
@@ -186,33 +184,20 @@ class JobModel {
       'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, category = ?, status = ? WHERE id = ?',
       [title, description, type, payment, deadline, requirements, location, category || 'Academic Help', status, id]
     );
->>>>>>> aaa00c2713882a438867b73351ac389509e84631
     
-    try {
-      const result = await execute(
-        'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, status = ? WHERE id = ?',
-        [title, description, type, payment, deadline, requirements, location, status || 'Active', id]
-      );
-      
-      // Handle different database driver response formats
-      let affectedRows;
-      if (Array.isArray(result)) {
-        affectedRows = result[0]?.affectedRows || result.affectedRows;
-      } else {
-        affectedRows = result?.affectedRows;
-      }
-      
-      return affectedRows > 0;
-    } catch (error) {
-      console.error('JobModel.update() - Error:', {
-        id,
-        jobData: JSON.stringify(jobData, null, 2),
-        error: error.message,
-        stack: error.stack
-      });
-      throw error;
-    }
+    // Handle different database driver response formats
+    const affectedRows = Array.isArray(result) ? result[0]?.affectedRows : result?.affectedRows;
+    return affectedRows > 0;
+  } catch (error) {
+    console.error('JobModel.update() - Error:', {
+      id,
+      jobData,
+      error: error.message,
+      stack: error.stack
+    });
+    throw new Error('Failed to update job');
   }
+}
 
   // Delete job
   static async delete(id) {

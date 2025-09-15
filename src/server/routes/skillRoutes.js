@@ -1,6 +1,7 @@
+
 import { Router } from 'express';
 const router = Router();
-import { getAllSkills, getSkillById, createSkill, updateSkill, deleteSkill, getUserSkills, checkSkillDeletePermission } from '../controllers/skillController.js';
+import { getAllSkills, getSkillById, createSkill, updateSkill, deleteSkill, getUserSkills } from '../controllers/skillController.js';
 import auth from '../middleware/authMiddleware.js';
 
 // Public routes
@@ -11,7 +12,6 @@ router.get('/:id', getSkillById);
 router.post('/', auth, createSkill);
 router.put('/:id', auth, updateSkill);
 router.delete('/:id', auth, deleteSkill);
-router.get('/:id/delete-permission', auth, checkSkillDeletePermission);
 router.get('/user/posted', auth, getUserSkills);
 router.get('/user/skills', auth, getUserSkills);
 

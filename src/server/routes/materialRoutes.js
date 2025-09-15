@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 const router = Router();
 import { 
@@ -8,8 +9,7 @@ import {
   deleteMaterial, 
   getUserMaterials,
   uploadMaterialImage,
-  uploadMaterialImageMiddleware,
-  checkMaterialDeletePermission
+  uploadMaterialImageMiddleware
 } from '../controllers/materialController.js';
 import auth from '../middleware/authMiddleware.js';
 
@@ -21,7 +21,6 @@ router.get('/:id', getMaterialById);
 router.post('/', auth, uploadMaterialImageMiddleware, createMaterial);
 router.put('/:id', auth, uploadMaterialImageMiddleware, updateMaterial);
 router.delete('/:id', auth, deleteMaterial);
-router.get('/:id/delete-permission', auth, checkMaterialDeletePermission);
 router.get('/user/posted', auth, getUserMaterials);
 router.get('/user/materials', auth, getUserMaterials);
 

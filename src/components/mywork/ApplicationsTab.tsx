@@ -110,11 +110,6 @@ export function ApplicationsTab({
     }
   };
 
-  const handleApplicationUpdate = (appId: number, updates: any) => {
-    // Invalidate and refetch the applications query to update the state
-    queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
-  };
-
   // Ensure all data arrays are valid arrays
   const applicationsArray = Array.isArray(applications) ? applications : [];
   const jobApplicationsArray = Array.isArray(jobApplications)
@@ -133,15 +128,19 @@ export function ApplicationsTab({
 
   return (
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
-      <TabsList className="mb-4">
-        <TabsTrigger value="posted">Application</TabsTrigger>
-        <TabsTrigger value="received">Received Application</TabsTrigger>
+      <TabsList className="user-friendly-tabs grid grid-cols-2 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+        <TabsTrigger value="posted" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+          📤 Posted
+        </TabsTrigger>
+        <TabsTrigger value="received" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+          📥 Received
+        </TabsTrigger>
       </TabsList>
 
       {/* Posted Applications */}
       <TabsContent value="posted">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Application</h2>
+          <h2 className="text-lg font-semibold">Posted Application</h2>
           <Button
             variant="outline"
             className="flex items-center gap-2"
@@ -151,10 +150,16 @@ export function ApplicationsTab({
         </div>
 
         <Tabs defaultValue="job" className="mt-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="job">Job</TabsTrigger>
-            <TabsTrigger value="skill">Skill</TabsTrigger>
-            <TabsTrigger value="material">Mat</TabsTrigger>
+          <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              💼 Jobs
+            </TabsTrigger>
+            <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              🎯 Skills
+            </TabsTrigger>
+            <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              📚 Materials
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="job">
@@ -241,10 +246,16 @@ export function ApplicationsTab({
         </div>
 
         <Tabs defaultValue="job" className="mt-4">
-          <TabsList className="mb-4">
-            <TabsTrigger value="job">Job</TabsTrigger>
-            <TabsTrigger value="skill">Skill</TabsTrigger>
-            <TabsTrigger value="material">Mat</TabsTrigger>
+          <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
+            <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              💼 Jobs
+            </TabsTrigger>
+            <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              🎯 Skills
+            </TabsTrigger>
+            <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
+              📚 Materials
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="job">
@@ -253,7 +264,6 @@ export function ApplicationsTab({
               isLoading={isLoadingJobApps}
               onViewDetails={onViewDetails}
               onStatusChange={handleStatusChange}
-              onApplicationUpdate={handleApplicationUpdate}
             />
           </TabsContent>
 
