@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import ListMaterialForm from "@/components/forms/ListMaterialForm";
 import { MaterialType } from "@/types/marketplace";
@@ -32,12 +33,8 @@ export const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = (
         toast.success("Material listed successfully");
       }
       
-      // Redirect to My Posts tab after successful edit/create
-      if (initialData?.id) {
-        navigate("/dashboard/browse?tab=my-posts");
-      } else {
-        navigate("/dashboard/browse");
-      }
+      // Redirect to the browse page
+      navigate("/dashboard/browse");
     } catch (error) {
       console.error("Error creating/updating material:", error);
       toast.error("Failed to save material listing");

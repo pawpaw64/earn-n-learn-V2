@@ -194,13 +194,7 @@ static async getById(id) {
       
       return affectedRows > 0;
     } catch (error) {
-      console.error('SkillModel.updateSkill() - Error:', {
-        id,
-        skillData: JSON.stringify(skillData, null, 2),
-        error: error.message,
-        stack: error.stack
-      });
-      throw error;
+      throw new Error(error.message);
     }
   }
 

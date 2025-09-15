@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -34,7 +35,6 @@ interface ShareSkillFormProps {
 
 export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFormProps) {
   const { editItem, editType, clearEditItem } = useEditableItem();
-  const navigate = useNavigate();
   const isEditing = Boolean(initialData || (editType === 'skill' && editItem));
   const itemToEdit = initialData || (editType === 'skill' ? editItem : null);
 
@@ -95,11 +95,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       form.reset();
       onSuccess?.();
       if (clearEditItem) clearEditItem();
-      
-      // Redirect to My Posts tab after successful edit
-      if (isEditing) {
-        navigate('/dashboard/browse?tab=my-posts');
-      }
     } catch (error) {
       console.error("Error sharing skill:", error);
       toast.error(isEditing 

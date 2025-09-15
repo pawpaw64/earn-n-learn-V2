@@ -14,10 +14,9 @@ import { useNavigate } from "react-router-dom";
 import { EscrowDialog } from "../dialogs/EscrowDialog";
 import { toast } from "sonner";
 import { updateEscrowStatus } from "@/services/applications";
-import { Eye, MessageSquare, Check, X, DollarSign, Play, ExternalLink } from "lucide-react";
+import { Eye, MessageSquare, Check, X, DollarSign } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { createGroup, findGroupByName, addToGroup } from "@/services/messages";
-import { createProjectFromApplication, getUserProjects } from "@/services/projects";
 
 interface ReceivedApplicationsTableProps {
   applications: any[];
@@ -28,7 +27,6 @@ interface ReceivedApplicationsTableProps {
     type: string,
     status: string
   ) => Promise<void>;
-  onApplicationUpdate?: (appId: number, updates: any) => void;
 }
 
 /**
@@ -36,7 +34,7 @@ interface ReceivedApplicationsTableProps {
  */
 export const ReceivedApplicationsTable: React.FC<
   ReceivedApplicationsTableProps
-> = ({ applications, isLoading, onViewDetails, onStatusChange, onApplicationUpdate }) => {
+> = ({ applications, isLoading, onViewDetails, onStatusChange }) => {
   const navigate = useNavigate();
   const [showEscrowDialog, setShowEscrowDialog] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
@@ -150,61 +148,6 @@ export const ReceivedApplicationsTable: React.FC<
     }
   };
 
-  const handleGoToProject = async (app: any) => {
-    try {
-      // If project already exists, just navigate to it
-      if (app.project_id) {
-        navigate(`/dashboard/project/${app.project_id}`);
-        return;
-      }
-
-      // Prevent multiple clicks during project creation
-      if (processingId === app.id) {
-        return;
-      }
-
-      // Check if a project might already exist by making a backend call
-      setProcessingId(app.id);
-      
-      try {
-        // First try to fetch existing projects to see if one already exists for this application
-        const existingProjects = await getUserProjects();
-        const existingProject = existingProjects.find(p => p.source_id === app.job_id && p.source_type === 'job');
-        
-        if (existingProject) {
-          // Update the local state with the existing project_id
-          if (onApplicationUpdate) {
-            onApplicationUpdate(app.id, { project_id: existingProject.id });
-          }
-          navigate(`/dashboard/project/${existingProject.id}`);
-          return;
-        }
-      } catch (checkError) {
-        console.log('Could not check for existing projects, proceeding with creation');
-      }
-      
-      // Create the project only if none exists
-      const project = await createProjectFromApplication(app.id);
-      toast.success('Project created successfully', {
-        description: `Project #${project.id} has been created!`,
-      });
-      
-      // Update the application with the new project_id
-      if (onApplicationUpdate) {
-        onApplicationUpdate(app.id, { project_id: project.id });
-      }
-      
-      // Navigate to the specific project
-      navigate(`/dashboard/project/${project.id}`);
-    } catch (error) {
-      console.error('Error creating/accessing project:', error);
-      toast.error('Failed to access project. Please try again.');
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-
   // Group applications by job
   const jobGroups = applications.reduce((groups: any, app: any) => {
     if (!groups[app.job_id]) {
@@ -284,6 +227,7 @@ export const ReceivedApplicationsTable: React.FC<
                         {new Date(app.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
+                   <TableCell>
   <Badge
     variant={
       app.status === "Accepted" && app.escrow_status === "created"
@@ -307,6 +251,7 @@ export const ReceivedApplicationsTable: React.FC<
       : app.status}
   </Badge>
 </TableCell>
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           <Button
@@ -386,18 +331,9 @@ export const ReceivedApplicationsTable: React.FC<
 
                           {app.status === "Accepted" &&
                             app.escrow_status === "created" && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="bg-white border border-blue-500 text-blue-600 hover:bg-blue-50 hover:text-blue-700 px-3 py-1 text-sm rounded-md flex items-center gap-1"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleGoToProject(app);
-                                  }}
-                                  disabled={processingId === app.id}>
-                                  <ExternalLink className="w-4 h-4 mr-1" />
-                                  {processingId === app.id ? "Creating..." : "Go to Project"}
-                                </Button>
+                              <div className="text-sm text-purple-600 font-medium px-3 py-1">
+                                ✓ Escrowed
+                              </div>
                             )}
                         </div>
                       </TableCell>
