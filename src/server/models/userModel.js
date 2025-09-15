@@ -309,6 +309,26 @@ class UserModel {
             throw new Error(error.message);
         }
     }
+
+    // Check if user profile is complete for recommendations
+    static async isProfileComplete(userId) {
+        try {
+            const user = await this.findById(userId);
+            if (!user) return false;
+
+            // Check if user has basic profile info
+            const hasBasicInfo = user.name && user.email && user.university;
+            
+            // Check if user has at least one skill
+            const userSkills = await this.getUserSkills(userId);
+            const hasSkills = userSkills && userSkills.length > 0;
+
+            return hasBasicInfo && hasSkills;
+        } catch (error) {
+            console.error('Database error in isProfileComplete:', error);
+            return false;
+        }
+    }
 }
 
 export default UserModel;
