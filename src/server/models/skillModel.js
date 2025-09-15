@@ -38,6 +38,7 @@ class SkillModel {
           u.email,
           u.avatar as avatarUrl,
           s.availability,
+          s.category,
           s.created_at,
           s.image_url as imageUrl
         FROM skill_marketplace s
@@ -95,6 +96,7 @@ static async getById(id) {
           u.email,
           u.avatar as avatarUrl,
           s.availability,
+          s.category,
           s.created_at,
           s.image_url as imageUrl
         FROM skill_marketplace s
@@ -141,7 +143,7 @@ static async getById(id) {
 
   // Create skill listing
   static async createSkill(skillData) {
-    const { user_id, skill_name, description, pricing, availability } = skillData;
+    const { user_id, skill_name, description, pricing, availability, category } = skillData;
     
     try {
       // Validate required fields
@@ -151,8 +153,8 @@ static async getById(id) {
   
       // Execute the query with better error handling
       const result = await execute(
-        'INSERT INTO skill_marketplace (user_id, skill_name, description, pricing, availability) VALUES (?, ?, ?, ?, ?)',
-        [user_id, skill_name, description, pricing, availability]
+        'INSERT INTO skill_marketplace (user_id, skill_name, description, pricing, availability, category) VALUES (?, ?, ?, ?, ?, ?)',
+        [user_id, skill_name, description, pricing, availability, category || 'Academic Help']
       );
   
       // Check if the result is valid
@@ -176,12 +178,18 @@ static async getById(id) {
 
   // Update skill
   static async updateSkill(id, skillData) {
-    const { skill_name, description, pricing, availability } = skillData;
+    const { skill_name, description, pricing, availability, category } = skillData;
     
     try {
+<<<<<<< HEAD
       const result = await execute(
         'UPDATE skill_marketplace SET skill_name = ?, description = ?, pricing = ?, availability = ? WHERE id = ?',
         [skill_name, description, pricing, availability, id]
+=======
+      const [result] = await execute(
+        'UPDATE skill_marketplace SET skill_name = ?, description = ?, pricing = ?, availability = ?, category = ? WHERE id = ?',
+        [skill_name, description, pricing, availability, category || 'Academic Help', id]
+>>>>>>> aaa00c2713882a438867b73351ac389509e84631
       );
       
       // Handle different database driver response formats

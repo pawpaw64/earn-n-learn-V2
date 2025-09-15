@@ -19,7 +19,7 @@ const Header = () => {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <header className="bg-sidebar-background backdrop-blur-md border-b border-sidebar-border">
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center">
@@ -55,8 +55,8 @@ const Header = () => {
             </header>
 
             {/* Mobile Navigation Menu */}
-            <div className={`md:hidden fixed inset-0 z-40 bg-white/80 backdrop-blur-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <nav className="flex flex-col items-center justify-center h-full space-y-8 pt-16">
+            <div className={`md:hidden absolute inset-0 z-40 bg-sidebar-background backdrop-blur-lg transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <nav className="flex flex-col items-center justify-center h-full space-y-8">
                     {navLinks.map((link) => (
                         <a key={link.href} href={link.href} className="text-2xl font-semibold text-gray-800 hover:text-emerald-600 transition-colors" onClick={() => setIsMenuOpen(false)}>
                             {link.label}

@@ -48,6 +48,7 @@ export interface RecommendationResponse {
   jobs: Recommendation[];
   skills: Recommendation[];
   materials: Recommendation[];
+  profileIncomplete?: boolean;
 }
 
 export const recommendationService = {

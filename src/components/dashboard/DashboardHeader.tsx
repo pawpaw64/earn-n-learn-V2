@@ -147,7 +147,7 @@ const handleMarkAllAsRead = async () => {
   };
 
   return (
-    <div className="sticky top-0 z-10 flex h-16 justify-between w-full items-center gap-4 border-b bg-background px-4 md:px-6 lg:px-8">
+    <div className="flex h-16 justify-between w-full items-center gap-4 border-b border-sidebar-border bg-sidebar-background px-4 md:px-6 lg:px-8">
      <Sheet>
   <SheetTrigger asChild className="md:hidden">
     <Button size="icon" variant="outline">
