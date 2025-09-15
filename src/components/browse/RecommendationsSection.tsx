@@ -8,6 +8,7 @@ import { recommendationService, RecommendationResponse } from "@/services/recomm
 import RecommendationCard from "./RecommendationCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import AuthModal from "@/components/AuthModal";
+import { useNavigate } from "react-router-dom";
 
 interface RecommendationsSectionProps {
   onApply?: (id: number) => void;
@@ -22,7 +23,7 @@ const RecommendationsSection = ({
 }: RecommendationsSectionProps) => {
   const [activeTab, setActiveTab] = useState("all");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-
+  const navigate = useNavigate();
   const { data: recommendations, isLoading, error } = useQuery<RecommendationResponse>({
     queryKey: ['recommendations'],
     queryFn: recommendationService.getAllRecommendations,
@@ -66,29 +67,28 @@ const RecommendationsSection = ({
   );
 
   const getTotalRecommendations = () => {
-    if (!recommendations) return 0;
-    return recommendations.jobs.length + recommendations.skills.length + recommendations.materials.length;
+    const jobs = recommendations?.jobs ?? [];
+    const skills = recommendations?.skills ?? [];
+    const materials = recommendations?.materials ?? [];
+    return jobs.length + skills.length + materials.length;
   };
 
   const getAllRecommendations = () => {
-    if (!recommendations) return [];
     return [
-      ...recommendations.jobs,
-      ...recommendations.skills,
-      ...recommendations.materials
+      ...(recommendations?.jobs ?? []),
+      ...(recommendations?.skills ?? []),
+      ...(recommendations?.materials ?? []),
     ].sort((a, b) => b.matchPercentage - a.matchPercentage);
   };
 
   const getTabData = (tab: string) => {
-    if (!recommendations) return [];
-    
     switch (tab) {
       case 'jobs':
-        return recommendations.jobs;
+        return recommendations?.jobs ?? [];
       case 'skills':
-        return recommendations.skills;
+        return recommendations?.skills ?? [];
       case 'materials':
-        return recommendations.materials;
+        return recommendations?.materials ?? [];
       default:
         return getAllRecommendations();
     }
@@ -127,7 +127,7 @@ const RecommendationsSection = ({
         <p className="text-gray-600 mb-4">
           Add skills to your profile to get personalized recommendations for jobs, learning opportunities, and resources.
         </p>
-        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+        <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => navigate('/dashboard/profile')} aria-label="Complete your profile">
           Complete Your Profile
         </Button>
       </div>
@@ -177,25 +177,25 @@ const RecommendationsSection = ({
             </TabsTrigger>
             <TabsTrigger value="jobs" className="relative">
               Jobs
-              {recommendations?.jobs.length > 0 && (
+              {(recommendations?.jobs?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.jobs.length}
+                  {recommendations.jobs?.length ?? 0}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="skills" className="relative">
               Skills
-              {recommendations?.skills.length > 0 && (
+              {(recommendations?.skills?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.skills.length}
+                  {recommendations.skills?.length ?? 0}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="materials" className="relative">
               Materials
-              {recommendations?.materials.length > 0 && (
+              {(recommendations?.materials?.length ?? 0) > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.materials.length}
+                  {recommendations.materials?.length ?? 0}
                 </Badge>
               )}
             </TabsTrigger>
