@@ -7,6 +7,7 @@ import { Sparkles, ChevronRight, Target } from "lucide-react";
 import { recommendationService, RecommendationResponse } from "@/services/recommendations.ts";
 import RecommendationCard from "./RecommendationCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import AuthModal from "@/components/AuthModal";
 
 interface RecommendationsSectionProps {
   onApply?: (id: number) => void;
@@ -20,6 +21,7 @@ const RecommendationsSection = ({
   onViewDetails,
 }: RecommendationsSectionProps) => {
   const [activeTab, setActiveTab] = useState("all");
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   const { data: recommendations, isLoading, error } = useQuery<RecommendationResponse>({
     queryKey: ['recommendations'],
@@ -93,6 +95,19 @@ const RecommendationsSection = ({
   };
 
   if (error) {
+    const status = (error as any)?.response?.status;
+    if (status === 401) {
+      return (
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign in to see recommendations</h3>
+          <p className="text-gray-600 mb-4">Login to get personalized matches based on your profile.</p>
+          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setIsAuthOpen(true)}>
+            Login
+          </Button>
+          <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} type="login" />
+        </div>
+      );
+    }
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center">
         <p className="text-gray-600">Unable to load recommendations. Please try again later.</p>
