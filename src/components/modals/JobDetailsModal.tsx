@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Dialog,
@@ -19,9 +18,10 @@ interface JobDetailsModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onApply: (jobId: number) => void;
+  showApply?: boolean;
 }
 
-const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModalProps) => {
+const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply, showApply = true }: JobDetailsModalProps) => {
   if (!job) return null;
 
   // Store user info in localStorage when they view a job so it's available in the application modal
@@ -96,12 +96,14 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
           </DialogClose>
-          <Button 
-            onClick={() => onApply(job.id)} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            Apply Now
-          </Button>
+          {showApply && (
+            <Button 
+              onClick={() => onApply(job.id)} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Apply Now
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

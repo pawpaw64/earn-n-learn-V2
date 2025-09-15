@@ -179,13 +179,28 @@ static async getById(id) {
     const { skill_name, description, pricing, availability } = skillData;
     
     try {
-      const [result] = await execute(
+      const result = await execute(
         'UPDATE skill_marketplace SET skill_name = ?, description = ?, pricing = ?, availability = ? WHERE id = ?',
         [skill_name, description, pricing, availability, id]
       );
-      return result.affectedRows > 0;
+      
+      // Handle different database driver response formats
+      let affectedRows;
+      if (Array.isArray(result)) {
+        affectedRows = result[0]?.affectedRows || result.affectedRows;
+      } else {
+        affectedRows = result?.affectedRows;
+      }
+      
+      return affectedRows > 0;
     } catch (error) {
-      throw new Error(error.message);
+      console.error('SkillModel.updateSkill() - Error:', {
+        id,
+        skillData: JSON.stringify(skillData, null, 2),
+        error: error.message,
+        stack: error.stack
+      });
+      throw error;
     }
   }
 

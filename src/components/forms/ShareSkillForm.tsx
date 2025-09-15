@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,6 +12,7 @@ import { toast } from "sonner";
 import { createSkill, updateSkill } from "@/services/skills";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { SkillType } from "@/types/marketplace";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
@@ -34,6 +34,7 @@ interface ShareSkillFormProps {
 
 export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFormProps) {
   const { editItem, editType, clearEditItem } = useEditableItem();
+  const navigate = useNavigate();
   const isEditing = Boolean(initialData || (editType === 'skill' && editItem));
   const itemToEdit = initialData || (editType === 'skill' ? editItem : null);
 
@@ -94,6 +95,11 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       form.reset();
       onSuccess?.();
       if (clearEditItem) clearEditItem();
+      
+      // Redirect to My Posts tab after successful edit
+      if (isEditing) {
+        navigate('/dashboard/browse?tab=my-posts');
+      }
     } catch (error) {
       console.error("Error sharing skill:", error);
       toast.error(isEditing 
