@@ -33,8 +33,12 @@ export const ListMaterialFormWrapper: React.FC<ListMaterialFormWrapperProps> = (
         toast.success("Material listed successfully");
       }
       
-      // Redirect to the browse page
-      navigate("/dashboard/browse");
+      // Redirect to My Posts tab after successful edit/create
+      if (initialData?.id) {
+        navigate("/dashboard/browse?tab=my-posts");
+      } else {
+        navigate("/dashboard/browse");
+      }
     } catch (error) {
       console.error("Error creating/updating material:", error);
       toast.error("Failed to save material listing");

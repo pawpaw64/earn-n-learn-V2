@@ -46,20 +46,23 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
   };
 
   const handleEdit = (item: any, type: string) => {
+    console.log("MyPostsSection handleEdit called:", { item, type });
     // Store edit data for PostingSection to pick up
     localStorage.setItem("editItem", JSON.stringify(item));
     localStorage.setItem("editType", type);
     
     // Call the parent's onEdit handler if provided
     if (onEdit) {
+      console.log("Calling parent onEdit handler");
       onEdit(item, type);
     } else {
-      console.log("Edit clicked:", { item, type });
+      console.log("No onEdit handler provided");
       toast.info("Edit functionality would be triggered here");
     }
   };
 
   const handleDeletePost = async (id: number, type: string) => {
+    console.log("MyPostsSection handleDeletePost called:", { id, type });
     // Confirm deletion
     if (!window.confirm(`Are you sure you want to delete this ${type} post?`)) {
       return;
@@ -70,10 +73,10 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
       
       // Call the parent's onDelete handler if provided
       if (onDelete) {
+        console.log("Calling parent onDelete handler");
         success = await onDelete(id, type);
       } else {
-        // Fallback behavior if no onDelete handler provided
-        console.log("Delete clicked:", { id, type });
+        console.log("No onDelete handler provided");
         toast.info("Delete functionality would be triggered here");
         success = true; // Simulate success for demo
       }
@@ -92,11 +95,13 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
   };
 
   const handleViewDetails = (item: any, type: string) => {
+    console.log("MyPostsSection handleViewDetails called:", { item, type });
     // Call the parent's onViewDetails handler if provided
     if (onViewDetails) {
+      console.log("Calling parent onViewDetails handler");
       onViewDetails(item, type);
     } else {
-      console.log("View details clicked:", { item, type });
+      console.log("No onViewDetails handler provided");
       toast.info("View details functionality would be triggered here");
       
       // You could implement a modal or other UI to show details
@@ -296,16 +301,10 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
-            <TabsTrigger value="jobs" className="user-friendly-tab">
-              💼 Jobs ({jobs.length})
-            </TabsTrigger>
-            <TabsTrigger value="skills" className="user-friendly-tab">
-              🎯 Skills ({skills.length})
-            </TabsTrigger>
-            <TabsTrigger value="materials" className="user-friendly-tab">
-              📚 Materials ({materials.length})
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="jobs">Jobs ({jobs.length})</TabsTrigger>
+            <TabsTrigger value="skills">Skills ({skills.length})</TabsTrigger>
+            <TabsTrigger value="materials">Materials ({materials.length})</TabsTrigger>
           </TabsList>
           
           <TabsContent value="jobs" className="space-y-4 mt-6">

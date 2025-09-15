@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,7 +12,6 @@ import { toast } from "sonner";
 import { createSkill, updateSkill } from "@/services/skills";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { SkillType } from "@/types/marketplace";
-import { useNavigate } from "react-router-dom";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
@@ -95,6 +93,13 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       form.reset();
       onSuccess?.();
       if (clearEditItem) clearEditItem();
+      
+      // Redirect to My Posts tab after successful edit
+      if (isEditing) {
+        setTimeout(() => {
+          window.location.href = '/dashboard/browse?tab=my-posts';
+        }, 1000);
+      }
     } catch (error) {
       console.error("Error sharing skill:", error);
       toast.error(isEditing 

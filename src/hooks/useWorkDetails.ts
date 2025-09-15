@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { NavigateFunction } from "react-router-dom";
@@ -50,7 +49,6 @@ export const useWorkDetails = ({
           detailItem = { ...item, ...details };
         }
       }
-
       else if (type === 'contact') {
         console.log("Fetching contact details for item:", item);
         if (item.skill_id || item.skill_name) {
@@ -66,6 +64,34 @@ export const useWorkDetails = ({
             detailItem = { ...item, ...details };
           }
         }
+      }
+      // Transform data for modals to match expected field names
+      else if (type === 'job') {
+        detailItem = {
+          ...item,
+          poster: item.user_name || item.poster || 'Unknown User',
+          posterEmail: item.user_email || item.posterEmail || '',
+          posterAvatar: item.user_avatar || item.posterAvatar || ''
+        };
+      }
+      else if (type === 'skill') {
+        detailItem = {
+          ...item,
+          skill: item.skill_name || item.name || item.skill || 'Unknown Skill',
+          name: item.user_name || item.name || 'Unknown User',
+          email: item.user_email || item.email || '',
+          avatarUrl: item.user_avatar || item.avatarUrl || ''
+        };
+      }
+      else if (type === 'material') {
+        detailItem = {
+          ...item,
+          material: item.title || item.name || item.material || 'Unknown Material',
+          name: item.user_name || item.name || 'Unknown User', 
+          email: item.user_email || item.email || '',
+          avatarUrl: item.user_avatar || item.avatarUrl || '',
+          condition: item.condition || item.conditions || 'Not specified'
+        };
       }
 
       setDetailsItem(detailItem);
@@ -100,9 +126,11 @@ export const useWorkDetails = ({
       toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully`);
       setIsProcessing(false);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error deleting ${type}:`, error);
-      toast.error(` Cannot delete ${type} with accepted applications until project is completed `);
+      const errorMessage = error.message || error.response?.data?.message || 
+        `Cannot delete ${type} with accepted applications until project is completed`;
+      toast.error(errorMessage);
       setIsProcessing(false);
       return false;
     }

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { string, z } from "zod";
 import { useForm } from "react-hook-form";
@@ -12,8 +11,6 @@ import { toast } from "sonner";
 import { createJob, updateJob } from "@/services/jobs";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { JobType } from "@/types/marketplace";
-//import { useNavigate } from "react-router-dom";
-//import CategorySelector from "@/components/ui/category-selector";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -87,6 +84,13 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       
       form.reset();
       if (clearEditItem) clearEditItem();
+      
+      // Redirect to My Posts tab after successful edit
+      if (isEditing) {
+        setTimeout(() => {
+          window.location.href = '/dashboard/browse?tab=my-posts';
+        }, 1000);
+      }
     } catch (error) {
       console.error("Error with job:", error);
       toast.error(isEditing ? "Failed to update job. Please try again." : "Failed to post job. Please try again.");
