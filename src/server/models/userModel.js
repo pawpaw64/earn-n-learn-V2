@@ -97,13 +97,15 @@ class UserModel {
         }
     }
 
-    // Get user skills
+    // Get user skills with categories
     static async getUserSkills(userId) {
         try {
-            const result = await execute(
-                'SELECT * FROM skills WHERE user_id = ?',
-                [userId]
-            );
+            const result = await execute(`
+                SELECT s.*, ps.category 
+                FROM skills s
+                LEFT JOIN predefined_skills ps ON s.name = ps.name
+                WHERE s.user_id = ?
+            `, [userId]);
 
             return Array.isArray(result) ? result : result.rows || [];
         } catch (error) {
@@ -179,7 +181,7 @@ class UserModel {
                 query += ' WHERE ' + conditions.join(' AND ');
             }
 
-            query += ' ORDER BY usage_count DESC, name ASC LIMIT 20';
+            query += ' ORDER BY usage_count DESC, name ASC LIMIT 100';
 
             const result = await execute(query, params);
             return Array.isArray(result) ? result : result.rows || [];
@@ -310,18 +312,17 @@ class UserModel {
         }
     }
 
-    // Check if user profile is complete for recommendations
+    // Check if user profile is complete
     static async isProfileComplete(userId) {
         try {
             const user = await this.findById(userId);
+            const skills = await this.getUserSkills(userId);
+
             if (!user) return false;
 
-            // Check if user has basic profile info
-            const hasBasicInfo = user.name && user.email && user.university;
-            
-            // Check if user has at least one skill
-            const userSkills = await this.getUserSkills(userId);
-            const hasSkills = userSkills && userSkills.length > 0;
+            // Check if user has basic profile info and at least one skill
+            const hasBasicInfo = user.name && user.email && user.bio;
+            const hasSkills = skills && skills.length > 0;
 
             return hasBasicInfo && hasSkills;
         } catch (error) {

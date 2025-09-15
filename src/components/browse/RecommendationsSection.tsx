@@ -7,8 +7,6 @@ import { Sparkles, ChevronRight, Target } from "lucide-react";
 import { recommendationService, RecommendationResponse } from "@/services/recommendations.ts";
 import RecommendationCard from "./RecommendationCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import AuthModal from "@/components/AuthModal";
-import { useNavigate } from "react-router-dom";
 
 interface RecommendationsSectionProps {
   onApply?: (id: number) => void;
@@ -22,8 +20,7 @@ const RecommendationsSection = ({
   onViewDetails,
 }: RecommendationsSectionProps) => {
   const [activeTab, setActiveTab] = useState("all");
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const navigate = useNavigate();
+
   const { data: recommendations, isLoading, error } = useQuery<RecommendationResponse>({
     queryKey: ['recommendations'],
     queryFn: recommendationService.getAllRecommendations,
@@ -67,47 +64,35 @@ const RecommendationsSection = ({
   );
 
   const getTotalRecommendations = () => {
-    const jobs = recommendations?.jobs ?? [];
-    const skills = recommendations?.skills ?? [];
-    const materials = recommendations?.materials ?? [];
-    return jobs.length + skills.length + materials.length;
+    if (!recommendations) return 0;
+    return recommendations.jobs.length + recommendations.skills.length + recommendations.materials.length;
   };
 
   const getAllRecommendations = () => {
+    if (!recommendations) return [];
     return [
-      ...(recommendations?.jobs ?? []),
-      ...(recommendations?.skills ?? []),
-      ...(recommendations?.materials ?? []),
+      ...recommendations.jobs,
+      ...recommendations.skills,
+      ...recommendations.materials
     ].sort((a, b) => b.matchPercentage - a.matchPercentage);
   };
 
   const getTabData = (tab: string) => {
+    if (!recommendations) return [];
+    
     switch (tab) {
       case 'jobs':
-        return recommendations?.jobs ?? [];
+        return recommendations.jobs;
       case 'skills':
-        return recommendations?.skills ?? [];
+        return recommendations.skills;
       case 'materials':
-        return recommendations?.materials ?? [];
+        return recommendations.materials;
       default:
         return getAllRecommendations();
     }
   };
 
   if (error) {
-    const status = (error as any)?.response?.status;
-    if (status === 401) {
-      return (
-        <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Sign in to see recommendations</h3>
-          <p className="text-gray-600 mb-4">Login to get personalized matches based on your profile.</p>
-          <Button className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setIsAuthOpen(true)}>
-            Login
-          </Button>
-          <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} type="login" />
-        </div>
-      );
-    }
     return (
       <div className="bg-white rounded-lg shadow-md p-6 text-center">
         <p className="text-gray-600">Unable to load recommendations. Please try again later.</p>
@@ -117,17 +102,20 @@ const RecommendationsSection = ({
 
   const totalRecommendations = getTotalRecommendations();
 
-  if (!isLoading && totalRecommendations === 0) {
+  if (!isLoading && (totalRecommendations === 0 || recommendations?.profileIncomplete)) {
     return (
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-md p-8 text-center">
         <Sparkles className="h-12 w-12 mx-auto mb-4 text-purple-500" />
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Start Building Your Profile
+          Complete Your Profile for Better Recommendations
         </h3>
         <p className="text-gray-600 mb-4">
-          Add skills to your profile to get personalized recommendations for jobs, learning opportunities, and resources.
+          Add skills and complete your bio to get personalized recommendations for jobs, learning opportunities, and resources.
         </p>
-        <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={() => navigate('/dashboard/profile')} aria-label="Complete your profile">
+        <Button 
+          className="bg-purple-600 hover:bg-purple-700 text-white"
+          onClick={() => window.location.href = '/dashboard/profile'}
+        >
           Complete Your Profile
         </Button>
       </div>
@@ -177,25 +165,25 @@ const RecommendationsSection = ({
             </TabsTrigger>
             <TabsTrigger value="jobs" className="relative">
               Jobs
-              {(recommendations?.jobs?.length ?? 0) > 0 && (
+              {recommendations?.jobs.length > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.jobs?.length ?? 0}
+                  {recommendations.jobs.length}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="skills" className="relative">
               Skills
-              {(recommendations?.skills?.length ?? 0) > 0 && (
+              {recommendations?.skills.length > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.skills?.length ?? 0}
+                  {recommendations.skills.length}
                 </Badge>
               )}
             </TabsTrigger>
             <TabsTrigger value="materials" className="relative">
               Materials
-              {(recommendations?.materials?.length ?? 0) > 0 && (
+              {recommendations?.materials.length > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 text-xs">
-                  {recommendations.materials?.length ?? 0}
+                  {recommendations.materials.length}
                 </Badge>
               )}
             </TabsTrigger>
