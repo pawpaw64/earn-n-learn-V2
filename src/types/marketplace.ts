@@ -12,6 +12,7 @@ export interface JobType {
   location?: string;
   deadline?: string;
   requirements?: string;
+  category?: string;
   created_at?: string;
 }
 
@@ -28,6 +29,7 @@ export interface SkillType {
   avatarUrl?: string;
   experienceLevel?: string;
   availability?: string;
+  category?: string;
 }
 
 // Material types
@@ -47,6 +49,7 @@ export interface MaterialType {
   duration?: string;
   location?: string;
   imageUrl?: string;
+  category?: string;
 }
 
 // Application types
