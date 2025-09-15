@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import Settings from "./pages/dashboard/Settings";
 import Leaderboard from "./pages/dashboard/Leaderboard";
 import Calendar from "./pages/dashboard/Calendar";
 import MyWork from "./pages/dashboard/MyWork";
+import ProjectView from "./pages/dashboard/ProjectView";
 import { SocketProvider } from "./contexts/SocketContext";
 import { ProjectCard } from "./components/projects/ProjectCard";
 
@@ -32,7 +32,9 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route path="browse" element={<Browse />} />
             <Route path="campus" element={<Campus />} />
-            <Route path="mywork" element={<MyWork />} />            <Route path="wallet" element={<Wallet />} />
+            <Route path="mywork" element={<MyWork />} />
+            <Route path="project/:projectId" element={<ProjectView />} />
+            <Route path="wallet" element={<Wallet />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<Profile />} />
             <Route path="profile/:userId" element={<Profile />} />
