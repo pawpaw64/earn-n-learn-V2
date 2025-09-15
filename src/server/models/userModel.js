@@ -97,15 +97,13 @@ class UserModel {
         }
     }
 
-    // Get user skills with categories
+    // Get user skills
     static async getUserSkills(userId) {
         try {
-            const result = await execute(`
-                SELECT s.*, ps.category 
-                FROM skills s
-                LEFT JOIN predefined_skills ps ON s.name = ps.name
-                WHERE s.user_id = ?
-            `, [userId]);
+            const result = await execute(
+                'SELECT * FROM skills WHERE user_id = ?',
+                [userId]
+            );
 
             return Array.isArray(result) ? result : result.rows || [];
         } catch (error) {
@@ -181,7 +179,7 @@ class UserModel {
                 query += ' WHERE ' + conditions.join(' AND ');
             }
 
-            query += ' ORDER BY usage_count DESC, name ASC LIMIT 100';
+            query += ' ORDER BY usage_count DESC, name ASC LIMIT 20';
 
             const result = await execute(query, params);
             return Array.isArray(result) ? result : result.rows || [];
@@ -309,25 +307,6 @@ class UserModel {
         } catch (error) {
             console.error('Database error in removeUserWebsite:', error);
             throw new Error(error.message);
-        }
-    }
-
-    // Check if user profile is complete
-    static async isProfileComplete(userId) {
-        try {
-            const user = await this.findById(userId);
-            const skills = await this.getUserSkills(userId);
-
-            if (!user) return false;
-
-            // Check if user has basic profile info and at least one skill
-            const hasBasicInfo = user.name && user.email && user.bio;
-            const hasSkills = skills && skills.length > 0;
-
-            return hasBasicInfo && hasSkills;
-        } catch (error) {
-            console.error('Database error in isProfileComplete:', error);
-            return false;
         }
     }
 }

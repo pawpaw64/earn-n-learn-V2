@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ImageIcon } from "lucide-react";
-import CategorySelector from "@/components/ui/category-selector";
 
 const formSchema = z.object({
   materialName: z.string().min(3, "Material name must be at least 3 characters"),
@@ -19,8 +18,7 @@ const formSchema = z.object({
   type: z.enum(["sale", "rent", "borrow"]),
   availability: z.string().min(1, "Please specify availability"),
   description: z.string().min(10, "Please provide a more detailed description"),
-  contactInfo: z.string().email("Please enter a valid email address"),
-  category: z.string().min(1, "Please select a category"),
+  contactInfo: z.string().email("Please enter a valid email address")
 });
 
 type ListMaterialFormValues = z.infer<typeof formSchema>;
@@ -43,8 +41,7 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
       type: "sale",
       availability: "",
       description: "",
-      contactInfo: "",
-      category: "Academic Help"
+      contactInfo: ""
     }
   });
 
@@ -59,7 +56,6 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
         condition: values.condition,
         price: values.price,
         availability: values.availability,
-        category: values.category,
       };
 
       console.log("Submitting material with data:", materialData);
@@ -113,26 +109,6 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category *</FormLabel>
-              <FormControl>
-                <CategorySelector
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  placeholder="Select material category"
-                  required
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}

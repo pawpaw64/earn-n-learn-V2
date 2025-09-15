@@ -41,11 +41,9 @@ const SearchFilters = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="Academic Help">📚 Academic Help</SelectItem>
-            <SelectItem value="Coding">💻 Coding</SelectItem>
-            <SelectItem value="Design">🎨 Design</SelectItem>
-            <SelectItem value="Marketing">📈 Marketing</SelectItem>
-            <SelectItem value="Freelance">💼 Freelance</SelectItem>
+            <SelectItem value="jobs">Jobs</SelectItem>
+            <SelectItem value="skills">Skills</SelectItem>
+            <SelectItem value="materials">Materials</SelectItem>
           </SelectContent>
         </Select>
         

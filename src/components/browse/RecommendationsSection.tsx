@@ -102,20 +102,17 @@ const RecommendationsSection = ({
 
   const totalRecommendations = getTotalRecommendations();
 
-  if (!isLoading && (totalRecommendations === 0 || recommendations?.profileIncomplete)) {
+  if (!isLoading && totalRecommendations === 0) {
     return (
       <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-md p-8 text-center">
         <Sparkles className="h-12 w-12 mx-auto mb-4 text-purple-500" />
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          Complete Your Profile for Better Recommendations
+          Start Building Your Profile
         </h3>
         <p className="text-gray-600 mb-4">
-          Add skills and complete your bio to get personalized recommendations for jobs, learning opportunities, and resources.
+          Add skills to your profile to get personalized recommendations for jobs, learning opportunities, and resources.
         </p>
-        <Button 
-          className="bg-purple-600 hover:bg-purple-700 text-white"
-          onClick={() => window.location.href = '/dashboard/profile'}
-        >
+        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
           Complete Your Profile
         </Button>
       </div>

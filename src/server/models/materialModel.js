@@ -46,7 +46,6 @@ class MaterialModel {
           u.email,
           u.avatar as avatarUrl,
           m.image_url as imageUrl,
-          m.category,
           m.created_at
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
@@ -83,7 +82,6 @@ class MaterialModel {
           u.email,
           u.avatar as avatarUrl,
           m.image_url as imageUrl,
-          m.category,
           m.created_at
         FROM material_marketplace m
         JOIN users u ON m.user_id = u.id
@@ -140,7 +138,6 @@ class MaterialModel {
       price,
       availability,
       image_url,
-      category,
     } = materialData;
 
     try {
@@ -149,7 +146,7 @@ class MaterialModel {
       }
 
       const result = await execute(
-        "INSERT INTO material_marketplace (user_id, title, description, `conditions`, price, availability, image_url, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO material_marketplace (user_id, title, description, `conditions`, price, availability, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           user_id,
           title,
@@ -158,7 +155,6 @@ class MaterialModel {
           price || null,
           availability || null,
           image_url || null,
-          category || 'Academic Help',
         ]
       );
 
@@ -180,7 +176,7 @@ class MaterialModel {
 
   // Update material (enhanced to include image_url)
   static async update(id, materialData) {
-    const { title, description, conditions, price, availability, image_url, category } =
+    const { title, description, conditions, price, availability, image_url } =
       materialData;
 
     try {
@@ -192,12 +188,6 @@ class MaterialModel {
       if (image_url !== undefined) {
         query += ", image_url = ?";
         params.push(image_url);
-      }
-
-      // Add category update
-      if (category !== undefined) {
-        query += ", category = ?";
-        params.push(category);
       }
 
       query += " WHERE id = ?";
