@@ -130,10 +130,10 @@ export function ApplicationsTab({
     <Tabs value={applicationsTab} onValueChange={setApplicationsTab}>
       <TabsList className="user-friendly-tabs grid grid-cols-2 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
         <TabsTrigger value="posted" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-          📤 Posted
+          Posted
         </TabsTrigger>
         <TabsTrigger value="received" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-          📥 Received
+          Received
         </TabsTrigger>
       </TabsList>
 
@@ -152,13 +152,13 @@ export function ApplicationsTab({
         <Tabs defaultValue="job" className="mt-4">
           <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
             <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              💼 Jobs
+              Jobs
             </TabsTrigger>
             <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              🎯 Skills
+              Skills
             </TabsTrigger>
             <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              📚 Materials
+              Materials
             </TabsTrigger>
           </TabsList>
 
@@ -248,13 +248,13 @@ export function ApplicationsTab({
         <Tabs defaultValue="job" className="mt-4">
           <TabsList className="user-friendly-tabs grid grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
             <TabsTrigger value="job" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              💼 Jobs
+            Jobs
             </TabsTrigger>
             <TabsTrigger value="skill" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              🎯 Skills
+              Skills
             </TabsTrigger>
             <TabsTrigger value="material" className="user-friendly-tab flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm">
-              📚 Materials
+            Materials
             </TabsTrigger>
           </TabsList>
 

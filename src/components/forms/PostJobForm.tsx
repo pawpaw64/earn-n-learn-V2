@@ -148,7 +148,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category *</FormLabel>
+              <FormLabel>Category</FormLabel>
               <FormControl>
                 <CategorySelector
                   value={field.value}

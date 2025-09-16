@@ -44,13 +44,13 @@ export function PostingSection({ activePostTab, setActivePostTab }: PostingSecti
         <Tabs value={activePostTab} onValueChange={setActivePostTab}>
           <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
             <TabsTrigger value="job" className="user-friendly-tab">
-              💼 Post Job
+              Post Job
             </TabsTrigger>
             <TabsTrigger value="skill" className="user-friendly-tab">
-              🎯 Share Skill
+              Share Skill
             </TabsTrigger>
             <TabsTrigger value="material" className="user-friendly-tab">
-              📚 List Material
+             List Material
             </TabsTrigger>
           </TabsList>
           <TabsContent value="job">
