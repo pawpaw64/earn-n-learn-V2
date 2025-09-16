@@ -483,7 +483,9 @@ export default function Profile() {
     }
 
     return (
-        <div className="profile-ui space-y-6">
+        
+      <div className="dashboard-content-area space-y-6">
+
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Your Profile</h1>
                 {!isOwnProfile && (

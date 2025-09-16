@@ -64,7 +64,7 @@ export default function Browse() {
   }, [urlTab]);
 
   return (
-    <div className="space-y-6 bg-green-50 p-6 rounded-lg shadow-md">
+         <div className="dashboard-content-area space-y-6">     
       <h1 className="text-3xl font-bold">Campus Marketplace</h1>
       
       <Tabs value={mainTab} onValueChange={handleTabChange} className="w-full">
@@ -75,13 +75,6 @@ export default function Browse() {
         </TabsList>
         
         <TabsContent value="explore" className="space-y-6">
-          {/* Added RecommendationsSection here */}
-          <RecommendationsSection 
-            onApply={(id) => console.log('Apply to job:', id)}
-            onContact={(id, type) => console.log('Contact for:', type, id)}
-            onViewDetails={handleViewDetails}
-          />
-          
           <SearchFilters 
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -89,6 +82,12 @@ export default function Browse() {
             setCategoryFilter={setCategoryFilter}
             sortBy={sortBy}
             setSortBy={setSortBy}
+          />
+          
+          <RecommendationsSection 
+            onApply={(id) => console.log('Apply to job:', id)}
+            onContact={(id, type) => console.log('Contact for:', type, id)}
+            onViewDetails={handleViewDetails}
           />
           
           <ListingsSection 
