@@ -19,9 +19,10 @@ interface JobDetailsModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onApply: (jobId: number) => void;
+  showApply?: boolean;
 }
 
-const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModalProps) => {
+const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply, showApply = true }: JobDetailsModalProps) => {
   if (!job) return null;
 
   // Store user info in localStorage when they view a job so it's available in the application modal
@@ -39,6 +40,8 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
     }
   }, [isOpen]);
 
+  const posterName = job.poster || localStorage.getItem('userName') || 'You';
+  const posterEmail = job.posterEmail || localStorage.getItem('userEmail') || 'No email provided';
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -49,12 +52,12 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
         <div className="grid gap-6 my-4">
           <div className="flex items-start gap-4">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={job.posterAvatar} alt={job.poster} />
-              <AvatarFallback>{job.poster?.charAt(0)}</AvatarFallback>
+              <AvatarImage src={job.posterAvatar} alt={posterName} />
+              <AvatarFallback>{posterName?.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium">Posted by: {job.poster}</h3>
-              <p className="text-sm text-muted-foreground">{job.posterEmail || "No email provided"}</p>
+              <h3 className="font-medium">Posted by: {posterName}</h3>
+              <p className="text-sm text-muted-foreground">{posterEmail}</p>
             </div>
             <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-800 font-medium">
               {job.type}
@@ -96,12 +99,14 @@ const JobDetailsModal = ({ job, isOpen, onOpenChange, onApply }: JobDetailsModal
               <ArrowLeft className="h-4 w-4" /> Back
             </Button>
           </DialogClose>
-          <Button 
-            onClick={() => onApply(job.id)} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            Apply Now
-          </Button>
+          {showApply && (
+            <Button 
+              onClick={() => onApply(job.id)} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Apply Now
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
