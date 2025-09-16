@@ -152,9 +152,20 @@ export const ReceivedApplicationsTable: React.FC<
 
   const handleGoToProject = async (app: any) => {
     try {
-      // If project already exists, just navigate to it
+      // If project already exists, show project details modal
       if (app.project_id) {
-        navigate(`/dashboard/project/${app.project_id}`);
+        // Fetch the full project details first
+        const response = await fetch(`/api/projects/${app.project_id}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          const projectData = await response.json();
+          onViewDetails(projectData, 'project');
+        } else {
+          toast.error('Failed to load project details');
+        }
         return;
       }
 
@@ -176,7 +187,8 @@ export const ReceivedApplicationsTable: React.FC<
           if (onApplicationUpdate) {
             onApplicationUpdate(app.id, { project_id: existingProject.id });
           }
-          navigate(`/dashboard/project/${existingProject.id}`);
+          // Show project details modal instead of navigating
+          onViewDetails(existingProject, 'project');
           return;
         }
       } catch (checkError) {
@@ -194,8 +206,8 @@ export const ReceivedApplicationsTable: React.FC<
         onApplicationUpdate(app.id, { project_id: project.id });
       }
       
-      // Navigate to the specific project
-      navigate(`/dashboard/project/${project.id}`);
+      // Show the newly created project in modal instead of navigating
+      onViewDetails(project, 'project');
     } catch (error) {
       console.error('Error creating/accessing project:', error);
       toast.error('Failed to access project. Please try again.');
