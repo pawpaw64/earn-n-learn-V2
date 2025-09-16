@@ -170,10 +170,16 @@ static async getAllRecommendations(req, res) {
   try {
     const userId = req.user.id;
     
+    // Check if profile is complete
+    const isProfileComplete = await UserModel.isProfileComplete(userId);
+    if (!isProfileComplete) {
+      return res.json({ jobs: [], skills: [], materials: [], profileIncomplete: true });
+    }
+    
     // Get user skills
     const userSkills = await UserModel.getUserSkills(userId);
     if (!userSkills?.length) {
-      return res.json({ jobs: [], skills: [], materials: [] });
+      return res.json({ jobs: [], skills: [], materials: [], profileIncomplete: true });
     }
     
     const predefinedSkills = await UserModel.getPredefinedSkills();

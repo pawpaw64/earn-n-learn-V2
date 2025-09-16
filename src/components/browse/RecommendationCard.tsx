@@ -128,7 +128,7 @@ const RecommendationCard = ({
       {recommendation.imageUrl && (
         <div className="w-full h-32 bg-gray-100">
           <img 
-            src={`http://localhost:8080${recommendation.imageUrl}`}
+            src={recommendation.imageUrl || ''}
             alt={recommendation.material}
             className="w-full h-full object-cover"
             onError={(e) => {

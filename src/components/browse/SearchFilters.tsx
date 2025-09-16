@@ -39,11 +39,13 @@ const SearchFilters = ({
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-50 bg-popover">
             <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="jobs">Jobs</SelectItem>
-            <SelectItem value="skills">Skills</SelectItem>
-            <SelectItem value="materials">Materials</SelectItem>
+            <SelectItem value="Academic Help">📚 Academic Help</SelectItem>
+            <SelectItem value="Coding">💻 Coding</SelectItem>
+            <SelectItem value="Design">🎨 Design</SelectItem>
+            <SelectItem value="Marketing">📈 Marketing</SelectItem>
+            <SelectItem value="Freelance">💼 Freelance</SelectItem>
           </SelectContent>
         </Select>
         
@@ -51,7 +53,7 @@ const SearchFilters = ({
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-50 bg-popover">
             <SelectItem value="recent">Most Recent</SelectItem>
             <SelectItem value="price-low">Price: Low to High</SelectItem>
             <SelectItem value="price-high">Price: High to Low</SelectItem>

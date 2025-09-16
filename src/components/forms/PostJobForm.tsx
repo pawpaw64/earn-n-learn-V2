@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { createJob, updateJob } from "@/services/jobs";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { JobType } from "@/types/marketplace";
+import CategorySelector from "@/components/ui/category-selector";
 
 const formSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -20,6 +21,7 @@ const formSchema = z.object({
   deadline: z.string().optional(),
   requirements: z.string().optional(),
   location: z.string().optional(),
+  category: z.string().min(1, "Please select a category"),
 });
 
 type PostJobFormValues = z.infer<typeof formSchema>;
@@ -43,6 +45,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       deadline: "",
       requirements: "",
       location: "",
+      category: "Academic Help",
     }
   });
 
@@ -57,6 +60,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
         deadline: itemToEdit.deadline || "",
         requirements: itemToEdit.requirements || "",
         location: itemToEdit.location || "",
+        category: itemToEdit.category || "Academic Help",
       });
     }
   }, [itemToEdit, form]);
@@ -75,6 +79,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           deadline: values.deadline,
           requirements: values.requirements || "",
           location: values.location || values.type === "Remote" ? "Remote" : "On Campus",
+          category: values.category,
           poster: localStorage.getItem('userName') || "",
           posterEmail: localStorage.getItem('userEmail') || ""
           
@@ -84,13 +89,6 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
       
       form.reset();
       if (clearEditItem) clearEditItem();
-      
-      // Redirect to My Posts tab after successful edit
-      if (isEditing) {
-        setTimeout(() => {
-          window.location.href = '/dashboard/browse?tab=my-posts';
-        }, 1000);
-      }
     } catch (error) {
       console.error("Error with job:", error);
       toast.error(isEditing ? "Failed to update job. Please try again." : "Failed to post job. Please try again.");
@@ -125,6 +123,25 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
                   placeholder="Describe the job, requirements, and expectations..."
                   className="min-h-[120px]"
                   {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category *</FormLabel>
+              <FormControl>
+                <CategorySelector
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select job category"
+                  required
                 />
               </FormControl>
               <FormMessage />

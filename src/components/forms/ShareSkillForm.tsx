@@ -1,3 +1,4 @@
+
 import React from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -12,6 +13,7 @@ import { toast } from "sonner";
 import { createSkill, updateSkill } from "@/services/skills";
 import { useEditableItem } from "@/components/browse/EditableItemContext";
 import { SkillType } from "@/types/marketplace";
+import CategorySelector from "@/components/ui/category-selector";
 
 const formSchema = z.object({
   skillName: z.string().min(3, "Skill name must be at least 3 characters"),
@@ -21,7 +23,8 @@ const formSchema = z.object({
   availability: z.string().min(1, "Please specify your availability"),
   contactInfo: z.string().email("Please enter a valid email address"),
   skillTrade: z.boolean().default(false),
-  tradeSkill: z.string().optional()
+  tradeSkill: z.string().optional(),
+  category: z.string().min(1, "Please select a category"),
 });
 
 type ShareSkillFormValues = z.infer<typeof formSchema>;
@@ -46,7 +49,8 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       availability: "",
       contactInfo: "",
       skillTrade: false,
-      tradeSkill: ""
+      tradeSkill: "",
+      category: "Academic Help"
     }
   });
 
@@ -62,7 +66,8 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
         availability: itemToEdit.availability || "",
         contactInfo: itemToEdit.contactInfo || "",
         skillTrade: itemToEdit.pricing?.includes('Trade') || false,
-        tradeSkill: itemToEdit.pricing?.replace('Skill Trade: ', '') || ""
+        tradeSkill: itemToEdit.pricing?.replace('Skill Trade: ', '') || "",
+        category: itemToEdit.category || "Academic Help"
       });
     }
   }, [itemToEdit, form]);
@@ -79,7 +84,8 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
                 watchPricingType === 'free' ? 'Free' : 
                 'Skill Trade: ' + (values.tradeSkill || 'Open to offers'),
         availability: values.availability,
-        contactInfo: values.contactInfo
+        contactInfo: values.contactInfo,
+        category: values.category
       };
 
       if (isEditing && itemToEdit?.id) {
@@ -93,13 +99,6 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
       form.reset();
       onSuccess?.();
       if (clearEditItem) clearEditItem();
-      
-      // Redirect to My Posts tab after successful edit
-      if (isEditing) {
-        setTimeout(() => {
-          window.location.href = '/dashboard/browse?tab=my-posts';
-        }, 1000);
-      }
     } catch (error) {
       console.error("Error sharing skill:", error);
       toast.error(isEditing 
@@ -135,6 +134,25 @@ export default function ShareSkillForm({ initialData, onSuccess }: ShareSkillFor
                   placeholder="Describe your skill, experience level, and what you can offer..."
                   className="min-h-[120px]"
                   {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Category *</FormLabel>
+              <FormControl>
+                <CategorySelector
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  placeholder="Select skill category"
+                  required
                 />
               </FormControl>
               <FormMessage />

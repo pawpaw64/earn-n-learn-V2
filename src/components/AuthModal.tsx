@@ -125,7 +125,7 @@ const AuthModal = ({ isOpen, onClose, type }: AuthModalProps) => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select your institution" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-popover">
                     <SelectItem value="uni1">University One</SelectItem>
                     <SelectItem value="uni2">University Two</SelectItem>
                     <SelectItem value="uni3">University Three</SelectItem>

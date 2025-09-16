@@ -35,7 +35,7 @@ class JobModel {
       const result = await execute(`
         SELECT 
           j.id, j.title, j.type, j.description, j.payment,
-          j.location, j.deadline, j.requirements, j.created_at,
+          j.location, j.deadline, j.requirements, j.category, j.created_at,
           u.name as poster, 
           u.email as posterEmail, 
           u.avatar as posterAvatar
@@ -62,7 +62,7 @@ class JobModel {
       const result = await execute(`
         SELECT 
           j.id, j.title, j.type, j.description, j.payment,
-          j.location, j.deadline, j.requirements, j.created_at,
+          j.location, j.deadline, j.requirements, j.category, j.created_at,
           u.name as poster, 
           u.email as posterEmail, 
           u.avatar as posterAvatar
@@ -87,8 +87,8 @@ class JobModel {
       // Execute the insert query
       const result = await execute(
         `INSERT INTO jobs 
-        (user_id, title, description, type, payment, deadline, requirements, location, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (user_id, title, description, type, payment, deadline, requirements, location, category, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           jobData.user_id,
           jobData.title,
@@ -98,6 +98,7 @@ class JobModel {
           jobData.deadline,
           jobData.requirements,
           jobData.location,
+          jobData.category || 'Academic Help',
           jobData.status || 'Active'
         ]
       );
@@ -175,33 +176,27 @@ class JobModel {
 
   // Update job
   static async update(id, jobData) {
-    const { title, description, type, payment, deadline, requirements, location, status } = jobData;
+  const { title, description, type, payment, deadline, requirements, location, category, status } = jobData;
+  
+  try {
+    const result = await execute(
+      'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, category = ?, status = ? WHERE id = ?',
+      [title, description, type, payment, deadline, requirements, location, category || 'Academic Help', status, id]
+    );
     
-    try {
-      const result = await execute(
-        'UPDATE jobs SET title = ?, description = ?, type = ?, payment = ?, deadline = ?, requirements = ?, location = ?, status = ? WHERE id = ?',
-        [title, description, type, payment, deadline, requirements, location, status || 'Active', id]
-      );
-      
-      // Handle different database driver response formats
-      let affectedRows;
-      if (Array.isArray(result)) {
-        affectedRows = result[0]?.affectedRows || result.affectedRows;
-      } else {
-        affectedRows = result?.affectedRows;
-      }
-      
-      return affectedRows > 0;
-    } catch (error) {
-      console.error('JobModel.update() - Error:', {
-        id,
-        jobData: JSON.stringify(jobData, null, 2),
-        error: error.message,
-        stack: error.stack
-      });
-      throw error;
-    }
+    // Handle different database driver response formats
+    const affectedRows = Array.isArray(result) ? result[0]?.affectedRows : result?.affectedRows;
+    return affectedRows > 0;
+  } catch (error) {
+    console.error('JobModel.update() - Error:', {
+      id,
+      jobData,
+      error: error.message,
+      stack: error.stack
+    });
+    throw new Error('Failed to update job');
   }
+}
 
   // Delete job
   static async delete(id) {
