@@ -20,7 +20,6 @@ interface Skill {
   experience_years?: number;
   certifications?: string;
   user_id: string;
-  category?: string;
 }
 
 interface PredefinedSkill {
@@ -42,14 +41,19 @@ const proficiencyLevels = [
   { value: 'Expert', color: 'bg-purple-100 text-purple-800', icon: '👑' }
 ];
 
+const skillCategories = [
+  'Programming', 'Web Development', 'Database', 'Cloud & DevOps', 
+  'Data Science & AI', 'Design', 'Mobile Development', 'Business & Marketing', 
+  'Soft Skills', 'Languages', 'Version Control', 'Operating Systems', 
+  'Security', 'Networking', 'Backend', 'Architecture', 'Custom'
+];
+
 export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnProfile }: EnhancedSkillsSectionProps) {
   const [isAddingSkill, setIsAddingSkill] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<PredefinedSkill[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>('auto');
-  const [isLoading, setIsLoading] = useState(false);
-  const [detectedCategory, setDetectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   
   const [newSkill, setNewSkill] = useState({
     name: '',
@@ -58,8 +62,7 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
     proficiencyLevel: 'Beginner',
     experienceYears: 0,
     certifications: '',
-    isCustom: false,
-    category: ''
+    isCustom: false
   });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -68,10 +71,8 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (searchTerm.length > 1) {
-        setIsLoading(true);
         try {
-          const response = await fetch(`http://localhost:8080/api/users/skills/predefined?search=${encodeURIComponent(searchTerm)}`);
-          
+          const response = await fetch(`http://localhost:8080/api/users/skills/predefined?search=${encodeURIComponent(searchTerm)}&category=${selectedCategory}`);
           if (response.ok) {
             const data = await response.json();
             setSuggestions(data.skills || []);
@@ -79,8 +80,6 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
           }
         } catch (error) {
           console.error('Error fetching suggestions:', error);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         setSuggestions([]);
@@ -90,49 +89,15 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
 
     const timeoutId = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  // Detect category from skill name
-  const detectCategory = async (skillName: string) => {
-    if (!skillName.trim()) return;
-    
-    try {
-      const response = await fetch(`http://localhost:8080/api/users/skills/detect-category?skill=${encodeURIComponent(skillName)}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDetectedCategory(data.category || 'Other');
-        
-        // Auto-select the detected category if in auto mode
-        if (selectedCategory === 'auto') {
-          setNewSkill(prev => ({ ...prev, category: data.category || 'Other' }));
-        }
-      }
-    } catch (error) {
-      console.error('Error detecting category:', error);
-    }
-  };
-
-  // Detect category when skill name changes
-  useEffect(() => {
-    if (searchTerm && selectedCategory === 'auto') {
-      const timeoutId = setTimeout(() => {
-        detectCategory(searchTerm);
-      }, 500);
-      
-      return () => clearTimeout(timeoutId);
-    }
   }, [searchTerm, selectedCategory]);
 
   const handleSkillSelection = (skill: PredefinedSkill) => {
     setNewSkill(prev => ({
       ...prev,
       name: skill.name,
-      category: skill.category,
       isCustom: false
     }));
     setSearchTerm(skill.name);
-    setDetectedCategory(skill.category);
     setShowSuggestions(false);
   };
 
@@ -140,8 +105,7 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
     setNewSkill(prev => ({
       ...prev,
       name: searchTerm,
-      isCustom: true,
-      category: detectedCategory || 'Other'
+      isCustom: true
     }));
     setShowSuggestions(false);
   };
@@ -160,8 +124,7 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
         proficiencyLevel: newSkill.proficiencyLevel,
         experienceYears: newSkill.experienceYears,
         certifications: newSkill.certifications,
-        isCustom: newSkill.isCustom,
-        category: newSkill.category || detectedCategory || 'Other'
+        isCustom: newSkill.isCustom
       };
 
       const response = await addUserSkill(skillData);
@@ -199,12 +162,9 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
       proficiencyLevel: 'Beginner',
       experienceYears: 0,
       certifications: '',
-      isCustom: false,
-      category: ''
+      isCustom: false
     });
     setSearchTerm('');
-    setSelectedCategory('auto');
-    setDetectedCategory('');
     setIsAddingSkill(false);
     setShowSuggestions(false);
   };
@@ -252,86 +212,45 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
                         />
                         
                         {/* Suggestions Dropdown */}
-                        {showSuggestions && (
+                        {showSuggestions && suggestions.length > 0 && (
                           <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-md max-h-60 overflow-y-auto">
-                            {isLoading ? (
-                              <div className="px-3 py-2 text-center text-muted-foreground">
-                                Loading suggestions...
-                              </div>
-                            ) : suggestions.length > 0 ? (
-                              <>
-                                {suggestions.map((skill, index) => (
-                                  <div
-                                    key={index}
-                                    className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
-                                    onClick={() => handleSkillSelection(skill)}
-                                  >
-                                    <div className="font-medium">{skill.name}</div>
-                                    <div className="text-sm text-muted-foreground">{skill.category}</div>
-                                  </div>
-                                ))}
-                                
-                                {/* Add Custom Skill Option */}
-                                {searchTerm && !suggestions.some(s => s.name.toLowerCase() === searchTerm.toLowerCase()) && (
-                                  <div
-                                    className="px-3 py-2 hover:bg-accent cursor-pointer border-t bg-muted/50"
-                                    onClick={handleCustomSkill}
-                                  >
-                                    <div className="font-medium text-primary">+ Add "{searchTerm}" as custom skill</div>
-                                    <div className="text-sm text-muted-foreground">This will be available for other users too</div>
-                                  </div>
-                                )}
-                              </>
-                            ) : searchTerm.length > 1 ? (
+                            {suggestions.map((skill, index) => (
                               <div
-                                className="px-3 py-2 hover:bg-accent cursor-pointer"
+                                key={index}
+                                className="px-3 py-2 hover:bg-accent cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleSkillSelection(skill)}
+                              >
+                                <div className="font-medium">{skill.name}</div>
+                                <div className="text-sm text-muted-foreground">{skill.category}</div>
+                              </div>
+                            ))}
+                            
+                            {/* Add Custom Skill Option */}
+                            {searchTerm && !suggestions.some(s => s.name.toLowerCase() === searchTerm.toLowerCase()) && (
+                              <div
+                                className="px-3 py-2 hover:bg-accent cursor-pointer border-t bg-muted/50"
                                 onClick={handleCustomSkill}
                               >
                                 <div className="font-medium text-primary">+ Add "{searchTerm}" as custom skill</div>
-                                <div className="text-sm text-muted-foreground">No matches found. Click to add as custom skill.</div>
+                                <div className="text-sm text-muted-foreground">This will be available for other users too</div>
                               </div>
-                            ) : null}
+                            )}
                           </div>
                         )}
                       </div>
                       
-                      <Select 
-                        value={selectedCategory} 
-                        onValueChange={(value) => {
-                          setSelectedCategory(value);
-                          if (value !== 'auto') {
-                            setNewSkill(prev => ({ ...prev, category: value }));
-                          } else if (detectedCategory) {
-                            setNewSkill(prev => ({ ...prev, category: detectedCategory }));
-                          }
-                        }}
-                      >
+                      <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                         <SelectTrigger className="w-48">
                           <SelectValue placeholder="Category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="auto">
-                            {detectedCategory ? `Auto: ${detectedCategory}` : 'Auto-detect'}
-                          </SelectItem>
-                          <SelectItem value="Programming">Programming</SelectItem>
-                          <SelectItem value="Web Development">Web Development</SelectItem>
-                          <SelectItem value="Database">Database</SelectItem>
-                          <SelectItem value="Cloud & DevOps">Cloud & DevOps</SelectItem>
-                          <SelectItem value="Data Science & AI">Data Science & AI</SelectItem>
-                          <SelectItem value="Design">Design</SelectItem>
-                          <SelectItem value="Mobile Development">Mobile Development</SelectItem>
-                          <SelectItem value="Business & Marketing">Business & Marketing</SelectItem>
-                          <SelectItem value="Soft Skills">Soft Skills</SelectItem>
-                          <SelectItem value="Languages">Languages</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {skillCategories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    {selectedCategory === 'auto' && detectedCategory && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Detected category: <span className="font-medium">{detectedCategory}</span>
-                      </p>
-                    )}
                   </div>
                 </div>
 
@@ -442,11 +361,6 @@ export default function EnhancedSkillsSection({ skills, onSkillsUpdate, isOwnPro
                         <Badge className={`text-xs ${proficiencyConfig.color}`}>
                           {proficiencyConfig.icon} {skill.proficiency_level || 'Beginner'}
                         </Badge>
-                        {skill.category && (
-                          <Badge variant="outline" className="text-xs">
-                            {skill.category}
-                          </Badge>
-                        )}
                         {skill.experience_years && skill.experience_years > 0 && (
                           <Badge variant="outline" className="text-xs">
                             <Calendar className="h-3 w-3 mr-1" />
