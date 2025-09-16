@@ -140,7 +140,7 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Condition</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select condition" />
@@ -165,24 +165,24 @@ export default function ListMaterialForm({ onSubmit, isLoading = false }: ListMa
               <FormItem>
                 <FormLabel>Listing Type</FormLabel>
                 <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="sale" id="sale" />
-                      <label htmlFor="sale" className="text-sm font-medium">Sale</label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="rent" id="rent" />
-                      <label htmlFor="rent" className="text-sm font-medium">Rent</label>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <RadioGroupItem value="borrow" id="borrow" />
-                      <label htmlFor="borrow" className="text-sm font-medium">Borrow</label>
-                    </div>
-                  </RadioGroup>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex space-x-4"
+                >
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="sale" id="sale" />
+                    <label htmlFor="sale" className="text-sm font-medium">Sale</label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="rent" id="rent" />
+                    <label htmlFor="rent" className="text-sm font-medium">Rent</label>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <RadioGroupItem value="borrow" id="borrow" />
+                    <label htmlFor="borrow" className="text-sm font-medium">Borrow</label>
+                  </div>
+                </RadioGroup>
                 </FormControl>
                 <FormMessage />
               </FormItem>

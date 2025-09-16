@@ -52,12 +52,25 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
   // If we have initial data, populate the form
   useEffect(() => {
     if (itemToEdit) {
+      // Format deadline to yyyy-mm-dd for date input
+      let formattedDeadline = "";
+      if (itemToEdit.deadline) {
+        try {
+          const deadlineDate = new Date(itemToEdit.deadline);
+          if (!isNaN(deadlineDate.getTime())) {
+            formattedDeadline = deadlineDate.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.warn("Could not parse deadline:", itemToEdit.deadline);
+        }
+      }
+      
       form.reset({
         title: itemToEdit.title || "",
         description: itemToEdit.description || "",
         type: itemToEdit.type || "",
         payment: itemToEdit.payment || "",
-        deadline: itemToEdit.deadline || "",
+        deadline: formattedDeadline,
         requirements: itemToEdit.requirements || "",
         location: itemToEdit.location || "",
         category: itemToEdit.category || "Academic Help",
