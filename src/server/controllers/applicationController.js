@@ -75,15 +75,14 @@ export async function submitApplication(req, res) {
         }
 
         // Check for duplicate applications
-        const existingApplications = await ApplicationModel.checkDuplicate(job_id, user_id);
-        if (existingApplications && existingApplications.length > 0) {
-            return res.status(409).json({
-                success: false,
-                message: 'You have already applied for this job'
-            });
-
-
-        }
+       // Check for duplicate applications
+const existingApplications = await ApplicationModel.checkDuplicate(job_id, user_id);
+if (existingApplications && existingApplications.length > 0) {
+  return res.status(409).json({
+    success: false,
+    message: 'You have already applied for this job'
+  });
+}
 
         // Create application with additional fields
         const applicationData = {
