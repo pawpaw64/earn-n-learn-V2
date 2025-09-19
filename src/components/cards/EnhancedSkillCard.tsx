@@ -34,10 +34,10 @@ const EnhancedSkillCard: React.FC<EnhancedSkillCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden hover:border-secondary/20">
       {/* Thumbnail placeholder */}
-      {/* <div className="h-32 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
-        <BookOpen className="h-8 w-8 text-blue-500" />
+      {/* <div className="h-32 bg-gradient-to-br from-secondary/10 to-secondary/20 flex items-center justify-center">
+        <BookOpen className="h-8 w-8 text-secondary" />
       </div> */}
       
       <div className="p-4">
@@ -46,7 +46,7 @@ const EnhancedSkillCard: React.FC<EnhancedSkillCardProps> = ({
           <h3 className="font-semibold text-foreground line-clamp-2 flex-1">
             {skill.skill || skill.skill_name}
           </h3>
-          <Badge variant="secondary" className="text-xs shrink-0 bg-blue-100 text-blue-800">
+          <Badge variant="secondary" className="text-xs shrink-0 bg-secondary/10 text-secondary hover:bg-secondary/20">
             {skill.experienceLevel || 'Beginner'}
           </Badge>
         </div>
@@ -61,12 +61,12 @@ const EnhancedSkillCard: React.FC<EnhancedSkillCardProps> = ({
         )}
 
         {/* Poster Info */}
-        <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => onViewPoster?.(skill.user_id || 0)}>
+        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:bg-accent/50 p-2 -m-2 rounded-md transition-colors" onClick={() => onViewPoster?.(skill.user_id || 0)}>
           <Avatar className="h-6 w-6">
             <AvatarImage src={skill.avatarUrl} alt={skill.name} />
-            <AvatarFallback className="text-xs">{skill.name?.charAt(0) || 'U'}</AvatarFallback>
+            <AvatarFallback className="text-xs bg-secondary text-secondary-foreground">{skill.name?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <span className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
             {skill.name || 'Anonymous'}
           </span>
         </div>

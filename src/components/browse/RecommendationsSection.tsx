@@ -256,6 +256,7 @@ const RecommendationsSection = ({
                         job={jobData}
                         onApply={(jobId) => handleApplyJob(recommendation)}
                         onViewDetails={(jobId) => handleViewJobDetails(recommendation)}
+                        onViewPoster={(userId) => navigate(`/dashboard/poster/${userId}`)}
                       />
                     );
                   } else if (recommendation.type === 'skill') {
@@ -273,6 +274,7 @@ const RecommendationsSection = ({
                         skill={skillData}
                         onContact={(skillId) => handleContactSkill(recommendation)}
                         onViewDetails={(skillId) => handleViewSkillDetails(recommendation)}
+                        onViewPoster={(userId) => navigate(`/dashboard/poster/${userId}`)}
                       />
                     );
                   } else if (recommendation.type === 'material') {
@@ -292,6 +294,7 @@ const RecommendationsSection = ({
                         material={materialData}
                         onContact={(materialId) => handleContactMaterial(recommendation)}
                         onViewDetails={(materialId) => handleViewMaterialDetails(recommendation)}
+                        onViewPoster={(userId) => navigate(`/dashboard/poster/${userId}`)}
                       />
                     );
                   }
