@@ -314,45 +314,7 @@ export function FinancialDashboard() {
         </CardContent>
       </Card>
 
-      {/* How it works section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>How SSLCommerz Integration Works</CardTitle>
-          <CardDescription>Payment processing through Bangladesh's leading payment gateway</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="p-4 border rounded-lg">
-              <CreditCard className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-              <h3 className="font-medium text-center">Cards</h3>
-              <p className="text-sm text-muted-foreground text-center">Visa, Mastercard, AMEX</p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <Wallet className="h-8 w-8 text-pink-500 mx-auto mb-2" />
-              <h3 className="font-medium text-center">Mobile Banking</h3>
-              <p className="text-sm text-muted-foreground text-center">bKash, Nagad, Rocket</p>
-            </div>
-            
-            <div className="p-4 border rounded-lg">
-              <Plus className="h-8 w-8 text-green-500 mx-auto mb-2" />
-              <h3 className="font-medium text-center">Internet Banking</h3>
-              <p className="text-sm text-muted-foreground text-center">All major banks</p>
-            </div>
-          </div>
-          
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">How it works:</h4>
-            <ol className="text-sm text-blue-800 space-y-1">
-              <li>1. Click "Top Up" to add money to your wallet</li>
-              <li>2. Choose your payment method on SSLCommerz secure page</li>
-              <li>3. Complete payment and funds are instantly added</li>
-              <li>4. Use your wallet balance for escrow payments and purchases</li>
-            </ol>
-          </div>
-        </CardContent>
-      </Card>
-      
+    
       {/* Financial Analytics Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>

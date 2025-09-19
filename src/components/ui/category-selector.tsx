@@ -51,7 +51,7 @@ export default function CategorySelector({
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="z-50 bg-popover">
         {categories.map((category) => (
           <SelectItem key={category.value} value={category.value}>
             <div className="flex items-center gap-2">

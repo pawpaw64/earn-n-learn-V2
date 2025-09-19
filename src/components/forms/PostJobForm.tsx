@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { string, z } from "zod";
 import { useForm } from "react-hook-form";
@@ -53,12 +52,25 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
   // If we have initial data, populate the form
   useEffect(() => {
     if (itemToEdit) {
+      // Format deadline to yyyy-mm-dd for date input
+      let formattedDeadline = "";
+      if (itemToEdit.deadline) {
+        try {
+          const deadlineDate = new Date(itemToEdit.deadline);
+          if (!isNaN(deadlineDate.getTime())) {
+            formattedDeadline = deadlineDate.toISOString().split('T')[0];
+          }
+        } catch (e) {
+          console.warn("Could not parse deadline:", itemToEdit.deadline);
+        }
+      }
+      
       form.reset({
         title: itemToEdit.title || "",
         description: itemToEdit.description || "",
         type: itemToEdit.type || "",
         payment: itemToEdit.payment || "",
-        deadline: itemToEdit.deadline || "",
+        deadline: formattedDeadline,
         requirements: itemToEdit.requirements || "",
         location: itemToEdit.location || "",
         category: itemToEdit.category || "Academic Help",
@@ -136,7 +148,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category *</FormLabel>
+              <FormLabel>Category</FormLabel>
               <FormControl>
                 <CategorySelector
                   value={field.value}
@@ -157,7 +169,7 @@ export default function PostJobForm({ initialData }: PostJobFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Job Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select job type" />

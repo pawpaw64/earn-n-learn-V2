@@ -17,7 +17,11 @@ import Leaderboard from "./pages/dashboard/Leaderboard";
 import Calendar from "./pages/dashboard/Calendar";
 import MyWork from "./pages/dashboard/MyWork";
 import { SocketProvider } from "./contexts/SocketContext";
-import { ProjectCard } from "./components/projects/ProjectCard";
+import JobDetailsPage from "./components/details/JobDetailsPage";
+
+import MaterialDetailsPage from "./components/details/MaterialDetailsPage";
+import PosterProfilePage from "./components/details/PosterProfilePage";
+import SkillDetailsPage from "./components/details/Skilldetailspage";
 
 const queryClient = new QueryClient();
 
@@ -31,11 +35,14 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route path="browse" element={<Browse />} />
+            <Route path="job/:id" element={<JobDetailsPage />} />
+            <Route path="skill/:id" element={<SkillDetailsPage />} />
+            <Route path="material/:id" element={<MaterialDetailsPage />} />
             <Route path="campus" element={<Campus />} />
             <Route path="mywork" element={<MyWork />} />            <Route path="wallet" element={<Wallet />} />
             <Route path="messages" element={<Messages />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="profile/:userId" element={<Profile />} />
+            <Route path="profile/:userId" element={<PosterProfilePage />} />
             <Route path="settings" element={<Settings />} />
             <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="calendar" element={<Calendar />} />

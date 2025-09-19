@@ -1,4 +1,3 @@
-
 import WalletModel from '../models/walletModel.js';
 import { sslcommerz, getSSLCommerzConfig } from '../config/sslcommerz.js';
 import UserModel from '../models/userModel.js';
@@ -768,7 +767,7 @@ export async function sslcommerzSuccess(req, res) {
     
     if (status !== 'VALID') {
       console.log('Invalid payment status:', status);
-      return res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=failed`);
     }
 
     // Validate the payment with SSLCommerz
@@ -776,7 +775,7 @@ export async function sslcommerzSuccess(req, res) {
     
     if (validation.status !== 'VALID' || validation.tran_id !== tran_id) {
       console.log('Payment validation failed:', validation);
-      return res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=failed`);
     }
 
     // Extract user ID from transaction ID
@@ -790,15 +789,14 @@ export async function sslcommerzSuccess(req, res) {
     
     console.log('Payment processed successfully:', { tran_id, amount, userId });
     
-    // Redirect to success page
-    res.redirect(`http://localhost:3000/dashboard/wallet?payment=success&amount=${amount}`);
+    // Redirect to success page using FRONTEND_URL
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=success&amount=${amount}`);
     
   } catch (error) {
     console.error('SSLCommerz success callback error:', error);
-    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=error`);
   }
 }
-
 // SSLCommerz Fail Callback
 export async function sslcommerzFail(req, res) {
   try {
@@ -809,12 +807,11 @@ export async function sslcommerzFail(req, res) {
     // Update the transaction status to failed
     await WalletModel.updateTransactionStatusByReference(tran_id, 'failed');
     
-    res.redirect('http://localhost:3000/dashboard/wallet?payment=failed');
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=failed`);
     
   } catch (error) {
     console.error('SSLCommerz fail callback error:', error);
-    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
-  }
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=error`);  }
 }
 
 // SSLCommerz Cancel Callback
@@ -827,12 +824,10 @@ export async function sslcommerzCancel(req, res) {
     // Update the transaction status to failed
     await WalletModel.updateTransactionStatusByReference(tran_id, 'failed');
     
-    res.redirect('http://localhost:3000/dashboard/wallet?payment=cancelled');
-    
+  res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=cancelled`);    
   } catch (error) {
     console.error('SSLCommerz cancel callback error:', error);
-    res.redirect('http://localhost:3000/dashboard/wallet?payment=error');
-  }
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:8081'}/dashboard/wallet?payment=error`);  }
 }
 
 // SSLCommerz IPN (Instant Payment Notification) Callback

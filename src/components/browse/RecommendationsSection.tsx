@@ -5,8 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ChevronRight, Target } from "lucide-react";
 import { recommendationService, RecommendationResponse } from "@/services/recommendations.ts";
-import RecommendationCard from "./RecommendationCard";
+import { JobType, SkillType, MaterialType } from "@/types/marketplace";
+import JobCard from "@/components/JobCard";
+import SkillCard from "@/components/SkillCard";
+import MaterialCard from "@/components/MaterialCard";
+import JobDetailsModal from "@/components/modals/JobDetailsModal";
+import SkillDetailsModal from "@/components/modals/SkillDetailsModal";
+import MaterialDetailsModal from "@/components/modals/MaterialDetailsModal";
+import JobApplicationModal from "@/components/modals/JobApplicationModal";
+import ContactModal from "@/components/modals/ContactModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useNavigate } from "react-router-dom";
+import EnhancedJobCard from "../cards/EnhancedJobCard";
+import EnhancedSkillCard from "../cards/EnhancedSkillCard";
+import EnhancedListingsSection from "./EnhancedListingsSection";
+import EnhancedMaterialCard from "../cards/EnhancedMaterialCard";
 
 interface RecommendationsSectionProps {
   onApply?: (id: number) => void;
@@ -20,6 +33,20 @@ const RecommendationsSection = ({
   onViewDetails,
 }: RecommendationsSectionProps) => {
   const [activeTab, setActiveTab] = useState("all");
+  const navigate = useNavigate();
+
+  // Modal states
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [selectedSkill, setSelectedSkill] = useState<any>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+  
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
+  const [skillDetailsOpen, setSkillDetailsOpen] = useState(false);
+  const [materialDetailsOpen, setMaterialDetailsOpen] = useState(false);
+  
+  const [jobApplicationOpen, setJobApplicationOpen] = useState(false);
+  const [skillContactOpen, setSkillContactOpen] = useState(false);
+  const [materialContactOpen, setMaterialContactOpen] = useState(false);
 
   const { data: recommendations, isLoading, error } = useQuery<RecommendationResponse>({
     queryKey: ['recommendations'],
@@ -27,21 +54,40 @@ const RecommendationsSection = ({
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const handleItemAction = (item: any, action: 'apply' | 'contact' | 'view') => {
-    const id = item.id;
-    const type = item.type;
-    
-    switch (action) {
-      case 'apply':
-        onApply?.(id);
-        break;
-      case 'contact':
-        onContact?.(id, type);
-        break;
-      case 'view':
-        onViewDetails?.(id, type);
-        break;
-    }
+  // Job handlers
+  const handleViewJobDetails = (recommendation: any) => {
+    setSelectedJob(recommendation);
+    setJobDetailsOpen(true);
+  };
+
+  const handleApplyJob = (recommendation: any) => {
+    setJobDetailsOpen(false);
+    setSelectedJob(recommendation);
+    setJobApplicationOpen(true);
+  };
+
+  // Skill handlers
+  const handleViewSkillDetails = (recommendation: any) => {
+    setSelectedSkill(recommendation);
+    setSkillDetailsOpen(true);
+  };
+
+  const handleContactSkill = (recommendation: any) => {
+    setSkillDetailsOpen(false);
+    setSelectedSkill(recommendation);
+    setSkillContactOpen(true);
+  };
+
+  // Material handlers  
+  const handleViewMaterialDetails = (recommendation: any) => {
+    setSelectedMaterial(recommendation);
+    setMaterialDetailsOpen(true);
+  };
+
+  const handleContactMaterial = (recommendation: any) => {
+    setMaterialDetailsOpen(false);
+    setSelectedMaterial(recommendation);
+    setMaterialContactOpen(true);
   };
 
   const renderLoadingSkeleton = () => (
@@ -192,15 +238,65 @@ const RecommendationsSection = ({
           {['all', 'jobs', 'skills', 'materials'].map((tab) => (
             <TabsContent key={tab} value={tab}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getTabData(tab).map((recommendation) => (
-                  <RecommendationCard
-                    key={`${recommendation.type}-${recommendation.id}`}
-                    recommendation={recommendation}
-                    onApply={() => handleItemAction(recommendation, 'apply')}
-                    onContact={() => handleItemAction(recommendation, 'contact')}
-                    onViewDetails={() => handleItemAction(recommendation, 'view')}
-                  />
-                ))}
+                {getTabData(tab).map((recommendation) => {
+                  if (recommendation.type === 'job') {
+                    const jobData: JobType = {
+                      id: recommendation.id,
+                      title: recommendation.title || 'Untitled',
+                      type: 'General',
+                      description: recommendation.description || '',
+                      payment: recommendation.payment || 'Not specified',
+                      poster: recommendation.poster,
+                      posterEmail: recommendation.posterEmail,
+                      posterAvatar: recommendation.posterAvatar
+                    };
+                    return (
+                      <EnhancedJobCard 
+                        key={`job-${recommendation.id}`}
+                        job={jobData}
+                        onApply={(jobId) => handleApplyJob(recommendation)}
+                        onViewDetails={(jobId) => handleViewJobDetails(recommendation)}
+                      />
+                    );
+                  } else if (recommendation.type === 'skill') {
+                    const skillData: SkillType = {
+                      id: recommendation.id,
+                      skill_name: recommendation.skill || recommendation.skill_name || 'Skill',
+                      pricing: recommendation.pricing || 'Not specified',
+                      description: recommendation.description,
+                      name: recommendation.name,
+                      experienceLevel: 'Beginner'
+                    };
+                    return (
+                      <EnhancedSkillCard 
+                        key={`skill-${recommendation.id}`}
+                        skill={skillData}
+                        onContact={(skillId) => handleContactSkill(recommendation)}
+                        onViewDetails={(skillId) => handleViewSkillDetails(recommendation)}
+                      />
+                    );
+                  } else if (recommendation.type === 'material') {
+                    const materialData: MaterialType = {
+                      id: recommendation.id,
+                      title: recommendation.material || 'Material',
+                      price: recommendation.price || 'Not specified',
+                      availability: recommendation.availability || 'Unknown',
+                      condition: recommendation.condition || recommendation.conditions,
+                      description: recommendation.description,
+                      name: recommendation.name,
+                      imageUrl: recommendation.imageUrl
+                    };
+                    return (
+                      <EnhancedMaterialCard 
+                        key={`material-${recommendation.id}`}
+                        material={materialData}
+                        onContact={(materialId) => handleContactMaterial(recommendation)}
+                        onViewDetails={(materialId) => handleViewMaterialDetails(recommendation)}
+                      />
+                    );
+                  }
+                  return null;
+                })}
               </div>
               
               {getTabData(tab).length === 0 && (
@@ -213,6 +309,57 @@ const RecommendationsSection = ({
             </TabsContent>
           ))}
         </Tabs>
+      )}
+
+      {/* Details Modals */}
+      <JobDetailsModal 
+        job={selectedJob} 
+        isOpen={jobDetailsOpen} 
+        onOpenChange={setJobDetailsOpen} 
+        onApply={() => selectedJob && handleApplyJob(selectedJob)}
+      />
+      
+      <SkillDetailsModal 
+        skill={selectedSkill} 
+        isOpen={skillDetailsOpen} 
+        onOpenChange={setSkillDetailsOpen} 
+        onContact={() => selectedSkill && handleContactSkill(selectedSkill)}
+      />
+      
+      <MaterialDetailsModal 
+        material={selectedMaterial} 
+        isOpen={materialDetailsOpen} 
+        onOpenChange={setMaterialDetailsOpen} 
+        onContact={() => selectedMaterial && handleContactMaterial(selectedMaterial)}
+      />
+
+      {/* Application/Contact Modals */}
+      <JobApplicationModal 
+        job={selectedJob} 
+        isOpen={jobApplicationOpen} 
+        onOpenChange={setJobApplicationOpen} 
+      />
+      
+      {selectedSkill && (
+        <ContactModal 
+          recipientName={selectedSkill.name || ''}
+          itemName={selectedSkill.skill || selectedSkill.skill_name || ''}
+          itemId={selectedSkill.id}
+          itemType="skill"
+          isOpen={skillContactOpen} 
+          onOpenChange={setSkillContactOpen} 
+        />
+      )}
+      
+      {selectedMaterial && (
+        <ContactModal 
+          recipientName={selectedMaterial.name || ''}
+          itemName={selectedMaterial.material || selectedMaterial.title || ''}
+          itemId={selectedMaterial.id}
+          itemType="material"
+          isOpen={materialContactOpen} 
+          onOpenChange={setMaterialContactOpen} 
+        />
       )}
     </div>
   );

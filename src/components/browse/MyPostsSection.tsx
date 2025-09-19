@@ -298,13 +298,13 @@ export function MyPostsSection({ onEdit, onDelete, onViewDetails }: MyPostsSecti
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="user-friendly-tabs cols-3 grid w-full grid-cols-3 p-1 bg-gray-50 rounded-xl border shadow-sm mb-6">
             <TabsTrigger value="jobs" className="user-friendly-tab">
-              💼 Jobs ({jobs.length})
+              Jobs ({jobs.length})
             </TabsTrigger>
             <TabsTrigger value="skills" className="user-friendly-tab">
-              🎯 Skills ({skills.length})
+              Skills ({skills.length})
             </TabsTrigger>
             <TabsTrigger value="materials" className="user-friendly-tab">
-              📚 Materials ({materials.length})
+              Materials ({materials.length})
             </TabsTrigger>
           </TabsList>
           

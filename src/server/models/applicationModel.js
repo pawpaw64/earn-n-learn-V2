@@ -249,13 +249,25 @@ class ApplicationModel {
   }
 
   // Check if user has already applied for a job
-  static async checkDuplicate(jobId, userId) {
-    const [rows] = await execute(
+ // Check if user has already applied for a job
+static async checkDuplicate(jobId, userId) {
+  try {
+    const result = await execute(
       "SELECT id FROM applications WHERE job_id = ? AND user_id = ?",
       [jobId, userId]
     );
+    
+    // Handle different result formats
+    const rows = Array.isArray(result) 
+      ? (result[0] && Array.isArray(result[0]) ? result[0] : result)
+      : (result.rows || []);
+    
     return rows;
+  } catch (error) {
+    console.error("ApplicationModel.checkDuplicate() - Error:", error);
+    throw error;
   }
+}
   // Update escrow status for an application
   static async updateEscrowStatus(id, status) {
     try {
