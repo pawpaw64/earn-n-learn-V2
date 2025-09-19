@@ -138,10 +138,10 @@ export default function SkillDetailsPage() {
                       <User className="h-4 w-4" />
                       <span>{posterProfile?.name || 'Instructor'}</span>
                     </div>
-                    {skill.availability && (
+                    {skill.duration && (
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        <span>{skill.availability}</span>
+                        <span>{skill.duration}</span>
                       </div>
                     )}
                   </div>
@@ -237,7 +237,7 @@ export default function SkillDetailsPage() {
                   <Clock className="h-5 w-5 text-gray-500" />
                   <div>
                     <div className="font-medium text-gray-900">Duration</div>
-                    <div className="text-sm text-gray-600">{skill.availability || 'Flexible'}</div>
+                    <div className="text-sm text-gray-600">{skill.duration || 'Flexible'}</div>
                   </div>
                 </div>
                 

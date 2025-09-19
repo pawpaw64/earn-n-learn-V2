@@ -33,7 +33,7 @@ const EnhancedMaterialCard: React.FC<EnhancedMaterialCardProps> = ({
   };
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden hover:border-accent/20">
+    <div className="bg-white rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Image or Thumbnail */}
       <div className="h-32 overflow-hidden">
         {material.imageUrl ? (
@@ -49,8 +49,8 @@ const EnhancedMaterialCard: React.FC<EnhancedMaterialCardProps> = ({
             }}
           />
         ) : null}
-        <div className="w-full h-full bg-gradient-to-br from-accent/10 to-accent/20 flex items-center justify-center" style={{ display: material.imageUrl ? 'none' : 'flex' }}>
-          <Package className="h-8 w-8 text-accent" />
+        <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center" style={{ display: material.imageUrl ? 'none' : 'flex' }}>
+          <Package className="h-8 w-8 text-purple-500" />
         </div>
       </div>
       
@@ -60,7 +60,7 @@ const EnhancedMaterialCard: React.FC<EnhancedMaterialCardProps> = ({
           <h3 className="font-semibold text-foreground line-clamp-2 flex-1">
             {material.material || material.title}
           </h3>
-          <Badge variant="secondary" className="text-xs shrink-0 bg-accent/10 text-accent hover:bg-accent/20">
+          <Badge variant="secondary" className="text-xs shrink-0 bg-purple-100 text-purple-800">
             {material.condition || material.conditions || 'Good'}
           </Badge>
         </div>
@@ -72,18 +72,18 @@ const EnhancedMaterialCard: React.FC<EnhancedMaterialCardProps> = ({
               {material.category}
             </Badge>
           )}
-          <Badge variant="outline" className="text-xs bg-muted text-muted-foreground hover:bg-muted/80">
+          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800">
             {material.availability || 'Available'}
           </Badge>
         </div>
 
         {/* Poster Info */}
-        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:bg-accent/50 p-2 -m-2 rounded-md transition-colors" onClick={() => onViewPoster?.(material.user_id || 0)}>
+        <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => onViewPoster?.(material.user_id || 0)}>
           <Avatar className="h-6 w-6">
             <AvatarImage src={material.avatarUrl} alt={material.name} />
-            <AvatarFallback className="text-xs bg-accent text-accent-foreground">{material.name?.charAt(0) || 'U'}</AvatarFallback>
+            <AvatarFallback className="text-xs">{material.name?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
+          <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {material.name || 'Anonymous'}
           </span>
         </div>

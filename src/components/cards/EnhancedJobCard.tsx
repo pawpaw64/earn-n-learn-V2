@@ -34,7 +34,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
  
 
   return (
-    <div className="bg-card rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden hover:border-primary/20">
+    <div className="bg-white rounded-xl shadow-sm border border-border hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Thumbnail placeholder - can be replaced with actual job image */}
       {/* <div className="h-32 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
         <Briefcase className="h-8 w-8 text-primary/40" />
@@ -46,7 +46,7 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
           <h3 className="font-semibold text-foreground line-clamp-2 flex-1">
             {job.title}
           </h3>
-          <Badge variant="secondary" className="text-xs shrink-0 bg-primary/10 text-primary hover:bg-primary/20">
+          <Badge variant="secondary" className="text-xs shrink-0">
             {job.type}
           </Badge>
         </div>
@@ -61,12 +61,12 @@ const EnhancedJobCard: React.FC<EnhancedJobCardProps> = ({
         )}
 
         {/* Poster Info */}
-        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:bg-accent/50 p-2 -m-2 rounded-md transition-colors" onClick={() => onViewPoster?.(job.user_id || 0)}>
+        <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => onViewPoster?.(job.user_id || 0)}>
           <Avatar className="h-6 w-6">
             <AvatarImage src={job.posterAvatar} alt={job.poster} />
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">{job.poster?.charAt(0) || 'U'}</AvatarFallback>
+            <AvatarFallback className="text-xs">{job.poster?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
-          <span className="text-sm text-muted-foreground hover:text-primary transition-colors font-medium">
+          <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {job.poster || 'Anonymous'}
           </span>
         </div>
