@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SearchFilters from "@/components/browse/SearchFilters";
-import ListingsSection from "@/components/browse/ListingsSection";
+import ListingsSection from "@/components/browse/EnhancedListingsSection";
 import { PostingSection } from "@/components/browse/PostingSection";
 import { MyPostsSection } from "@/components/browse/MyPostsSection";
 import JobDetailsModal from "@/components/modals/JobDetailsModal";
@@ -11,6 +11,7 @@ import useBrowseData from "@/hooks/useBrowseData";
 import { useWorkDetails } from "@/hooks/useWorkDetails";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import RecommendationsSection from "@/components/browse/RecommendationsSection";
+import EnhancedListingsSection from "@/components/browse/EnhancedListingsSection";
 
 export default function Browse() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,7 +91,7 @@ export default function Browse() {
             onViewDetails={handleViewDetails}
           />
           
-          <ListingsSection 
+          <EnhancedListingsSection 
             jobs={jobs}
             skills={skills}
             materials={materials}

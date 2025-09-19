@@ -1,17 +1,22 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ArrowUpRight, MapPin, Star } from "lucide-react";
 import "../styles/dashboard-global.css";
 
 interface SkillCardProps {
   name: string;
   skill: string;
-  description?: string; // Optional with default value
+  description?: string;
   pricing: string;
-  experienceLevel?: string; // Optional with default value
+  experienceLevel?: string;
+  location?: string;
+  posterAvatar?: string;
+  rating?: number;
+  contactStatus?: 'none' | 'contacted' | 'accepted' | 'rejected';
   onContact: () => void;
   onViewDetails: () => void;
+  onPosterClick?: () => void;
 }
 
 /**
@@ -23,8 +28,13 @@ const SkillCard = ({
   description = "No description provided",
   pricing = "Not specified",
   experienceLevel = "Beginner",
+  location,
+  posterAvatar,
+  rating = 0,
+  contactStatus = 'none',
   onContact,
   onViewDetails,
+  onPosterClick
 }: SkillCardProps) => {
   // Format pricing to be consistent
   const formatPricing = (priceString: string) => {
@@ -40,45 +50,99 @@ const SkillCard = ({
 
   const formattedPricing = formatPricing(pricing);
 
+  const getContactButtonText = () => {
+    switch (contactStatus) {
+      case 'contacted': return 'Contacted';
+      case 'accepted': return 'Accepted';
+      case 'rejected': return 'Declined';
+      default: return 'Contact';
+    }
+  };
+
+  const getContactButtonClass = () => {
+    switch (contactStatus) {
+      case 'contacted': return 'dashboard-button bg-amber-500 hover:bg-amber-600 text-white cursor-not-allowed';
+      case 'accepted': return 'dashboard-button bg-green-600 hover:bg-green-700 text-white';
+      case 'rejected': return 'dashboard-button bg-red-500 hover:bg-red-600 text-white cursor-not-allowed';
+      default: return 'dashboard-button bg-emerald-600 hover:bg-emerald-700 text-white';
+    }
+  };
+
   return (
-    <div className="skill-card w-full">
+    <div className="skill-card w-full bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4">
+      {/* Header with skill and experience badge */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
-  <div>
-  <h3 className="skill-card-title text-lg font-semibold text-gray-900 line-clamp-2">{skill}</h3>          
-        <p className="text-sm text-gray-600 mb-2">By {name}</p>
-        </div>
+        <h3 className="skill-card-title text-lg font-semibold text-gray-900 line-clamp-2 flex-1">{skill}</h3>
         <div className="flex gap-2 self-start sm:self-auto">
-          <Badge variant="secondary" className="skill-card-badge bg-blue-100 text-blue-800">
+          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
             {experienceLevel}
           </Badge>
+          {rating > 0 && (
+            <Badge variant="outline" className="flex items-center gap-1">
+              <Star className="w-3 h-3 fill-current text-yellow-500" />
+              {rating.toFixed(1)}
+            </Badge>
+          )}
         </div>
       </div>
 
+      {/* Poster info section */}
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
+        <Avatar 
+          className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-emerald-200 transition-all"
+          onClick={onPosterClick}
+        >
+          <AvatarImage src={posterAvatar} alt={name} />
+          <AvatarFallback className="text-xs bg-emerald-100 text-emerald-800">
+            {name?.charAt(0)?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <p 
+            className="text-sm font-medium text-gray-900 cursor-pointer hover:text-emerald-600 transition-colors"
+            onClick={onPosterClick}
+          >
+            {name}
+          </p>
+        </div>
+      </div>
+
+      {/* Description */}
       <p className="text-sm text-gray-600 line-clamp-2 min-h-[40px] mb-4">{description}</p>
 
-      <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3">
-        <span className="skill-card-price text-emerald-600 font-medium whitespace-nowrap">
+      {/* Key info section */}
+      <div className="flex flex-wrap items-center gap-4 mb-4 text-sm text-gray-600">
+        <span className="skill-card-price text-emerald-600 font-medium">
           {formattedPricing}
         </span>
+        
+        {location && (
+          <div className="flex items-center gap-1">
+            <MapPin className="w-4 h-4" />
+            <span>{location}</span>
+          </div>
+        )}
+      </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full xs:w-auto">
-          <Button
-            variant="outline"
-            onClick={onViewDetails}
-            className="dashboard-button-outline border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full xs:w-auto"
-            size="sm"
-          >
-            <span className="hidden sm:inline">Details</span>
-            <ArrowUpRight className="ml-1 h-4 w-4" />
-          </Button>
-          <Button
-            onClick={onContact}
-            className="dashboard-button bg-emerald-600 hover:bg-emerald-700 text-white w-full xs:w-auto"
-            size="sm"
-          >
-            Contact
-          </Button>
-        </div>
+      {/* Action buttons */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button
+          variant="outline"
+          onClick={onViewDetails}
+          className="dashboard-button-outline border-emerald-600 text-emerald-600 hover:bg-emerald-50 flex-1 sm:flex-none"
+          size="sm"
+        >
+          <span className="hidden sm:inline">Details</span>
+          <ArrowUpRight className="ml-1 h-4 w-4" />
+        </Button>
+        <Button
+          onClick={onContact}
+          className={getContactButtonClass()}
+          size="sm"
+          disabled={contactStatus === 'contacted' || contactStatus === 'rejected'}
+        >
+          {getContactButtonText()}
+        </Button>
       </div>
     </div>
   );

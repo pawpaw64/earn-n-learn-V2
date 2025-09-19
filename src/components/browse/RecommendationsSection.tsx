@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ChevronRight, Target } from "lucide-react";
 import { recommendationService, RecommendationResponse } from "@/services/recommendations.ts";
+import { JobType, SkillType, MaterialType } from "@/types/marketplace";
 import JobCard from "@/components/JobCard";
 import SkillCard from "@/components/SkillCard";
 import MaterialCard from "@/components/MaterialCard";
@@ -15,6 +16,10 @@ import JobApplicationModal from "@/components/modals/JobApplicationModal";
 import ContactModal from "@/components/modals/ContactModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import EnhancedJobCard from "../cards/EnhancedJobCard";
+import EnhancedSkillCard from "../cards/EnhancedSkillCard";
+import EnhancedListingsSection from "./EnhancedListingsSection";
+import EnhancedMaterialCard from "../cards/EnhancedMaterialCard";
 
 interface RecommendationsSectionProps {
   onApply?: (id: number) => void;
@@ -235,43 +240,58 @@ const RecommendationsSection = ({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {getTabData(tab).map((recommendation) => {
                   if (recommendation.type === 'job') {
+                    const jobData: JobType = {
+                      id: recommendation.id,
+                      title: recommendation.title || 'Untitled',
+                      type: 'General',
+                      description: recommendation.description || '',
+                      payment: recommendation.payment || 'Not specified',
+                      poster: recommendation.poster,
+                      posterEmail: recommendation.posterEmail,
+                      posterAvatar: recommendation.posterAvatar
+                    };
                     return (
-                      <JobCard 
+                      <EnhancedJobCard 
                         key={`job-${recommendation.id}`}
-                        title={recommendation.title || 'Untitled'}
-                        type={recommendation.type || 'General'}
-                        description={recommendation.description || ''}
-                        payment={recommendation.payment || 'Not specified'}
-                        onApply={() => handleApplyJob(recommendation)}
-                        onViewDetails={() => handleViewJobDetails(recommendation)}
+                        job={jobData}
+                        onApply={(jobId) => handleApplyJob(recommendation)}
+                        onViewDetails={(jobId) => handleViewJobDetails(recommendation)}
                       />
                     );
                   } else if (recommendation.type === 'skill') {
+                    const skillData: SkillType = {
+                      id: recommendation.id,
+                      skill_name: recommendation.skill || recommendation.skill_name || 'Skill',
+                      pricing: recommendation.pricing || 'Not specified',
+                      description: recommendation.description,
+                      name: recommendation.name,
+                      experienceLevel: 'Beginner'
+                    };
                     return (
-                      <SkillCard 
+                      <EnhancedSkillCard 
                         key={`skill-${recommendation.id}`}
-                        name={recommendation.name || ''}
-                        skill={recommendation.skill || recommendation.skill_name || ''}
-                        description={recommendation.description || ''}
-                        pricing={recommendation.pricing || 'Not specified'}
-                        experienceLevel="Beginner"
-                        onContact={() => handleContactSkill(recommendation)}
-                        onViewDetails={() => handleViewSkillDetails(recommendation)}
+                        skill={skillData}
+                        onContact={(skillId) => handleContactSkill(recommendation)}
+                        onViewDetails={(skillId) => handleViewSkillDetails(recommendation)}
                       />
                     );
                   } else if (recommendation.type === 'material') {
+                    const materialData: MaterialType = {
+                      id: recommendation.id,
+                      title: recommendation.material || 'Material',
+                      price: recommendation.price || 'Not specified',
+                      availability: recommendation.availability || 'Unknown',
+                      condition: recommendation.condition || recommendation.conditions,
+                      description: recommendation.description,
+                      name: recommendation.name,
+                      imageUrl: recommendation.imageUrl
+                    };
                     return (
-                      <MaterialCard 
+                      <EnhancedMaterialCard 
                         key={`material-${recommendation.id}`}
-                        name={recommendation.name || ''}
-                        material={recommendation.material || recommendation.title || ''}
-                        condition={recommendation.condition || recommendation.conditions || 'Unknown'}
-                        price={recommendation.price || 'Not specified'}
-                        availability={recommendation.availability || 'Unknown'}
-                        description={recommendation.description || ''}
-                        imageUrl={recommendation.imageUrl}
-                        onContact={() => handleContactMaterial(recommendation)}
-                        onViewDetails={() => handleViewMaterialDetails(recommendation)}
+                        material={materialData}
+                        onContact={(materialId) => handleContactMaterial(recommendation)}
+                        onViewDetails={(materialId) => handleViewMaterialDetails(recommendation)}
                       />
                     );
                   }
