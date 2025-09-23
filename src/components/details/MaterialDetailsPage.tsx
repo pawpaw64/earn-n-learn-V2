@@ -136,7 +136,7 @@ export default function MaterialDetailsPage() {
                   <div className="flex items-center gap-4 text-gray-600 mb-4">
                     <div className="flex items-center gap-1">
                       <Building className="h-4 w-4" />
-                      <span>{material.poster || 'Seller'}</span>
+                      <span>{material.email || 'Seller'}</span>
                     </div>
                     {material.location && (
                       <div className="flex items-center gap-1">
@@ -163,7 +163,7 @@ export default function MaterialDetailsPage() {
                 </div>
 
                 <Avatar className="h-16 w-16 border-2 border-white shadow-md cursor-pointer" onClick={handlePosterClick}>
-                  <AvatarImage src={material.avatarUrl} alt={material.poster} />
+                  <AvatarImage src={material.avatarUrl} alt={material.email} />
                   <AvatarFallback className="bg-blue-100 text-blue-800">
                     {posterProfile?.user?.name?.charAt(0) || 'S'}
                   </AvatarFallback>
@@ -278,7 +278,7 @@ export default function MaterialDetailsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 cursor-pointer" onClick={handlePosterClick}>
-                  <AvatarImage src={material.avatarUrl} alt={material.poster} />
+                  <AvatarImage src={material.avatarUrl} alt={material.email} />
                   <AvatarFallback className="bg-blue-100 text-blue-800">
                     {posterProfile?.user?.name?.charAt(0) || 'S'}
                   </AvatarFallback>
@@ -287,7 +287,7 @@ export default function MaterialDetailsPage() {
                   <p className="font-medium text-gray-900 cursor-pointer" onClick={handlePosterClick}>
                     {posterProfile?.user?.name || 'Seller'}
                   </p>
-                  <p className="text-sm text-gray-500">{material.posterEmail}</p>
+                  <p className="text-sm text-gray-500">{material.email}</p>
                 </div>
               </div>
 

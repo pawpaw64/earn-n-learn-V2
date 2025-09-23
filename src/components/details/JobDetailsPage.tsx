@@ -24,6 +24,7 @@ import { submitJobApplication, fetchMyApplications } from "@/services/applicatio
 import { fetchUserById, ProfileData } from "@/services/profile";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { ProjectProgressSection } from "./ProjectProgressSection";
 
 interface JobDetailsPageProps {
   jobId?: number;
@@ -340,6 +341,11 @@ const JobDetailsPage: React.FC<JobDetailsPageProps> = ({ jobId: propJobId }) => 
                   <p className="text-sm text-gray-500">
                     Applied on {new Date(application.created_at).toLocaleDateString()}
                   </p>
+
+                  {/* Project Progress Section - Show if application is accepted */}
+                  {application.status === 'accepted' && application.project_id && (
+                    <ProjectProgressSection projectId={application.project_id} />
+                  )}
                 </div>
               )}
             </CardContent>
